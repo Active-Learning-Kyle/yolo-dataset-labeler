@@ -35,7 +35,7 @@ For the best experience, use the latest desktop version of Google Chrome or Micr
 | Browser | Folder access | Saving behaviour |
 | --- | --- | --- |
 | Chrome or Edge on desktop | Direct folder mode when the File System Access API is available | Labels and `classes.txt` can be written back to the selected folder |
-| Safari or Firefox | Compatibility mode | Edits remain in browser memory until the completed ZIP is downloaded |
+| Safari or Firefox on desktop | Compatibility mode | Edits remain in browser memory until the completed ZIP is downloaded |
 
 ## Dataset Structure
 
