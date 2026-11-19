@@ -1,0 +1,2306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YOLO Dataset Labeler</title>
+
+<!-- ==========================================================================
+     STYLES
+     Pure CSS, no frameworks. Grouped in the same order as the page:
+     base → controls → layout → landing → setup → labeler → dialogs → responsive
+     ========================================================================== -->
+<style>
+:root {
+  --bg: #f5f7fb;
+  --panel: #fff;
+  --ink: #172033;
+  --muted: #5d687a;
+  --line: #dce2ec;
+  --primary: #185abd;
+  --primary2: #0f4497;
+  --good: #137333;
+  --warn: #9a5b00;
+  --bad: #b42318;
+  --shadow: 0 10px 28px rgba(23, 32, 51, .10);
+  --radius: 16px;
+}
+
+/* --- Base ---------------------------------------------------------------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+button, input, select { font: inherit; }
+
+.hidden { display: none !important; }
+
+/* --- Buttons ------------------------------------------------------------- */
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: .72rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #e9eef7;
+  color: var(--ink);
+}
+button:hover { filter: brightness(.97); }
+button:focus-visible,
+input:focus-visible,
+select:focus-visible { outline: 3px solid #8bb8ff; outline-offset: 2px; }
+
+.primary { background: var(--primary); color: #fff; }
+.primary:hover { background: var(--primary2); }
+.danger { background: #fee4e2; color: #912018; }
+.success { background: #dcfce7; color: #166534; }
+.ghost { background: transparent; border: 1px solid var(--line); }
+
+/* --- App bar & generic screen shell -------------------------------------- */
+.appbar {
+  height: 64px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.brand { font-size: 1.18rem; font-weight: 800; }
+.bar-actions { display: flex; gap: 8px; align-items: center; }
+
+.screen { max-width: 1280px; margin: 0 auto; padding: 26px; }
+
+/* --- Landing / hero ------------------------------------------------------ */
+.hero { min-height: calc(100vh - 120px); display: grid; place-items: center; }
+.hero-card {
+  max-width: 1520px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 44px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); margin: .2em 0; }
+.hero p { color: var(--muted); font-size: 1.05rem; }
+
+.privacy {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  background: #eaf6ee;
+  color: #14532d;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.mode-note {
+  margin: 18px auto;
+  max-width: 760px;
+  padding: 14px;
+  background: #f3f6fb;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.workflow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 22px 0;
+}
+.workflow span {
+  background: #edf2fa;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: .9rem;
+}
+
+/* --- Cards --------------------------------------------------------------- */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: 0 4px 14px rgba(23, 32, 51, .05);
+  margin-bottom: 18px;
+}
+.card h2 { margin-top: 0; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+/* --- Setup screen -------------------------------------------------------- */
+.checklist { display: grid; gap: 10px; }
+.check {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.ok { color: var(--good); font-weight: 800; }
+.missing, .invalid { color: var(--bad); font-weight: 800; }
+.warning { color: var(--warn); font-weight: 700; }
+
+.notice {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff7e6;
+  border: 1px solid #f1d39a;
+  color: #6b4300;
+  margin: 12px 0;
+}
+.errorbox {
+  white-space: pre-wrap;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff1f0;
+  border: 1px solid #ffc9c5;
+  color: #8a1c13;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.class-list { display: grid; gap: 8px; }
+.class-row {
+  display: grid;
+  grid-template-columns: 52px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+}
+.class-id { font-weight: 800; text-align: center; }
+.class-row input,
+.search,
+select {
+  width: 100%;
+  border: 1px solid #bfc8d6;
+  border-radius: 9px;
+  padding: .68rem;
+  background: #fff;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 12px;
+}
+.stat { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: #fbfcfe; }
+.stat b { display: block; font-size: 1.6rem; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+.progress { height: 12px; background: #e4e9f1; border-radius: 999px; overflow: hidden; }
+.progress > div { height: 100%; background: var(--primary); width: 0; }
+
+/* --- Labeler layout ------------------------------------------------------ */
+.annotation {
+  display: grid;
+  grid-template-columns: 260px minmax(320px, 1fr) 290px;
+  gap: 12px;
+  height: calc(100vh - 132px);
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  min-height: 0;
+}
+.panel-head { padding: 12px; border-bottom: 1px solid var(--line); }
+
+.image-list { overflow: auto; height: calc(100% - 72px); }
+.image-item {
+  width: 100%;
+  text-align: left;
+  border-radius: 0;
+  border-bottom: 1px solid #eef1f5;
+  background: #fff;
+  padding: 10px 12px;
+  font-weight: 600;
+}
+.image-item.current { background: #dfeeff; }
+.status-pill {
+  display: inline-block;
+  font-size: .74rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-top: 4px;
+  border: 1px solid currentColor;
+}
+
+.canvas-panel { display: flex; flex-direction: column; background: #20242b; }
+.canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.canvas-wrap canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+.canvas-message { color: #fff; text-align: center; padding: 20px; }
+
+.toolbar {
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line);
+}
+
+.right-body { padding: 12px; overflow: auto; height: 100%; }
+.box-list { display: grid; gap: 7px; margin-top: 12px; }
+.box-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+}
+.box-row.selected { outline: 3px solid #8bb8ff; }
+
+.save-state { font-weight: 800; padding: 8px 10px; }
+.top-progress {
+  padding: 10px 18px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+/* --- Help dialog --------------------------------------------------------- */
+.kbd {
+  font-family: ui-monospace, monospace;
+  border: 1px solid #bfc8d6;
+  border-bottom-width: 3px;
+  border-radius: 5px;
+  padding: 1px 5px;
+  background: #fff;
+}
+dialog {
+  border: 0;
+  border-radius: 18px;
+  max-width: 680px;
+  width: calc(100% - 28px);
+  box-shadow: var(--shadow);
+  padding: 0;
+}
+dialog::backdrop { background: rgba(15, 23, 42, .55); }
+.dialog-body { padding: 22px; }
+.dialog-foot {
+  padding: 14px 22px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* --- Misc ---------------------------------------------------------------- */
+.finish { border: 2px solid #71c590; background: #effcf3; }
+.small { font-size: .86rem; color: var(--muted); }
+
+/* --- Responsive ---------------------------------------------------------- */
+@media (max-width: 980px) {
+  .annotation { grid-template-columns: 210px 1fr; }
+  .right-panel { grid-column: 1 / -1; height: 280px; }
+  .grid2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .screen { padding: 14px; }
+  .hero-card { padding: 25px; }
+  .annotation { display: flex; flex-direction: column; height: auto; }
+  .left-panel, .right-panel { height: 260px; }
+  .canvas-panel { height: 65vh; }
+  .appbar { padding: 0 10px; }
+  .brand { font-size: 1rem; }
+  .bar-actions button { padding: .55rem; }
+  .top-progress { grid-template-columns: 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     MARKUP
+     Screen order: landing → setup → labeler, plus a help dialog.
+     ========================================================================== -->
+
+<header class="appbar">
+  <div class="brand">YOLO Dataset Labeler</div>
+  <div class="bar-actions">
+    <button id="helpBtn" class="ghost">Help</button>
+    <button id="resetBtn" class="danger">Reset Application</button>
+  </div>
+</header>
+
+<div id="topProgress" class="top-progress hidden">
+  <div>
+    <div id="progressText"></div>
+    <div class="progress"><div id="progressFill"></div></div>
+  </div>
+  <div id="saveState" class="save-state">Saved</div>
+</div>
+
+<main>
+
+  <!-- ---------------------------------------------------------------- Landing -->
+  <section id="landing" class="screen hero">
+    <div class="hero-card">
+      <div class="privacy">🔒 Selected images and labels are processed locally and are not uploaded by this application.</div>
+      <h1>YOLO Dataset Labeler</h1>
+      <p>
+        Draw rectangular bounding boxes and save standard YOLO labels in your browser.
+        Supported images: JPG, JPEG, PNG, WebP and BMP.
+      </p>
+      <div class="workflow">
+        <span>Open folder</span>
+        <span>→ Check structure</span>
+        <span>→ Define classes</span>
+        <span>→ Label images</span>
+        <span>→ Validate</span>
+        <span>→ Export</span>
+      </div>
+      <div class="actions" style="justify-content:center">
+        <button id="openBtn" class="primary">Open Dataset Folder</button>
+        <button id="openZipBtn" class="ghost">Import Images ZIP</button>
+      </div>
+      <input id="folderInput" class="hidden" type="file" webkitdirectory multiple>
+      <input id="zipInput" class="hidden" type="file" accept=".zip,application/zip">
+      <input id="zipImagesInput" class="hidden" type="file" accept=".zip,application/zip">
+      <div id="modeNote" class="mode-note"></div>
+      <p class="small">Recommended: latest desktop Chrome or Edge for direct folder saving. Safari and Firefox use compatibility mode.</p><p class="small">ZIP filenames must be UTF-8 or ASCII. Limits: 50,000 entries, 1 GiB input, 512 MiB per file, 2 GiB extracted total.</p>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- Setup -->
+  <section id="setup" class="screen hidden">
+    <div class="card">
+      <h2>1. Dataset structure</h2>
+      <div id="datasetName" class="small"></div>
+      <div id="checklist" class="checklist"></div>
+      <div id="structureActions" class="actions"></div>
+      <div id="structureNotice"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>2. Classes</h2>
+        <p class="small">Class IDs are zero-based. Changing order or deleting classes can invalidate existing labels.</p>
+        <div id="classList" class="class-list"></div>
+        <div class="actions">
+          <button id="addClassBtn">Add Class</button>
+          <button id="saveClassesBtn" class="primary">Save Classes</button>
+        </div>
+        <div id="classError"></div>
+      </div>
+
+      <div class="card">
+        <h2>3. Dataset summary</h2>
+        <div id="summaryStats" class="stats"></div>
+        <div id="summaryIssues"></div>
+        <div id="summaryActions" class="actions"></div>
+      </div>
+    </div>
+
+    <div id="completionCard" class="card finish hidden"></div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- Labeler -->
+  <section id="labeler" class="screen hidden" style="max-width:none;padding:10px">
+    <div class="annotation">
+
+      <aside class="panel left-panel">
+        <div class="panel-head">
+          <input id="imageSearch" class="search" aria-label="Search images" placeholder="Search images...">
+        </div>
+        <div id="imageList" class="image-list"></div>
+      </aside>
+
+      <section class="panel canvas-panel">
+        <div id="canvasWrap" class="canvas-wrap">
+          <canvas id="canvas"></canvas>
+          <div id="canvasMessage" class="canvas-message">Choose an image.</div>
+        </div>
+        <div class="toolbar">
+          <button id="prevBtn">← Previous</button>
+          <button id="nextBtn">Next →</button>
+          <button id="saveBtn" class="primary">Save</button>
+          <button id="saveNextBtn" class="primary">Save and Next</button>
+          <button id="backSetupBtn" class="ghost">Back to Dataset Summary</button>
+        </div>
+      </section>
+
+      <aside class="panel right-panel">
+        <div class="right-body">
+          <label for="classSelect"><b>Selected class</b></label>
+          <select id="classSelect"></select>
+          <p class="small">Draw by dragging on the image. Select a box to move, resize, delete, or change its class.</p>
+          <div class="actions">
+            <button id="undoBtn">Undo</button>
+            <button id="redoBtn">Redo</button>
+          </div>
+          <h3>Bounding boxes</h3>
+          <div id="boxList" class="box-list"></div>
+          <div id="invalidDetails"></div>
+        </div>
+      </aside>
+
+    </div>
+  </section>
+
+</main>
+
+<dialog id="helpDialog">
+  <div class="dialog-body">
+    <h2>Quick help</h2>
+    <ol>
+      <li>Select a class, then drag on the image to draw a box.</li>
+      <li>Click a box to select it. Drag inside it to move it, or drag a square handle to resize it.</li>
+      <li>To mark an image as a background image with no target object, leave it without boxes and select <b>Save</b>. This creates an empty label file.</li>
+      <li>Boxes smaller than 3 original-image pixels are rejected.</li>
+    </ol>
+    <p>
+      <b>Shortcuts:</b>
+      <span class="kbd">A</span>/<span class="kbd">←</span> previous,
+      <span class="kbd">D</span>/<span class="kbd">→</span> next,
+      <span class="kbd">1–9</span> classes,
+      <span class="kbd">Delete</span> remove box,
+      <span class="kbd">Ctrl/Cmd+Z</span> undo,
+      <span class="kbd">Ctrl/Cmd+S</span> save,
+      <span class="kbd">Esc</span> cancel/deselect.
+    </p>
+    <p class="small">
+      All work remains local. In Safari and Firefox, use compatibility mode and download the completed ZIP;
+      the original folder cannot be updated directly.
+    </p>
+  </div>
+  <div class="dialog-foot">
+    <button id="closeHelp" class="primary">Close</button>
+  </div>
+</dialog>
+
+<!-- ==========================================================================
+     SCRIPT
+
+     Layout of this file (search for the banner text to jump around):
+
+       0. SHARED HELPERS .......... tiny utilities used everywhere
+       1. STORAGE ADAPTER ......... File System Access API OR in-memory Map
+       2. DATASET MODEL ........... folder scan + YOLO label validation
+       3. ZIP WRITER .............. dependency-free ZIP creation (export)
+       4. ZIP READER .............. dependency-free ZIP parsing (import)
+       5. ANNOTATION CONTROLLER ... canvas drawing, per-image undo/redo, YOLO I/O
+       6. APP ..................... workflow, screens, dialogs, import/export
+
+     Why everything lives in ONE <script>:
+       - The workshop requires a single double-clickable .html file, fully offline.
+       - ES modules (import/export) would be blocked by CORS on file:// URLs and
+         would also require separate files or a bundler, so we deliberately use
+         one classic inline script and plain classes instead.
+     ========================================================================== -->
+<script>
+(() => {
+  'use strict';
+
+  /* ========================================================================
+     0. SHARED HELPERS
+     ======================================================================== */
+
+  const $ = id => document.getElementById(id);
+  const enc = new TextEncoder();
+  const dec = new TextDecoder('utf-8');
+
+  const SUPPORTED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.bmp'];
+  const EXT = /\.(jpe?g|png|webp|bmp)$/i;
+  const TOL = 1e-6; // tolerance for "box touches image border" float checks
+  const MAX_ZIP_INPUT_BYTES=1024**3,MAX_ZIP_ENTRIES=50000,MAX_ENTRY_BYTES=512*1024**2,MAX_TOTAL_BYTES=2*1024**3;
+  const MAX_CLASSIC_ZIP_ENTRIES=65535,MAX_CLASSIC_ZIP_BYTES=0xffffffff;
+
+  /** Create an element with optional text and class name. */
+  const el = (tag, text, cls) => {
+    const n = document.createElement(tag);
+    if (text !== undefined) n.textContent = text;
+    if (cls) n.className = cls;
+    return n;
+  };
+
+  /** "cat.jpg" -> "cat" */
+  const stem = n => n.replace(/\.[^.]+$/, '');
+
+  const statusLabel = s => ({
+    unlabeled: 'Unlabeled',
+    labeled: 'Labeled',
+    background: 'No Object',
+    invalid: 'Invalid'
+  }[s] || s);
+
+
+  /* ========================================================================
+     1. STORAGE ADAPTER
+     Abstracts two very different backends behind one small async API:
+
+       mode 'direct'  -> File System Access API handles (Chrome / Edge).
+                         Reads and writes go straight to the real folder.
+       mode 'memory'  -> a Map<path, Blob|File> filled from a folder pick or a
+                         ZIP import. Nothing touches the disk until export.
+     ======================================================================== */
+
+  class StorageAdapter {
+    constructor() {
+      this.mode = 'memory';
+      this.root = null;
+      this.files = new Map();
+      this.name = 'Imported dataset';
+    }
+
+    async openDirect() {
+      this.root = await window.showDirectoryPicker({ mode: 'readwrite' });
+      this.mode = 'direct';
+      this.name = this.root.name;
+    }
+
+    /** Import a webkitdirectory selection into memory, stripping the top folder. */
+    async openMemory(list) {
+      this.mode = 'memory';
+      this.name = (list[0]?.webkitRelativePath || 'Imported dataset').split('/')[0] || 'Imported dataset';
+      this.files.clear();
+      for (const f of list) {
+        let p = f.webkitRelativePath || f.name;
+        const parts = p.split('/');
+        if (parts.length > 1) parts.shift();
+        p = parts.join('/');
+        if (p) this.files.set(p, f);
+      }
+      const hi=[...this.files.keys()].some(p=>p.toLowerCase().startsWith('images/'));
+      const hl=[...this.files.keys()].some(p=>p.toLowerCase().startsWith('labels/'));
+      if(hi&&!hl)this.files.set('labels/.keep',new Blob(['']));
+    }
+
+    // --- Direct-mode handle helpers ---------------------------------------
+    async childDir(name, create = false) {
+      if (this.mode !== 'direct') return null;
+      try {
+        return await this.root.getDirectoryHandle(name, { create });
+      } catch (e) {
+        if (e.name === 'NotFoundError') return null;
+        throw e;
+      }
+    }
+
+    async rootFile(name, create = false) {
+      if (this.mode !== 'direct') return null;
+      try {
+        return await this.root.getFileHandle(name, { create });
+      } catch (e) {
+        if (e.name === 'NotFoundError') return null;
+        throw e;
+      }
+    }
+
+    // --- Existence checks --------------------------------------------------
+    async existsDir(n) {
+      return this.mode === 'direct'
+        ? !!(await this.childDir(n))
+        : Array.from(this.files.keys()).some(p => p.toLowerCase().startsWith(n.toLowerCase() + '/'));
+    }
+
+    async existsFile(n) {
+      if (this.mode === 'direct') return !!(await this.rootFile(n));
+      return Array.from(this.files.keys()).some(p => p.toLowerCase() === n.toLowerCase());
+    }
+
+    /** Create images/, labels/ and classes.txt when they are missing. */
+    async createMissing() {
+      if(this.mode==='direct'){
+        await this.childDir('images',true);await this.childDir('labels',true);
+        if(!(await this.rootFile('classes.txt')))await this.writeText('classes.txt','');
+      }else{
+        if(!(await this.existsDir('images')))this.files.set('images/.keep',new Blob(['']));
+        if(!(await this.existsDir('labels')))this.files.set('labels/.keep',new Blob(['']));
+        if(!(await this.existsFile('classes.txt')))this.files.set('classes.txt',new Blob(['']));
+      }
+    }
+
+    // --- Directory listing ------------------------------------------------
+    async listDir(name) {
+      if (this.mode === 'direct') {
+        const d = await this.childDir(name);
+        if (!d) return [];
+        const out = [];
+        for await (const [n, h] of d.entries()) {
+          if (h.kind === 'file') out.push({ name: n, getFile: () => h.getFile(), handle: h });
+        }
+        return out;
+      }
+      const prefix = name.toLowerCase() + '/';
+      return Array.from(this.files.entries())
+        .filter(([p]) => p.toLowerCase().startsWith(prefix) && !p.slice(prefix.length).includes('/'))
+        .map(([p, f]) => ({ name: p.split('/').pop(), getFile: async () => f, file: f }));
+    }
+
+    // --- Reading ----------------------------------------------------------
+    async readFile(path) {
+      if (this.mode === 'direct') {
+        const [d, n] = path.includes('/') ? path.split(/\/(.+)/) : [null, path];
+        const h = d ? await (await this.childDir(d)).getFileHandle(n) : await this.rootFile(n);
+        return h.getFile();
+      }
+      const key = Array.from(this.files.keys()).find(k => k.toLowerCase() === path.toLowerCase());
+      if (!key) throw new DOMException('File not found', 'NotFoundError');
+      return this.files.get(key);
+    }
+
+    async readText(path) {
+      return dec.decode(await (await this.readFile(path)).arrayBuffer()).replace(/^\uFEFF/, '');
+    }
+
+    // --- Writing ----------------------------------------------------------
+    async writeText(path, text) {
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      if (this.mode === 'direct') {
+        const [d, n] = path.split(/\/(.+)/);
+        let h;
+        if (n) h = await (await this.childDir(d, true)).getFileHandle(n, { create: true });
+        else h = await this.root.getFileHandle(d, { create: true });
+        const w = await h.createWritable();
+        await w.write(blob);
+        await w.close();
+      } else {
+        this.files.set(path, blob);
+      }
+    }
+
+    async writeBlob(path, blob) {
+      if (this.mode === 'direct') {
+        const [directoryName, fileName] = path.split(/\/(.+)/);
+        const directory = await this.childDir(directoryName, true);
+        const handle = await directory.getFileHandle(fileName, { create: true });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } else {
+        this.files.set(path, blob);
+      }
+    }
+
+    async putMemory(path, blob) {
+      this.files.set(path, blob);
+    }
+  }
+
+
+  /* ========================================================================
+     2. DATASET MODEL
+     Scans the folder, parses classes.txt, validates every label file and
+     produces the status counts used by the summary screen.
+     ======================================================================== */
+
+  class DatasetModel {
+    constructor(store) {
+      this.store = store;
+      this.classes = [];
+      this.images = [];
+      this.orphans = [];
+      this.structure = {};
+      this.duplicates = [];
+    }
+
+    /** Full rescan of images/, labels/ and classes.txt. */
+    async scan() {
+      this.structure = {
+        images: await this.store.existsDir('images'),
+        labels: await this.store.existsDir('labels'),
+        classes: await this.store.existsFile('classes.txt')
+      };
+
+      this.classes = this.structure.classes
+        ? (await this.store.readText('classes.txt')).split(/\r?\n/).map(x => x.trim()).filter(Boolean)
+        : [];
+
+      const imgs = this.structure.images
+        ? (await this.store.listDir('images')).filter(x => EXT.test(x.name))
+        : [];
+      const labs = this.structure.labels
+        ? (await this.store.listDir('labels')).filter(x => /\.txt$/i.test(x.name))
+        : [];
+
+      // Duplicate image stems would collide on the label filename.
+      const groups = new Map();
+      for (const i of imgs) {
+        const k = stem(i.name).toLocaleLowerCase();
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(i.name);
+      }
+      this.duplicates = Array.from(groups.values()).filter(a => a.length > 1);
+
+      // Pair images with their label files (case-insensitive stem match).
+      const labMap = new Map(labs.map(x => [stem(x.name).toLocaleLowerCase(), x]));
+      this.images = [];
+      for (const i of imgs.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))) {
+        const k = stem(i.name).toLocaleLowerCase();
+        const le = labMap.get(k);
+        const item = {
+          name: i.name,
+          stem: stem(i.name),
+          imageEntry: i,
+          labelEntry: le,
+          status: 'unlabeled',
+          boxes: [],
+          errors: [],
+          width: 0,
+          height: 0,
+          totalBoxes: 0
+        };
+        if (le) await this.validateItem(item);
+        this.images.push(item);
+      }
+
+      const imgKeys = new Set(imgs.map(i => stem(i.name).toLocaleLowerCase()));
+      this.orphans = labs
+        .filter(l => !imgKeys.has(stem(l.name).toLocaleLowerCase()))
+        .map(l => l.name);
+
+      return this;
+    }
+
+    /** Lazily decode natural width/height for an image entry. */
+    async imageDimensions(item) {
+      if (item.width && item.height) return;
+      const f = await item.imageEntry.getFile();
+      const u = URL.createObjectURL(f);
+      try {
+        const im = await new Promise((res, rej) => {
+          const x = new Image();
+          x.onload = () => res(x);
+          x.onerror = () => rej(new Error('Corrupt or unsupported image'));
+          x.src = u;
+        });
+        item.width = im.naturalWidth;
+        item.height = im.naturalHeight;
+      } catch (e) {
+        item.errors.push({ line: 0, reason: e.message });
+        item.status = 'invalid';
+      } finally {
+        URL.revokeObjectURL(u);
+      }
+    }
+
+    /** Parse one YOLO label file and fill item.boxes / item.errors / item.status. */
+    async validateItem(item) {
+      let text = '';
+      try {
+        text = await dec.decode(await (await item.labelEntry.getFile()).arrayBuffer()).replace(/^\uFEFF/, '');
+      } catch (e) {
+        item.status = 'invalid';
+        item.errors = [{ line: 0, reason: 'Cannot read label file' }];
+        return;
+      }
+
+      if (!text.trim()) {
+        item.status = 'background'; // deliberate no-object image
+        return;
+      }
+
+      await this.imageDimensions(item);
+      if (item.errors.length) return;
+
+      const lines = text.split(/\r?\n/);
+      for (let idx = 0; idx < lines.length; idx++) {
+        if (!lines[idx].trim()) continue;
+        const p = lines[idx].trim().split(/\s+/);
+        let reason = '';
+
+        if (p.length !== 5) {
+          reason = 'Expected exactly five fields';
+        } else {
+          const id = Number(p[0]);
+          const v = p.slice(1).map(Number);
+          if (!/^\d+$/.test(p[0])) reason = 'Class ID must be a non-negative integer';
+          else if (id < 0 || id >= this.classes.length) reason = 'Class ID does not exist in classes.txt';
+          else if (v.some(x => !Number.isFinite(x))) reason = 'Coordinates must be finite numbers';
+          else if (v[0] < 0 || v[0] > 1 || v[1] < 0 || v[1] > 1) reason = 'Center coordinates must be between 0 and 1';
+          else if (v[2] <= 0 || v[2] > 1 || v[3] <= 0 || v[3] > 1) reason = 'Width and height must be greater than 0 and no greater than 1';
+          else if (v[0] - v[2] / 2 < -TOL || v[0] + v[2] / 2 > 1 + TOL ||
+                   v[1] - v[3] / 2 < -TOL || v[1] + v[3] / 2 > 1 + TOL) reason = 'Implied box extends outside the image';
+
+          if (!reason) {
+            // Convert normalized YOLO center/size into original-image pixels.
+            item.boxes.push({
+              classId: id,
+              x: (v[0] - v[2] / 2) * item.width,
+              y: (v[1] - v[3] / 2) * item.height,
+              w: v[2] * item.width,
+              h: v[3] * item.height
+            });
+          }
+        }
+
+        if (reason) item.errors.push({ line: idx + 1, reason, raw: lines[idx] });
+      }
+
+      item.status = item.errors.length ? 'invalid' : 'labeled';
+      item.totalBoxes = item.boxes.length;
+    }
+
+    /** Aggregate counts for the summary screen and progress bar. */
+    summary() {
+      const c = {
+        total: this.images.length,
+        labeled: 0,
+        background: 0,
+        unlabeled: 0,
+        invalid: 0,
+        orphans: this.orphans.length,
+        boxes: 0
+      };
+      for (const i of this.images) {
+        c[i.status]++;
+        c.boxes += i.boxes.length;
+      }
+      c.complete = c.total ? Math.round(((c.labeled + c.background) / c.total) * 100) : 0;
+      return c;
+    }
+  }
+
+
+  /* ========================================================================
+     3. ZIP WRITER
+     Minimal ZIP builder: local headers + central directory + EOCD.
+     Used only for the "Download Labeled_data.zip" export.
+     ======================================================================== */
+
+  class ZipWriter {
+    constructor() {
+      this.files = []; this.totalDataBytes=0;
+    }
+
+    static crcTable() {
+      if (this._t) return this._t;
+      this._t = Array.from({ length: 256 }, (_, n) => {
+        for (let k = 0; k < 8; k++) n = (n & 1) ? 0xedb88320 ^ (n >>> 1) : n >>> 1;
+        return n >>> 0;
+      });
+      return this._t;
+    }
+
+    static crc(data) {
+      let c = 0xffffffff;
+      const t = this.crcTable();
+      for (const b of data) c = t[(c ^ b) & 255] ^ (c >>> 8);
+      return (c ^ 0xffffffff) >>> 0;
+    }
+
+    add(name, data) {
+      const bytes=data instanceof Uint8Array?data:new Uint8Array(data);
+      if(this.files.length>=MAX_CLASSIC_ZIP_ENTRIES)throw new Error('Too many files for classic ZIP.');
+      this.totalDataBytes+=bytes.length;if(bytes.length>MAX_CLASSIC_ZIP_BYTES||this.totalDataBytes>MAX_CLASSIC_ZIP_BYTES)throw new Error('Classic ZIP 4 GiB limit exceeded.');
+      this.files.push({name,data:bytes});
+    }
+
+    build() {
+      const locals = [];
+      const centrals = [];
+      let off = 0;
+
+      const u16 = (a, o, v) => new DataView(a.buffer).setUint16(o, v, true);
+      const u32 = (a, o, v) => new DataView(a.buffer).setUint32(o, v, true);
+
+      for (const f of this.files) {
+        const n = enc.encode(f.name);
+        const crc = ZipWriter.crc(f.data);
+
+        // Local file header
+        const l = new Uint8Array(30 + n.length + f.data.length);
+        u32(l, 0, 0x04034b50);
+        u16(l, 4, 20);
+        u16(l, 6, 0x800);       // UTF-8 filename flag
+        u16(l, 8, 0);           // stored (no compression)
+        u32(l, 14, crc);
+        u32(l, 18, f.data.length);
+        u32(l, 22, f.data.length);
+        u16(l, 26, n.length);
+        l.set(n, 30);
+        l.set(f.data, 30 + n.length);
+        locals.push(l);
+
+        // Central directory record
+        const c = new Uint8Array(46 + n.length);
+        u32(c, 0, 0x02014b50);
+        u16(c, 4, 20);
+        u16(c, 6, 20);
+        u16(c, 8, 0x800);
+        u32(c, 16, crc);
+        u32(c, 20, f.data.length);
+        u32(c, 24, f.data.length);
+        u16(c, 28, n.length);
+        u32(c, 42, off);
+        c.set(n, 46);
+        centrals.push(c);
+
+        off += l.length;
+      }
+
+      const cs = centrals.reduce((s, a) => s + a.length, 0);
+
+      // End of central directory
+      const e = new Uint8Array(22);
+      u32(e, 0, 0x06054b50);
+      u16(e, 8, this.files.length);
+      u16(e, 10, this.files.length);
+      u32(e, 12, cs);
+      u32(e, 16, off);
+
+      return new Blob([...locals, ...centrals, e], { type: 'application/zip' });
+    }
+  }
+
+
+  /* ========================================================================
+     4. ZIP READER
+     Parses a ZIP from an ArrayBuffer using only browser built-ins.
+     Supports Stored + Deflate (via DecompressionStream) and Zip64 fallbacks,
+     and rejects encrypted or exotic-compression archives with a clear message.
+     ======================================================================== */
+
+  class ZipReader {
+    constructor(buffer) {
+      if(buffer.byteLength>MAX_ZIP_INPUT_BYTES)throw new Error('ZIP exceeds 1 GiB input limit.');
+      this.u8 = new Uint8Array(buffer);
+      this.v = new DataView(buffer);
+    }
+
+    async entries() {
+      const u8 = this.u8;
+      const v = this.v;
+      if (u8.length < 22) throw new Error('Not a valid ZIP file.');
+
+      // --- Locate the end-of-central-directory record ----------------------
+      let eocd = -1;
+      const stop = Math.max(0, u8.length - 22 - 65535);
+      for (let i = u8.length - 22; i >= stop; i--) {
+        if (v.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+      }
+      if (eocd < 0) throw new Error('Not a valid ZIP file (end of central directory not found).');
+
+      let count = v.getUint16(eocd + 10, true);
+      let cdSize = v.getUint32(eocd + 12, true);
+      let cdOff = v.getUint32(eocd + 16, true);
+
+      // --- Zip64 fallback ---------------------------------------------------
+      if (count === 0xffff || cdSize === 0xffffffff || cdOff === 0xffffffff) {
+        const loc = eocd - 20;
+        if (loc < 0 || v.getUint32(loc, true) !== 0x07064b50) {
+          throw new Error('This ZIP uses Zip64 features that could not be read.');
+        }
+        const z = Number(v.getBigUint64(loc + 8, true));
+        if (z + 56 > u8.length || v.getUint32(z, true) !== 0x06064b50) {
+          throw new Error('Corrupt Zip64 end-of-directory record.');
+        }
+        count = Number(v.getBigUint64(z + 32, true));
+        cdSize = Number(v.getBigUint64(z + 40, true));
+        cdOff = Number(v.getBigUint64(z + 48, true));
+      }
+
+      if(count>MAX_ZIP_ENTRIES)throw new Error('ZIP exceeds 50,000-entry limit.');
+      // Some writers store offsets relative to the archive start; normalise.
+      const base = Math.max(0, eocd - cdSize - cdOff);
+      cdOff += base;
+
+      // --- Walk the central directory --------------------------------------
+      const out = []; let totalUncompressed=0;
+      let p = cdOff;
+
+      for (let i = 0; i < count; i++) {
+        if (p + 46 > u8.length || v.getUint32(p, true) !== 0x02014b50) {
+          throw new Error('Corrupt ZIP central directory.');
+        }
+
+        const flags = v.getUint16(p + 8, true);
+        const method = v.getUint16(p + 10, true);
+        const expectedCrc=v.getUint32(p+16,true);
+        let csize = v.getUint32(p + 20, true);
+        let usize = v.getUint32(p + 24, true);
+        let lho = v.getUint32(p + 42, true);
+        const nlen = v.getUint16(p + 28, true);
+        const xlen = v.getUint16(p + 30, true);
+        const clen = v.getUint16(p + 32, true);
+        const nb=u8.subarray(p+46,p+46+nlen);
+        if(!(flags&0x800)&&nb.some(b=>b>127))throw new Error('Non-ASCII ZIP filename is not marked UTF-8.');
+        let name=dec.decode(nb).replace(/\\/g,'/').replace(/^\/+/, '');
+        if(name.split('/').includes('..'))throw new Error('Unsafe parent path in ZIP.');
+
+        // Zip64 extended information extra field
+        if (usize === 0xffffffff || csize === 0xffffffff || lho === 0xffffffff) {
+          let q = p + 46 + nlen;
+          const end = q + xlen;
+          while (q + 4 <= end) {
+            const id = v.getUint16(q, true);
+            const sz = v.getUint16(q + 2, true);
+            q += 4;
+            if (id === 1) {
+              let r = q;
+              if (usize === 0xffffffff) { usize = Number(v.getBigUint64(r, true)); r += 8; }
+              if (csize === 0xffffffff) { csize = Number(v.getBigUint64(r, true)); r += 8; }
+              if (lho === 0xffffffff) { lho = Number(v.getBigUint64(r, true)); r += 8; }
+              break;
+            }
+            q += sz;
+          }
+        }
+
+        p += 46 + nlen + xlen + clen;
+        if(name.endsWith('/'))continue;
+        if(usize>MAX_ENTRY_BYTES)throw new Error('ZIP entry exceeds 512 MiB.');
+        totalUncompressed+=usize;if(totalUncompressed>MAX_TOTAL_BYTES)throw new Error('ZIP expands beyond 2 GiB.');
+
+        if (flags & 1) throw new Error(`"${name}" is password-protected. Remove the password and re-zip.`);
+        if (method !== 0 && method !== 8) {
+          throw new Error(`"${name}" uses unsupported compression (method ${method}). Re-zip using standard Deflate or "Store".`);
+        }
+
+        // --- Read the local header to find the payload --------------------
+        lho += base;
+        if (lho + 30 > u8.length || v.getUint32(lho, true) !== 0x04034b50) {
+          throw new Error(`Corrupt ZIP local header for "${name}".`);
+        }
+        const start = lho + 30 + v.getUint16(lho + 26, true) + v.getUint16(lho + 28, true);
+        if (start + csize > u8.length) {
+          throw new Error(`Corrupt ZIP: "${name}" extends past the end of the file.`);
+        }
+
+        const comp = u8.subarray(start, start + csize);
+        let data;
+
+        if (method === 0) {
+          data = comp;
+        } else {
+          if (typeof DecompressionStream !== 'function') {
+            throw new Error('This browser cannot read Deflate-compressed ZIP entries. Please use the latest desktop Chrome or Edge.');
+          }
+          try {
+            const s = new Blob([comp]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+            data = new Uint8Array(await new Response(s).arrayBuffer());
+          } catch (e) {
+            throw new Error(`Could not decompress "${name}". The ZIP may be corrupt, or this browser is too old — please use the latest Chrome or Edge.`);
+          }
+        }
+
+        if (data.length !== usize) {
+          throw new Error(`"${name}" has an unexpected uncompressed size.`);
+        }
+
+        if(ZipWriter.crc(data)!==expectedCrc)throw new Error(`"${name}" failed its CRC-32 integrity check.`);
+        out.push({name,data});
+      }
+
+      return out;
+    }
+  }
+
+
+  /* ========================================================================
+     5. ANNOTATION CONTROLLER
+     Owns the <canvas>: image loading, drawing, hit-testing, box editing,
+     per-image undo/redo stacks and YOLO text serialization.
+
+     Coordinates inside `this.boxes` are ALWAYS original-image pixels.
+     Conversion to/from normalized YOLO format happens only in yolo()/validate.
+     ======================================================================== */
+
+  class AnnotationController {
+    constructor(app) {
+      this.app = app;
+      this.canvas = $('canvas');
+      this.ctx = this.canvas.getContext('2d');
+      this.item = null;
+      this.img = null;
+      this.url = null;
+      this.boxes = [];
+      this.selected = -1;
+      this.action = null;   // active drag: {type:'draw'|'move'|'resize', ...}
+      this.undo = [];
+      this.redo = [];
+      this.dirty = false;
+      this.timer = null;    // debounce handle for direct-mode autosave
+      this.bind();
+    }
+
+    bind() {
+      this.canvas.addEventListener('pointerdown', e => this.down(e));
+      this.canvas.addEventListener('pointermove', e => this.move(e));
+      window.addEventListener('pointerup', e => this.up(e));
+      new ResizeObserver(() => this.draw()).observe($('canvasWrap'));
+    }
+
+    // --- Undo / redo -------------------------------------------------------
+    snapshot() {
+      return JSON.stringify(this.boxes);
+    }
+
+    pushUndo() {
+      this.undo.push(this.snapshot());
+      if (this.undo.length > 100) this.undo.shift();
+      this.redo = [];
+    }
+
+    restore(s) {
+      this.boxes = JSON.parse(s);
+      this.selected = -1;
+      this.changed();
+      this.renderList();
+    }
+
+    undoDo() {
+      if (!this.undo.length) return;
+      this.redo.push(this.snapshot());
+      this.restore(this.undo.pop());
+    }
+
+    redoDo() {
+      if (!this.redo.length) return;
+      this.undo.push(this.snapshot());
+      this.restore(this.redo.pop());
+    }
+
+    // --- Loading an image --------------------------------------------------
+    async load(item) {
+      if (this.dirty && !await this.app.guardUnsaved()) return false;
+
+      clearTimeout(this.timer);
+      if (this.url) URL.revokeObjectURL(this.url);
+
+      this.item = item;
+      this.boxes = JSON.parse(JSON.stringify(item.boxes || []));
+      this.selected = -1;
+      this.undo = [];
+      this.redo = [];
+      this.dirty = false;
+      this.app.saveState('Saved');
+
+      const f = await item.imageEntry.getFile();
+      this.url = URL.createObjectURL(f);
+
+      try {
+        this.img = await new Promise((res, rej) => {
+          const x = new Image();
+          x.onload = () => res(x);
+          x.onerror = () => rej(new Error('This image is corrupt or unsupported.'));
+          x.src = this.url;
+        });
+        item.width = this.img.naturalWidth;
+        item.height = this.img.naturalHeight;
+        $('canvasMessage').classList.add('hidden');
+        this.draw();
+        this.renderList();
+        return true;
+      } catch (e) {
+        this.img = null;
+        $('canvasMessage').textContent = e.message;
+        $('canvasMessage').classList.remove('hidden');
+        item.status = 'invalid';
+        item.errors = [{ line: 0, reason: e.message }];
+        this.app.renderAll();
+        return true;
+      }
+    }
+
+    // --- Rendering ---------------------------------------------------------
+    /** Fit the image inside the canvas wrapper and report the scale factor. */
+    transform() {
+      if (!this.img) return null;
+      const wrap = $('canvasWrap');
+      const r = wrap.getBoundingClientRect();
+      const scale = Math.min(r.width / this.img.naturalWidth, r.height / this.img.naturalHeight);
+      return {
+        scale,
+        cssW: this.img.naturalWidth * scale,
+        cssH: this.img.naturalHeight * scale
+      };
+    }
+
+    draw() {
+      if (!this.img) return;
+
+      const t = this.transform();
+      const dpr = window.devicePixelRatio || 1;
+
+      this.canvas.style.width = t.cssW + 'px';
+      this.canvas.style.height = t.cssH + 'px';
+      this.canvas.width = Math.round(t.cssW * dpr);
+      this.canvas.height = Math.round(t.cssH * dpr);
+
+      // Work in original-image pixel coordinates from here on.
+      this.ctx.setTransform(dpr * t.scale, 0, 0, dpr * t.scale, 0, 0);
+      this.ctx.drawImage(this.img, 0, 0);
+
+      this.ctx.lineWidth = 2 / t.scale;
+      this.ctx.font = `${14 / t.scale}px system-ui`;
+
+      this.boxes.forEach((b, i) => this.drawBox(b, i, t.scale));
+
+      // Live preview while drawing a new box.
+      if (this.action?.type === 'draw') this.drawBox(this.action.box, -2, t.scale);
+    }
+
+    /** Stable, well-separated colour per class id. */
+    color(id) {
+      return `hsl(${(id * 137.508) % 360} 78% 46%)`;
+    }
+
+    drawBox(b, i, s) {
+      const c = this.color(b.classId);
+      this.ctx.strokeStyle = c;
+      this.ctx.fillStyle = c;
+      this.ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+      // Class label chip above the box.
+      const name = this.app.model.classes[b.classId] ?? 'Unknown';
+      const txt = `${b.classId}: ${name}`;
+      const m = this.ctx.measureText(txt).width + 8 / s;
+      const h = 20 / s;
+      const y = Math.max(0, b.y - h);
+
+      this.ctx.fillRect(b.x, y, m, h);
+      this.ctx.fillStyle = '#fff';
+      this.ctx.fillText(txt, b.x + 4 / s, y + 15 / s);
+
+      // Selection highlight + resize handles.
+      if (i === this.selected) {
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.setLineDash([6 / s, 4 / s]);
+        this.ctx.strokeRect(b.x - 2 / s, b.y - 2 / s, b.w + 4 / s, b.h + 4 / s);
+        this.ctx.setLineDash([]);
+
+        for (const p of this.handles(b)) {
+          this.ctx.fillStyle = '#fff';
+          this.ctx.strokeStyle = c;
+          this.ctx.fillRect(p.x - 5 / s, p.y - 5 / s, 10 / s, 10 / s);
+          this.ctx.strokeRect(p.x - 5 / s, p.y - 5 / s, 10 / s, 10 / s);
+        }
+      }
+    }
+
+    handles(b) {
+      return [
+        { k: 'nw', x: b.x, y: b.y },
+        { k: 'ne', x: b.x + b.w, y: b.y },
+        { k: 'sw', x: b.x, y: b.y + b.h },
+        { k: 'se', x: b.x + b.w, y: b.y + b.h }
+      ];
+    }
+
+    // --- Pointer interaction ----------------------------------------------
+    /** Client (CSS px) coordinates -> original-image pixel coordinates. */
+    point(e) {
+      const r = this.canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - r.left) * this.img.naturalWidth / r.width,
+        y: (e.clientY - r.top) * this.img.naturalHeight / r.height
+      };
+    }
+
+    /** Topmost box / handle under the cursor, or null. */
+    hit(p) {
+      const s = this.transform().scale;
+      const rad = 9 / s;
+      for (let i = this.boxes.length - 1; i >= 0; i--) {
+        for (const h of this.handles(this.boxes[i])) {
+          if (Math.abs(p.x - h.x) <= rad && Math.abs(p.y - h.y) <= rad) return { i, handle: h.k };
+        }
+        const b = this.boxes[i];
+        if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return { i };
+      }
+      return null;
+    }
+
+    down(e) {
+      if (!this.img || e.button !== 0) return;
+
+      const p = this.point(e);
+      const hit = this.hit(p);
+      this.canvas.setPointerCapture?.(e.pointerId);
+
+      if (hit) {
+        this.selected = hit.i;
+        this.pushUndo();
+        this.action = {
+          type: hit.handle ? 'resize' : 'move',
+          handle: hit.handle,
+          start: p,
+          original: { ...this.boxes[hit.i] }
+        };
+      } else {
+        this.selected = -1;
+        this.action = {
+          type: 'draw',
+          start: p,
+          box: { classId: Number($('classSelect').value) || 0, x: p.x, y: p.y, w: 0, h: 0 }
+        };
+      }
+
+      this.draw();
+      this.renderList();
+    }
+
+    move(e) {
+      if (!this.action || !this.img) return;
+
+      const p = this.point(e);
+      const a = this.action;
+      const W = this.img.naturalWidth;
+      const H = this.img.naturalHeight;
+
+      if (a.type === 'draw') {
+        a.box.x = Math.max(0, Math.min(a.start.x, p.x));
+        a.box.y = Math.max(0, Math.min(a.start.y, p.y));
+        a.box.w = Math.min(W, Math.max(a.start.x, p.x)) - a.box.x;
+        a.box.h = Math.min(H, Math.max(a.start.y, p.y)) - a.box.y;
+      } else if (a.type === 'move') {
+        const o = a.original;
+        const b = this.boxes[this.selected];
+        const dx = p.x - a.start.x;
+        const dy = p.y - a.start.y;
+        b.x = Math.max(0, Math.min(W - o.w, o.x + dx));
+        b.y = Math.max(0, Math.min(H - o.h, o.y + dy));
+      } else {
+        // Resize: recompute the two corners independently.
+        const o = a.original;
+        const b = this.boxes[this.selected];
+        let x1 = o.x, y1 = o.y, x2 = o.x + o.w, y2 = o.y + o.h;
+        if (a.handle.includes('w')) x1 = Math.max(0, Math.min(x2, p.x));
+        if (a.handle.includes('e')) x2 = Math.min(W, Math.max(x1, p.x));
+        if (a.handle.includes('n')) y1 = Math.max(0, Math.min(y2, p.y));
+        if (a.handle.includes('s')) y2 = Math.min(H, Math.max(y1, p.y));
+        Object.assign(b, { x: x1, y: y1, w: x2 - x1, h: y2 - y1 });
+      }
+
+      this.draw();
+    }
+
+    up() {
+      if (!this.action) return;
+
+      const a = this.action;
+      this.action = null;
+
+      if (a.type === 'draw') {
+        if (a.box.w >= 3 && a.box.h >= 3) {
+          this.pushUndo();
+          this.boxes.push(a.box);
+          this.selected = this.boxes.length - 1;
+          this.changed();
+        } else {
+          this.app.toast('Box rejected: minimum size is 3 × 3 original-image pixels.');
+        }
+      } else {
+        const b = this.boxes[this.selected];
+        if (b.w < 3 || b.h < 3) this.undoDo();
+        else this.changed();
+      }
+
+      this.draw();
+      this.renderList();
+    }
+
+    // --- Box list / edits --------------------------------------------------
+    /** Mark the image as modified and schedule autosave in direct mode. */
+    changed() {
+      this.dirty = true;
+      this.app.saveState('Unsaved changes');
+      if (this.app.store.mode === 'direct') {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.save(), 650);
+      }
+    }
+
+    deleteSelected() {
+      if (this.selected < 0) return;
+      this.pushUndo();
+      this.boxes.splice(this.selected, 1);
+      this.selected = -1;
+      this.changed();
+      this.draw();
+      this.renderList();
+    }
+
+    changeClass(id) {
+      if (this.selected < 0) return;
+      this.pushUndo();
+      this.boxes[this.selected].classId = id;
+      this.changed();
+      this.draw();
+      this.renderList();
+    }
+
+    renderList() {
+      const host = $('boxList');
+      host.replaceChildren();
+
+      this.boxes.forEach((b, i) => {
+        const r = el('div', undefined, 'box-row' + (i === this.selected ? ' selected' : ''));
+        const btn = el('button', `${b.classId}: ${this.app.model.classes[b.classId] || 'Unknown'}`, 'ghost');
+        const del = el('button', 'Delete', 'danger');
+
+        btn.onclick = () => {
+          this.selected = i;
+          $('classSelect').value = b.classId;
+          this.draw();
+          this.renderList();
+        };
+        del.onclick = () => {
+          this.selected = i;
+          this.deleteSelected();
+        };
+
+        r.append(btn, del);
+        host.append(r);
+      });
+
+      if (!this.boxes.length) host.append(el('p', 'No bounding boxes.', 'small'));
+    }
+
+    // --- Persistence -------------------------------------------------------
+    /** Serialize boxes to standard YOLO lines (normalized center + size). */
+    yolo() {
+      return this.boxes.map(b => {
+        const W = this.img.naturalWidth;
+        const H = this.img.naturalHeight;
+        const xc = Math.min(1, Math.max(0, (b.x + b.w / 2) / W));
+        const yc = Math.min(1, Math.max(0, (b.y + b.h / 2) / H));
+        const w = Math.min(1, Math.max(0, b.w / W));
+        const h = Math.min(1, Math.max(0, b.h / H));
+        return `${b.classId} ${xc.toFixed(6)} ${yc.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)}`;
+      }).join('\n') + (this.boxes.length ? '\n' : '');
+    }
+
+    async save(empty = false) {
+      if (!this.item || !this.img) return false;
+
+      this.app.saveState('Saving');
+      try {
+        await this.app.store.writeText(`labels/${this.item.stem}.txt`, empty ? '' : this.yolo());
+
+        this.item.boxes = empty ? [] : JSON.parse(JSON.stringify(this.boxes));
+        this.boxes = JSON.parse(JSON.stringify(this.item.boxes));
+        this.item.errors = [];
+        this.item.status = (empty || this.boxes.length === 0) ? 'background' : 'labeled';
+        this.item.labelEntry = {
+          name: this.item.stem + '.txt',
+          getFile: () => this.app.store.readFile(`labels/${this.item.stem}.txt`)
+        };
+
+        this.dirty = false;
+        this.app.saveState('Saved');
+        this.app.renderAll();
+        return true;
+      } catch (e) {
+        this.app.saveState('Save failed');
+        this.app.toast(`Save failed: ${e.message}`, true);
+        return false;
+      }
+    }
+
+    /** Explicitly mark the current image as "no object" (empty label file). */
+    async noObject() {
+      if (this.boxes.length && !confirm('This image has boxes. Marking it as No Object will replace them with an empty label file. Continue?')) return;
+      this.pushUndo();
+      this.boxes = [];
+      this.selected = -1;
+      this.changed();
+      await this.save(true);
+      this.draw();
+      this.renderList();
+    }
+  }
+
+
+  /* ========================================================================
+     6. APP
+     Screen switching, setup workflow, image navigation, ZIP import/export,
+     keyboard shortcuts and toasts. This is the only class that touches the DOM
+     outside of the annotation canvas.
+     ======================================================================== */
+
+  class App {
+    constructor() {
+      this.store = new StorageAdapter();
+      this.model = new DatasetModel(this.store);
+      this.ann = new AnnotationController(this);
+      this.current = -1;
+      this.filter = 'all';
+      this.bind();
+      this.modeMessage();
+    }
+
+    // --- Wiring ------------------------------------------------------------
+    bind() {
+      $('openBtn').onclick = () => this.open();
+      $('addClassBtn').onclick = () => this.addClass();
+      $('saveClassesBtn').onclick = () => this.saveClasses();
+      $('helpBtn').onclick = () => $('helpDialog').showModal();
+      $('closeHelp').onclick = () => $('helpDialog').close();
+      $('resetBtn').onclick = () => this.reset();
+      $('prevBtn').onclick = () => this.navigate(-1);
+      $('nextBtn').onclick = () => this.navigate(1);
+      $('saveBtn').onclick = () => this.ann.save();
+      $('saveNextBtn').onclick = async () => { if (await this.ann.save()) this.navigate(1); };
+      $('undoBtn').onclick = () => this.ann.undoDo();
+      $('redoBtn').onclick = () => this.ann.redoDo();
+      $('backSetupBtn').onclick = async () => { if (await this.guardUnsaved()) this.showSetup(); };
+      $('classSelect').onchange = e => this.ann.changeClass(Number(e.target.value));
+      $('imageSearch').oninput = () => this.renderImageList();
+      $('folderInput').onchange = e => this.importFolder(e.target.files);
+      $('zipInput').onchange = e => this.importZip(e.target.files[0]);
+      $('openZipBtn').onclick = () => $('zipImagesInput').click();
+      $('zipImagesInput').onchange = e => this.importImagesZip(e.target.files[0]);
+
+      window.addEventListener('beforeunload', e => {
+        if (this.ann.dirty) { e.preventDefault(); e.returnValue = ''; }
+      });
+      document.addEventListener('keydown', e => this.keys(e));
+    }
+
+    modeMessage() {
+      const direct=typeof window.showDirectoryPicker==='function'&&window.isSecureContext;
+      $('modeNote').textContent = direct
+        ? 'Direct folder mode is available. Chrome or Edge can save labels back to the selected folder.'
+        : 'Compatibility mode: import a folder, label in browser memory, then download Labeled_data.zip. Safari and Firefox cannot save directly back into the selected folder.';
+      $('openBtn').textContent = direct ? 'Open Dataset Folder' : 'Import Dataset Folder';
+    }
+
+    // --- Opening a dataset -------------------------------------------------
+    async open() {
+      try {
+        if (typeof window.showDirectoryPicker === 'function') {
+          await this.store.openDirect();
+        } else {
+          return $('folderInput').click();
+        }
+        await this.refresh();
+        this.showSetup();
+      } catch (e) {
+        if (e.name !== 'AbortError') this.toast(`Could not open folder: ${e.message}`, true);
+      }
+    }
+
+    async importFolder(files) {
+      if (!files.length) return;
+      await this.store.openMemory(files);
+      await this.refresh();
+      this.showSetup();
+    }
+
+    async refresh() {
+      try {
+        await this.model.scan();
+        this.renderAll();
+      } catch (e) {
+        this.toast(`Dataset scan failed: ${e.message}`, true);
+      }
+    }
+
+    showSetup() {
+      $('landing').classList.add('hidden');
+      $('labeler').classList.add('hidden');
+      $('topProgress').classList.add('hidden');
+      $('setup').classList.remove('hidden');
+      this.renderAll();
+    }
+
+    renderAll() {
+      if (!$('setup').classList.contains('hidden')) {
+        this.renderStructure();
+        this.renderClasses();
+        this.renderSummary();
+      }
+      if (!$('labeler').classList.contains('hidden')) {
+        this.renderImageList();
+        this.renderProgress();
+        this.renderInvalid();
+      }
+    }
+
+    // --- Setup screen: structure ------------------------------------------
+    renderStructure() {
+      $('datasetName').textContent =
+        `Dataset: ${this.store.name} · ${this.store.mode === 'direct' ? 'Direct folder mode' : 'Compatibility mode'}`;
+
+      const c = $('checklist');
+      c.replaceChildren();
+      for (const [k, label] of [['images', 'images/ directory'], ['labels', 'labels/ directory'], ['classes', 'classes.txt']]) {
+        const row = el('div', undefined, 'check');
+        row.append(
+          el('span', label),
+          el('span', this.model.structure[k] ? '✓ Exists' : '✕ Missing', this.model.structure[k] ? 'ok' : 'missing')
+        );
+        c.append(row);
+      }
+
+      const a = $('structureActions');
+      a.replaceChildren();
+      if (Object.values(this.model.structure).some(x => !x)) {
+        if (this.store.mode === 'direct') {
+          const b = el('button', 'Create Missing Items', 'primary');
+          b.onclick = async () => {
+            try {
+              await this.store.createMissing();
+              await this.refresh();
+            } catch (e) {
+              this.toast(e.message, true);
+            }
+          };
+          a.append(b);
+        } else {
+          a.append(el('p', 'Re-import a folder containing images/, labels/ and classes.txt.', 'notice'));
+        }
+      }
+      const r = el('button', 'Refresh Dataset');
+      r.onclick = () => this.refresh();
+      a.append(r);
+
+      const n = $('structureNotice');
+      n.replaceChildren();
+      if (this.model.structure.images && !this.model.images.length) {
+        n.append(el('div', 'The images folder is empty. Copy .jpg, .jpeg, .png, .webp or .bmp images into it, then choose Refresh Dataset.', 'notice'));
+      }
+      if (this.model.duplicates.length) {
+        n.append(el('div', 'Duplicate image stems block labeling:\n' + this.model.duplicates.map(x => x.join(', ')).join('\n'), 'errorbox'));
+      }
+    }
+
+    // --- Setup screen: classes --------------------------------------------
+    renderClasses() {
+      const h = $('classList');
+      h.replaceChildren();
+      this.model.classes.forEach((name, i) => this.classRow(h, name, i));
+      if (!this.model.classes.length) {
+        h.append(el('p', 'No classes yet. Add at least one class before labeling.', 'small'));
+      }
+      this.fillClassSelect();
+    }
+
+    classRow(h, name, i) {
+      const r = el('div', undefined, 'class-row');
+      const id = el('div', String(i), 'class-id');
+      const inp = el('input');
+      inp.value = name;
+      inp.setAttribute('aria-label', `Class ${i} name`);
+
+      const up = el('button', '↑', 'ghost');
+      const del = el('button', 'Delete', 'danger');
+      const locked=this.labelsExist();up.disabled=i===0||locked;del.disabled=locked;if(locked)up.title=del.title='Locked because labels exist';
+      up.onclick = () => this.reorderClass(i, i - 1);
+      del.onclick = () => this.deleteClass(i);
+
+      r.append(id, inp, up, del);
+      h.append(r);
+    }
+
+    /** Read the current (possibly unsaved) class names from the DOM. */
+    collectClasses() {
+      return Array.from($('classList').querySelectorAll('input')).map(x => x.value.trim());
+    }
+
+    addClass() {
+      const names = this.collectClasses();
+      names.push('');
+      this.model.classes = names;
+      this.renderClasses();
+      const inputs = $('classList').querySelectorAll('input');
+      inputs[inputs.length - 1]?.focus();
+    }
+
+    /** True when at least one image already has a label file. */
+    labelsExist() {
+      return this.model.images.some(i => i.status !== 'unlabeled');
+    }
+
+    reorderClass(i, j) {
+      if(this.labelsExist())return this.toast('Class order is locked because labels exist.',true);
+      const a = this.collectClasses();
+      [a[i], a[j]] = [a[j], a[i]];
+      this.model.classes = a;
+      this.renderClasses();
+    }
+
+    deleteClass(i) {
+      if(this.labelsExist())return this.toast('Classes cannot be deleted because labels exist.',true);
+      const a = this.collectClasses();
+      a.splice(i, 1);
+      this.model.classes = a;
+      this.renderClasses();
+    }
+
+    async saveClasses() {
+      const a = this.collectClasses();
+      const err = $('classError');
+      err.replaceChildren();
+
+      if (a.some(x => !x)) {
+        err.append(el('div', 'Class names cannot be blank.', 'errorbox'));
+        return;
+      }
+      if (new Set(a).size !== a.length) {
+        err.append(el('div', 'Exact duplicate class names are not allowed.', 'errorbox'));
+        return;
+      }
+
+      try {
+        await this.store.writeText('classes.txt', a.join('\n') + (a.length ? '\n' : ''));
+        this.model.classes = a;
+        await this.refresh();
+        this.toast('Classes saved.');
+      } catch (e) {
+        this.toast(`Could not save classes: ${e.message}`, true);
+      }
+    }
+
+    fillClassSelect() {
+      const s = $('classSelect');
+      const v = s.value;
+      s.replaceChildren();
+      this.model.classes.forEach((n, i) => {
+        const o = el('option', `${i}: ${n}`);
+        o.value = i;
+        s.append(o);
+      });
+      if (v && Number(v) < this.model.classes.length) s.value = v;
+    }
+
+    // --- Setup screen: summary --------------------------------------------
+    renderSummary() {
+      const s = this.model.summary();
+
+      const h = $('summaryStats');
+      h.replaceChildren();
+      for (const [label, val] of [
+        ['Images', s.total],
+        ['With boxes', s.labeled],
+        ['No object', s.background],
+        ['Unlabeled', s.unlabeled],
+        ['Invalid', s.invalid],
+        ['Orphan labels', s.orphans],
+        ['Complete', s.complete + '%']
+      ]) {
+        const d = el('div', undefined, 'stat');
+        d.append(el('b', String(val)), el('span', label));
+        h.append(d);
+      }
+
+      const issues = $('summaryIssues');
+      issues.replaceChildren();
+      const errs = this.model.images.filter(i => i.status === 'invalid');
+      if (errs.length || this.model.orphans.length) {
+        let t = '';
+        for (const i of errs) for (const e of i.errors) t += `${i.name}${e.line ? ` line ${e.line}` : ''}: ${e.reason}\n`;
+        for (const o of this.model.orphans) t += `${o}: orphan label file\n`;
+        issues.append(el('div', t.trim(), 'errorbox'));
+      }
+
+      const a = $('summaryActions');
+      a.replaceChildren();
+
+      const actions = [
+        ['Start Labeling', 'all', 'primary'],
+        ['Show Only Unlabeled', 'unlabeled', '']
+      ];
+      if (s.invalid) actions.push(['Show Invalid Files', 'invalid', 'danger']);
+
+      for (const [text, filter, className] of actions) {
+        const button = el('button', text, className);
+        button.onclick = () => this.start(filter);
+        a.append(button);
+      }
+
+      const importButton = el('button', 'Import Labeled_data.zip');
+      importButton.onclick = () => $('zipInput').click();
+      a.append(importButton);
+
+      const ex = el('button', 'Download Labeled_data.zip', 'success');
+      ex.onclick = () => this.exportZip();
+      a.append(ex);
+
+      const card = $('completionCard');
+      if (s.total && s.complete === 100 && !s.invalid) {
+        card.classList.remove('hidden');
+        const counts = this.model.classes.map((n, id) =>
+          `${id}: ${n} — ${this.model.images.reduce((q, i) => q + i.boxes.filter(b => b.classId === id).length, 0)}`
+        );
+        card.replaceChildren(
+          el('h2', 'Labeling finished'),
+          el('p', `Total images: ${s.total} · Images with boxes: ${s.labeled} · No-object images: ${s.background} · Total bounding boxes: ${s.boxes} · Invalid labels: ${s.invalid} · Orphan labels: ${s.orphans}`),
+          el('pre', counts.join('\n'))
+        );
+      } else {
+        card.classList.add('hidden');
+      }
+    }
+
+    // --- Entering the labeler ---------------------------------------------
+    async start(filter) {
+      await this.refresh();
+
+      const problems = [];
+      if (!this.model.structure.images) problems.push('The images/ folder is missing.');
+      if (!this.model.structure.labels) problems.push('The labels/ folder is missing.');
+      if (!this.model.structure.classes) problems.push('classes.txt is missing.');
+      if (!this.model.classes.length) problems.push('classes.txt does not contain any classes.');
+      if (!this.model.images.length) problems.push('No supported images were found. Add JPG, JPEG, PNG, WebP or BMP files.');
+      if (this.model.duplicates.length) problems.push('Duplicate image filename stems must be renamed.');
+      if (filter === 'unlabeled' && !this.model.images.some(item => item.status === 'unlabeled')) problems.push('There are no unlabeled images.');
+      if (filter === 'invalid' && !this.model.images.some(item => item.status === 'invalid')) problems.push('There are no invalid files.');
+
+      if (problems.length) {
+        this.toast('Labeling cannot start yet.\n' + problems.map(item => `• ${item}`).join('\n'), true);
+        return;
+      }
+
+      this.filter = filter;
+      $('setup').classList.add('hidden');
+      $('labeler').classList.remove('hidden');
+      $('topProgress').classList.remove('hidden');
+      this.renderAll();
+
+      const idx = filter === 'unlabeled'
+        ? this.model.images.findIndex(item => item.status === 'unlabeled')
+        : filter === 'invalid'
+          ? this.model.images.findIndex(item => item.status === 'invalid')
+          : 0;
+
+      await this.openIndex(idx);
+    }
+
+    /** Images matching the current search text and status filter. */
+    visibleImages() {
+      const q = $('imageSearch').value.toLocaleLowerCase();
+      return this.model.images
+        .map((x, i) => ({ x, i }))
+        .filter(({ x }) => {
+          const matchesText = !q || x.name.toLocaleLowerCase().includes(q);
+          const matchesFilter =
+            this.filter === 'all' ||
+            (this.filter === 'remaining' && (x.status === 'unlabeled' || x.status === 'invalid')) ||
+            x.status === this.filter;
+          return matchesText && matchesFilter;
+        });
+    }
+
+    renderImageList() {
+      const h = $('imageList');
+      h.replaceChildren();
+
+      for (const { x, i } of this.visibleImages()) {
+        const b = el('button', undefined, 'image-item' + (i === this.current ? ' current' : ''));
+        b.append(
+          el('div', x.name),
+          el('span', i === this.current ? 'Current · ' + statusLabel(x.status) : statusLabel(x.status), 'status-pill')
+        );
+        b.onclick = () => this.openIndex(i);
+        h.append(b);
+      }
+
+      if (!h.children.length) h.append(el('p', 'No images match this view.', 'small'));
+    }
+
+    async openIndex(i) {
+      if (i < 0 || i >= this.model.images.length) return;
+      const ok = await this.ann.load(this.model.images[i]);
+      if (!ok) return;
+      this.current = i;
+      this.renderAll();
+    }
+
+    async navigate(d) {
+      if (this.current < 0) return;
+      let i = this.current + d;
+      while (i >= 0 && i < this.model.images.length) {
+        const x = this.model.images[i];
+        const matches =
+          this.filter === 'all' ||
+          (this.filter === 'remaining' && (x.status === 'unlabeled' || x.status === 'invalid')) ||
+          x.status === this.filter;
+        if (matches) {
+          await this.openIndex(i);
+          return;
+        }
+        i += d;
+      }
+    }
+
+    renderProgress() {
+      const s = this.model.summary();
+      const remaining = s.total - s.labeled - s.background;
+      $('progressText').textContent = `Image ${this.current + 1} of ${s.total} · Labeled ${s.labeled + s.background} · Remaining ${remaining} · ${s.complete}%`;
+      $('progressFill').style.width = s.complete + '%';
+    }
+
+    renderInvalid() {
+      const h = $('invalidDetails');
+      h.replaceChildren();
+      const i = this.model.images[this.current];
+      if (i?.errors.length) {
+        const t = i.errors
+          .map(e => `${i.name}${e.line ? ` · line ${e.line}` : ''}: ${e.reason}${e.raw ? `\n${e.raw}` : ''}`)
+          .join('\n');
+        h.append(el('div', t, 'errorbox'));
+      }
+    }
+
+    // --- Small helpers -----------------------------------------------------
+    saveState(t) {
+      $('saveState').textContent = t;
+      $('saveState').style.color = t === 'Save failed' ? 'var(--bad)' : t === 'Saved' ? 'var(--good)' : 'var(--warn)';
+    }
+
+    async guardUnsaved() {
+      if (!this.ann.dirty) return true;
+      if (this.store.mode === 'direct') return await this.ann.save();
+      const choice = confirm('You have unsaved changes. Choose OK to save them in browser memory, or Cancel to stay on this image.');
+      if (!choice) return false;
+      return await this.ann.save();
+    }
+
+    normalizeClasses(text) {
+      return text
+        .replace(/^\uFEFF/, '')
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+    }
+
+    sanitizeImportedStem(v){let s=v.normalize('NFC').replace(/[<>:"/\\|?*\x00-\x1F]/g,'_').replace(/[. ]+$/g,'').trim()||'image';if(/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(s))s='_'+s;return Array.from(s).slice(0,180).join('');}
+    uniqueImportedStem(originalStem, extension, occupiedStems) {
+      originalStem=this.sanitizeImportedStem(originalStem);let candidate = originalStem;
+      let number = 2;
+      while (occupiedStems.has(candidate.toLocaleLowerCase())) {
+        candidate = `${originalStem}_imported_${number++}`;
+      }
+      occupiedStems.add(candidate.toLocaleLowerCase());
+      return candidate;
+    }
+
+    // --- Import: images-only ZIP (starting a new dataset) ------------------
+    async importImagesZip(file) {
+      $('zipImagesInput').value = '';
+      if (!file) return;if(file.size>MAX_ZIP_INPUT_BYTES)return this.toast('ZIP exceeds 1 GiB.',true);
+      if (this.ann.dirty && !confirm('You have unsaved changes. Importing a ZIP will discard them. Continue?')) return;
+
+      try {
+        const entries = await new ZipReader(await file.arrayBuffer()).entries();
+
+        // Ignore OS metadata junk that macOS/Windows add to ZIPs.
+        const clean = entries.filter(e => {
+          const n = e.name;
+          return !/(^|\/)__MACOSX\//i.test(n) &&
+                 !/(^|\/)\._/.test(n) &&
+                 !/(^|\/)(\.DS_Store|Thumbs\.db|desktop\.ini)$/i.test(n);
+        });
+
+        const allImages = clean.filter(e => EXT.test(e.name));
+        if (!allImages.length) throw new Error('No supported images were found in the ZIP. Supported: JPG, JPEG, PNG, WebP, BMP.');
+
+        // Prefer entries already inside an images/ folder, else take them all.
+        const preferred = allImages.filter(e => /^images\//i.test(e.name));
+        const chosen = preferred.length ? preferred : allImages;
+
+        this.store.mode = 'memory';
+        this.store.name = file.name.replace(/\.zip$/i, '') || 'Imported dataset';
+        this.store.files.clear();
+
+        this.ann.dirty = false;
+        this.ann.item = null;
+        this.ann.boxes = [];
+        this.ann.selected = -1;
+        this.current = -1;
+        this.filter = 'all';
+        $('imageSearch').value = '';
+
+        const occupied = new Set();
+        const stemMap = new Map();
+        let count = 0;
+
+        for (const e of chosen) {
+          const base = e.name.split('/').pop();
+          const ext = base.slice(base.lastIndexOf('.')).toLowerCase();
+          const orig = stem(base);
+          const ns = this.uniqueImportedStem(orig, ext, occupied);
+          const mime = ext === '.png' ? 'image/png'
+            : ext === '.webp' ? 'image/webp'
+            : ext === '.bmp' ? 'image/bmp'
+            : 'image/jpeg';
+
+          await this.store.putMemory(`images/${ns}${ext}`, new Blob([e.data], { type: mime }));
+
+          const k = orig.toLocaleLowerCase();
+          if (!stemMap.has(k)) stemMap.set(k, ns);
+          count++;
+        }
+
+        const cls = clean.find(e => /(^|\/)classes\.txt$/i.test(e.name));
+        await this.store.putMemory(
+          'classes.txt',
+          new Blob([cls ? dec.decode(cls.data).replace(/^\uFEFF/, '') : ''], { type: 'text/plain;charset=utf-8' })
+        );
+        await this.store.putMemory('labels/.keep', new Blob(['']));
+
+        // Restore any matching label files that came along in the ZIP.
+        let restored = 0;
+        for (const e of clean) {
+          if (!/(^|\/)labels\/[^/]+\.txt$/i.test(e.name)) continue;
+          const ls = stem(e.name.split('/').pop()).toLocaleLowerCase();
+          const ns = stemMap.get(ls);
+          if (!ns) continue;
+          await this.store.putMemory(
+            `labels/${ns}.txt`,
+            new Blob([dec.decode(e.data).replace(/^\uFEFF/, '')], { type: 'text/plain;charset=utf-8' })
+          );
+          restored++;
+        }
+
+        await this.refresh();
+        this.showSetup();
+
+        let msg = `ZIP imported: ${count} image(s) ready.`;
+        if (restored) msg += `\n• ${restored} existing label file(s) restored`;
+        if (cls) msg += '\n• classes.txt loaded from ZIP';
+        else msg += '\nNext: add your classes in step 2, then start labeling.';
+        this.toast(msg);
+      } catch (e) {
+        this.toast(`ZIP import failed: ${e.message}`, true);
+      }
+    }
+
+    // --- Import: Labeled_data.zip into an open dataset ---------------------
+    async importZip(file) {
+      $('zipInput').value = '';
+      if (!file) return;
+
+      if (!this.model.structure.images || !this.model.structure.labels || !this.model.structure.classes) {
+        this.toast('Import blocked. Open a dataset containing images/, labels/ and classes.txt first.', true);
+        return;
+      }
+
+      try {
+        const entries = await new ZipReader(await file.arrayBuffer()).entries();
+        const fileMap = new Map(entries.map(entry => [entry.name.toLowerCase(), entry]));
+
+        // The ZIP's classes.txt must match the local one exactly.
+        const classEntries = entries.filter(entry => entry.name.toLowerCase() === 'classes.txt');
+        if (classEntries.length !== 1) throw new Error(`Expected exactly one classes.txt, but found ${classEntries.length}.`);
+
+        const importedClasses = this.normalizeClasses(dec.decode(classEntries[0].data));
+        const localClasses = this.model.classes;
+        if (JSON.stringify(importedClasses) !== JSON.stringify(localClasses)) {
+          throw new Error('The imported classes.txt does not match the local classes.txt. Class names and order must be identical. No files were imported.');
+        }
+
+        const imageEntries = entries.filter(entry => /^images\/[^/]+$/i.test(entry.name) && EXT.test(entry.name));
+        if (!imageEntries.length) throw new Error('No supported images were found in the ZIP images/ folder.');
+
+        const occupiedStems = new Set(this.model.images.map(item => item.stem.toLocaleLowerCase()));
+        let imported = 0;
+        let renamed = 0;
+        let emptyLabels = 0;
+        const skipped = [];
+
+        for (const imageEntry of imageEntries) {
+          const imageName = imageEntry.name.split('/').pop();
+          const extension = imageName.slice(imageName.lastIndexOf('.')).toLowerCase();
+          const originalStem = stem(imageName);
+
+          const labelEntry = fileMap.get(`labels/${originalStem}.txt`.toLowerCase());
+          if (!labelEntry) {
+            skipped.push(`${imageName}: matching label not found`);
+            continue;
+          }
+
+          const newStem = this.uniqueImportedStem(originalStem, extension, occupiedStems);
+          if (newStem !== originalStem) renamed++;
+
+          const imageBlob = new Blob([imageEntry.data], { type: `image/${extension.slice(1)}` });
+          const labelText = dec.decode(labelEntry.data).replace(/^\uFEFF/, '');
+          if (!labelText.trim()) emptyLabels++;
+
+          await this.store.writeBlob(`images/${newStem}${extension}`, imageBlob);
+          await this.store.writeText(`labels/${newStem}.txt`, labelText);
+          imported++;
+        }
+
+        await this.refresh();
+
+        let message = `Import completed.\n• ${imported} image-label pair(s) imported\n• ${renamed} pair(s) renamed to avoid filename conflicts\n• ${emptyLabels} background image(s) with empty labels`;
+        if (skipped.length) message += `\n• ${skipped.length} file(s) skipped:\n${skipped.slice(0, 10).join('\n')}`;
+        this.toast(message, skipped.length > 0);
+      } catch (error) {
+        this.toast(`Import failed: ${error.message}`, true);
+      }
+    }
+
+    // --- Export ------------------------------------------------------------
+    async exportZip() {
+      if (this.ann.dirty && !await this.ann.save()) return;
+      await this.refresh();
+
+      const s = this.model.summary();
+      const problems = [];
+
+      if (!this.model.classes.length) problems.push('classes.txt has no valid class names.');
+      if (this.model.duplicates.length) problems.push('Duplicate image filename stems exist.');
+      for (const i of this.model.images) {
+        if (i.status === 'unlabeled' || i.status === 'invalid') problems.push(`${i.name}: ${statusLabel(i.status)}`);
+      }
+      if (this.model.orphans.length) problems.push(...this.model.orphans.map(x => `${x}: orphan label file`));
+      if (!s.total) problems.push('No supported images found.');
+
+      if (problems.length) {
+        this.toast('Export blocked. Fix these items:\n' + problems.join('\n'), true);
+        return;
+      }
+
+      try {
+        const z = new ZipWriter();
+        z.add('classes.txt', enc.encode(this.model.classes.join('\n') + '\n'));
+
+        for (const i of this.model.images) {
+          z.add(`images/${i.name}`, new Uint8Array(await (await i.imageEntry.getFile()).arrayBuffer()));
+          const label = await this.store.readFile(`labels/${i.stem}.txt`);
+          z.add(`labels/${i.stem}.txt`, new Uint8Array(await label.arrayBuffer()));
+        }
+
+        const blob = z.build();
+        const u = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = u;
+        a.download = 'Labeled_data.zip';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(u), 1000);
+      } catch (e) {
+        this.toast(`Export failed: ${e.message}`, true);
+      }
+    }
+
+    // --- Keyboard shortcuts ------------------------------------------------
+    keys(e) {
+      // Let typing in inputs pass through, except for Ctrl/Cmd+S.
+      if (e.target.matches('input,select,textarea') && !((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's')) return;
+
+      const k = e.key.toLowerCase();
+
+      if ((e.ctrlKey || e.metaKey) && k === 's') {
+        e.preventDefault();
+        this.ann.save();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && k === 'z') {
+        e.preventDefault();
+        e.shiftKey ? this.ann.redoDo() : this.ann.undoDo();
+        return;
+      }
+
+      if (k === 'arrowleft' || k === 'a') this.navigate(-1);
+      else if (k === 'arrowright' || k === 'd') this.navigate(1);
+      else if (k === 'delete' || k === 'backspace') {
+        e.preventDefault();
+        this.ann.deleteSelected();
+      } else if (k === 'escape') {
+        this.ann.action = null;
+        this.ann.selected = -1;
+        this.ann.draw();
+        this.ann.renderList();
+      } else if (/^[1-9]$/.test(k)) {
+        const id = Number(k) - 1;
+        if (id < this.model.classes.length) {
+          $('classSelect').value = id;
+          this.ann.changeClass(id);
+        }
+      }
+    }
+
+    // --- Reset & toast -----------------------------------------------------
+    reset() {
+      if (!confirm('Reset the application view and forget the currently opened folder? Dataset files will NOT be deleted.')) return;
+      if (!confirm('Are you sure? Unsaved in-memory changes may be lost. Existing dataset files will remain untouched.')) return;
+      location.reload();
+    }
+
+    toast(msg, bad = false) {
+      const d = document.createElement('div');
+      d.textContent = msg;
+      Object.assign(d.style, {
+        position: 'fixed',
+        right: '18px',
+        bottom: '18px',
+        maxWidth: '520px',
+        whiteSpace: 'pre-wrap',
+        padding: '14px 16px',
+        borderRadius: '12px',
+        zIndex: 99,
+        color: '#fff',
+        background: bad ? '#a61b12' : '#174ea6',
+        boxShadow: '0 10px 25px rgba(0,0,0,.25)'
+      });
+      document.body.append(d);
+      setTimeout(() => d.remove(), bad ? 9000 : 3000);
+    }
+  }
+
+  new App();
+
+})();
+</script>
+
+<!--
+  Developer note — architecture at a glance
+  ------------------------------------------------------------------------
+  StorageAdapter        Local file access. Two backends behind one async API:
+                        File System Access API handles (Chrome/Edge) or an
+                        in-memory Map (folder pick / ZIP import).
+  DatasetModel          Scans the folder, parses classes.txt, validates every
+                        label line, and produces the summary counts.
+  AnnotationController  Canvas interaction: drawing, hit-testing, resize/move,
+                        per-image undo/redo, and YOLO text serialization.
+                        Boxes are stored in original-image pixels; conversion
+                        to/from normalized YOLO coordinates happens only when
+                        loading a label file and when saving one.
+  ZipWriter             Dependency-free ZIP export.
+  ZipReader             Dependency-free ZIP import (central-directory parsing
+                        plus native DecompressionStream for Deflate).
+  App                   Workflow and UI: screens, navigation, import/export,
+                        shortcuts.
+  ------------------------------------------------------------------------
+  • Direct folder mode uses read/write handles with debounced autosave.
+  • Compatibility mode keeps edits in memory and exports Labeled_data.zip;
+    it never claims to modify the source folder.
+  • Completion requires every supported image to have a valid matching label
+    file. Empty files count as deliberate no-object images, while malformed,
+    missing, duplicate-stem, corrupt-image and orphan-label conditions stay
+    visible and block export.
+-->
+</body>
+</html>
