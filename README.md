@@ -2,11 +2,11 @@
 
 [Open YOLO Dataset Labeler](https://active-learning-kyle.github.io/yolo-dataset-labeler/)
 
-Turn your photos into a training dataset by drawing a box around each object you want a detector to recognize. For example, a photo of two bolts and one nut gets three boxes, each with its own class. You can choose your own objects. Labeling runs on your device and requires no account.
+**Make a YOLO dataset from your own photos.** Choose the object types you want to detect, draw a box around each one, then download a ZIP containing your photos, labels and class names. Labeling runs on your device and requires no account.
 
-![Opening screen with 1 Open dataset folder, 2 Open a ZIP and 3 Start with my photos outlined in red](docs/guide/01-open-dataset.png)
+![The annotation workbench with a boxed bolt and hex nut and a row of five distinct hardware photos](docs/guide/04-label-objects.png)
 
-**1** Open a folder on your computer. **2** Open a ZIP or resume a draft. **3** Pick individual photos, including on a phone.
+The example uses photos of loose fasteners, an assembled bolt, a bolted plate, rusted parts and a bag of washers. [Screenshot photo credits](docs/guide/photo-credits.md)
 
 ## Your first dataset
 
@@ -19,9 +19,13 @@ Turn your photos into a training dataset by drawing a box around each object you
 
 **On a phone?** Start at **Start with my photos**, pick your pictures and continue from step 3. Download a draft ZIP before closing if you want to finish later.
 
-[Import photos or ZIPs](#open-or-add-images) · [Classes and merging](#set-up-classes-and-combine-datasets) · [Drawing tools](#use-the-annotation-workbench) · [Saving and repairs](#review-save-and-resume) · [Export](#export-your-training-zip) · [Help and shortcuts](#help-and-keyboard-shortcuts)
+[Import photos or ZIPs](#open-or-add-images) · [Classes and merging](#set-up-classes-and-combine-datasets) · [Drawing tools](#use-the-annotation-workbench) · [Phone controls](#use-the-workbench-on-a-phone) · [Saving and repairs](#review-save-and-resume) · [Export](#export-your-training-zip) · [Help and shortcuts](#help-and-keyboard-shortcuts)
 
 ## Open or add images
+
+![Opening screen with numbered red frames around Open dataset folder, Open a ZIP and Start with my photos](docs/guide/01-open-dataset.png)
+
+**1** Open a folder on your computer. **2** Open a ZIP or resume a draft. **3** Pick individual photos, including on a phone.
 
 | What you have | What to do |
 |---|---|
@@ -36,6 +40,8 @@ When you open an empty writable folder, click **Create Missing Items** where sho
 
 Open **File formats & folder access** on the opening screen for device-specific guidance. Supported photos are JPG/JPEG, PNG, WebP and BMP. Convert HEIC/HEIF photos to JPEG or PNG first. For ZIP imports, use UTF-8 or ASCII filenames and an unencrypted archive. Limits are 1 GiB per ZIP, 50,000 entries, 512 MiB per file and 2 GiB total extracted.
 
+Give each photo in a writable folder a unique name before its extension. For example, `bolt-01.jpg` and `bolt-01.png` would both need `bolt-01.txt`. When you import individual photos with the same name, the labeler gives the incoming copies unique names.
+
 ## Set up classes and combine datasets
 
 A class is an object type. Use a distinct, non-empty name for each one. The number beside each name is its ID in the label files. If `bolt` comes first and `hex_nut` second, their IDs are 0 and 1. **Save Classes** writes this order to `classes.txt`.
@@ -49,9 +55,7 @@ A class is an object type. Use a distinct, non-empty name for each one. The numb
 
 ## Use the annotation workbench
 
-![Workbench showing an example image with bolts and nuts, and numbered callouts for the draw and edit tools, next class, box list, Next and Confirm no object](docs/guide/04-label-objects.png)
-
-**1** Switch between **Draw** and **Edit**. **2** Choose the class for your next box. **3** Select an existing box from the list. **4** Go to the next image. **5** Mark a checked photo as a background if it has no target.
+The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1** Draw or Edit, **2** the class for the next box, **3** the list of existing boxes, **4** Next, **5** Confirm no object and **6** the row of photos.
 
 | Task | How to do it |
 |---|---|
@@ -61,6 +65,12 @@ A class is an object type. Use a distinct, non-empty name for each one. The numb
 | Check a small detail | Use **+** or **−** to zoom, then **Pan** to drag the enlarged image. **Fit** restores the whole image. **Hide boxes** lets you inspect the photo underneath. Click **Show boxes** to resume working with boxes. |
 | Reverse a mistake | **Undo** and **Redo** apply to the current image. You can undo a box change or an accidental background decision. |
 | Find another image | Use **Previous**, **Next** or a thumbnail. Type part of a filename in **Find image…** or filter by review status. Previous and Next follow the filtered list. On narrow screens, tap **Images** to open the list. |
+
+### Use the workbench on a phone
+
+![Phone-sized view with numbered callouts for the image drawer button, status filter and photo thumbnails](docs/guide/08-mobile-images.png)
+
+**1** Tap **Images** to open the list. **2** Filter by status or search by filename. **3** Swipe along the thumbnails and tap one to return to the canvas. After zooming in, use **Pan** to move the photo with one finger, then switch back to **Draw** or **Edit**.
 
 ## Review, save and resume
 
