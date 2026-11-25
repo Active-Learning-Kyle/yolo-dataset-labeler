@@ -68,22 +68,23 @@ Coordinates and dimensions are normalized to the range from `0` to `1`. An empty
 
 ## How to Use
 
-1. Select **Import Images ZIP**. Open the classroom images, a draft ZIP, or a dataset with `images/`, `labels/` and `classes.txt`. Desktop browsers that support writable folder access can also use **Open Dataset Folder**.
+1. Select **Import Images ZIP**. Open the classroom images, a draft ZIP, or a dataset with `images/`, `labels/` and `classes.txt`. For loose files on a phone or computer, use **Choose photos** and then **Add photos** in the summary. A second photo with the same name gets a separate filename inside the dataset. Desktop browsers that support writable folder access can also use **Open Dataset Folder**.
 2. Review the image count and class order in the dataset summary. Enter the agreed class names and select **Save Classes** before starting. The first class has ID 0.
-3. Select **Start Labeling**. Drag a box around the visible part of each target. Select a box to move it or drag a handle to resize it. Expand the box guide for examples.
+3. Select **Start Labeling**. Choose **New box class** and use **Draw** to box each visible target, even inside another box. To adjust an existing box, choose **Edit** and select it on the canvas or in the box list. Drag the box or a corner, or use **Change selected box class**. Expand the box guide for examples.
 4. Choose **Confirm no object** only after inspecting the whole image. A missing label means the image still needs review. An empty label records a reviewed background.
-5. Return to the dataset summary to download a **draft ZIP** before you leave a ZIP session. Reopen the draft with **Import Images ZIP**. Direct folder mode writes changes back to the selected folder.
+5. Select **Download draft ZIP** before you leave a ZIP session. **Next** keeps edits in the tab and advances. Skipping an untouched image keeps it unreviewed. Reopen the draft with **Import Images ZIP**. Direct folder mode writes changes back to the selected folder.
 6. When review is complete, download **Labeled_data.zip**. The class list, images and labels at the root match the classroom notebook’s input. Keep unseen test images outside this training ZIP.
 
 ## Keyboard Shortcuts
 
 - `A` or `Left Arrow`: previous image
 - `D` or `Right Arrow`: next image
-- `1` to `9`: select a class
+- `B` / `V`: draw / edit
+- `1` to `9`: choose the class for the next box
 - `Delete` or `Backspace`: delete the selected box
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Shift + Z`: redo
-- `Ctrl/Cmd + S`: save
+- `Ctrl/Cmd + S`: download a draft ZIP
 - `Esc`: cancel the current action or deselect a box
 
 ## ZIP Limits
@@ -104,7 +105,7 @@ Large datasets can still exceed the practical memory limits of a browser before 
 
 - Keep a backup before using direct folder mode because the application can write `classes.txt` and files inside `labels/`.
 - Class order is locked after label files exist because changing class IDs would change the meaning of existing annotations.
-- Images with the same filename stem, such as `sample.jpg` and `sample.png`, are rejected because both would map to `sample.txt`.
+- Loose photos and unlabeled ZIP images with colliding stems receive unique names inside the dataset. Direct folders and ambiguous image–label pairs must be fixed before labeling. When collecting files outside the labeler, give each one a unique stem before copying it into a shared folder, such as `target-001.webp` and `target-002.webp`. Keep the extension and keep paired labels with their images.
 - The tool creates YOLO bounding-box annotations. It does not train, evaluate, or run a YOLO model.
 - Browser behaviour may change as the File System Access API and related web APIs evolve.
 
