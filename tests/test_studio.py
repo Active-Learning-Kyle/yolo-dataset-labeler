@@ -29,9 +29,18 @@ def run(browser):
     page.on('pageerror', lambda err: errors.append(str(err)))
     page.goto((Path(__file__).resolve().parents[1] / 'index.html').as_uri())
     labels = page.locator('.kit-photo .photo-box b')
-    expect(labels).to_have_text(['Hex head', 'Socket cap', 'Thumb screw', 'Wing screw', 'Eye screw', 'Set screw'])
-    for width in (320, 390, 820, 1440):
+    names = ['Hex head', 'Socket cap', 'Thumb screw', 'Wing screw', 'Eye screw', 'Set screw',
+             'Self-drilling', 'Slotted flat', 'Wood screw', 'Shoulder screw', 'Pan head', 'Round head']
+    expect(labels).to_have_text(names)
+    expect(page.locator('#photoKey li')).to_have_text(names)
+    for width in (320, 390, 600, 820, 1024, 1440):
         page.set_viewport_size({'width': width, 'height': 850})
+        if page.locator('.kit-photo').bounding_box()['width'] <= 480:
+            expect(page.locator('#photoKey')).to_be_visible()
+            expect(labels.first.locator('span')).to_be_hidden()
+        else:
+            expect(page.locator('#photoKey')).to_be_hidden()
+            expect(labels.first.locator('span')).to_be_visible()
         assert labels.evaluate_all("""labels => {
             const photo = labels[0].closest('.kit-photo').getBoundingClientRect();
             const tags = labels.map(label => label.getBoundingClientRect());
