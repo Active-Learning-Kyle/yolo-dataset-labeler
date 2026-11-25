@@ -4,11 +4,15 @@
 
 Turn your photos into a training dataset by drawing a box around each object you want a detector to recognize. For example, a photo of two bolts and one nut gets three boxes, each with its own class. You can choose your own objects. Labeling runs on your device and requires no account.
 
+![Opening screen with 1 Open dataset folder, 2 Open a ZIP and 3 Start with my photos outlined in red](docs/guide/01-open-dataset.png)
+
+**1** Open a folder on your computer. **2** Open a ZIP or resume a draft. **3** Pick individual photos, including on a phone.
+
 ## Your first dataset
 
 1. **Start with a folder.** On your computer, create an empty folder called `My Dataset`. Open the labeler in desktop Chrome or Edge, click **Open dataset folder**, select it and allow write access if prompted.
 2. **Add your photos.** Click **Create Missing Items**. The labeler creates `images/`, `labels/` and `classes.txt`. Copy your training photos into `images/`, then click **Refresh Dataset**. Keep a few fresh photos aside for testing.
-3. **Choose your classes.** Click **Add Class** for each object type, enter names such as `bolt` and `nut`, then click **Save Classes** and **Start Labeling**.
+3. **Choose your classes.** Click **Add Class** for each object type, enter names such as `bolt` and `hex_nut`, then click **Save Classes** and **Start Labeling**.
 4. **Label each photo.** In **Draw**, choose a **New box class** and drag a tight box around each matching object. Use **Edit** to adjust a box. Click **Next** to move on. For a photo you checked that contains none of your targets, click **Confirm no object**.
 5. **Download your work.** Open **Dataset summary**, finish any remaining images and click **Download Labeled_data.zip**. The ZIP contains your photos, matching labels and class list.
 6. **Continue to training.** Find the ZIP in Downloads, click **I have the ZIP**, then **Continue to Training in Colab**. In Colab, sign in and open the notebook supplied in Part 5D. Upload your `Labeled_data.zip` through the **Files** panel, leave it zipped and run the dataset check. Check your class names before training.
@@ -26,16 +30,28 @@ Turn your photos into a training dataset by drawing a box around each object you
 | A ZIP of photos, a dataset or a saved draft | Use **Open a ZIP**, or drop one ZIP onto the opening screen. Existing classes and matching labels are restored when present. Drop photos and ZIPs separately. |
 | A browser that only imports folders | You can import an existing dataset with files. For an empty folder, choose **Start with my photos**. In **Compatibility mode**, download a ZIP to keep your edits. |
 
+When you open an empty writable folder, click **Create Missing Items** where shown below. Copy photos into `images/` and click **Refresh Dataset** beside it.
+
+![Empty dataset with all three required items marked Missing and Create Missing Items outlined in red](docs/guide/02-create-files.png)
+
 Open **File formats & folder access** on the opening screen for device-specific guidance. Supported photos are JPG/JPEG, PNG, WebP and BMP. Convert HEIC/HEIF photos to JPEG or PNG first. For ZIP imports, use UTF-8 or ASCII filenames and an unencrypted archive. Limits are 1 GiB per ZIP, 50,000 entries, 512 MiB per file and 2 GiB total extracted.
 
 ## Set up classes and combine datasets
 
-A class is an object type. Use a distinct, non-empty name for each one. The number beside each name is its ID in the label files. If `bolt` comes first and `nut` second, their IDs are 0 and 1. **Save Classes** writes this order to `classes.txt`.
+A class is an object type. Use a distinct, non-empty name for each one. The number beside each name is its ID in the label files. If `bolt` comes first and `hex_nut` second, their IDs are 0 and 1. **Save Classes** writes this order to `classes.txt`.
+
+![Dataset setup with two example classes and red callouts on Add Class, Save Classes and Start Labeling](docs/guide/03-add-classes.png)
+
+**1** Add a row for each object type. **2** Save your class names. **3** Open the workbench.
 
 - Before labeling, use **↑** to move a class up or **Delete** to remove it. Once images have labels, the order and delete controls lock so existing IDs keep their meaning. You can still append another class.
 - To combine a teammate’s work with yours, save your classes, then choose **Merge labeled ZIP** in **Dataset summary**. Both lists must have identical names in identical order. The labeler imports image–label pairs, keeps reviewed backgrounds and reports any images skipped for missing labels. If a pair’s filename is already in use, both incoming files get a matching new name.
 
 ## Use the annotation workbench
+
+![Workbench showing an example image with bolts and nuts, and numbered callouts for the draw and edit tools, next class, box list, Next and Confirm no object](docs/guide/04-label-objects.png)
+
+**1** Switch between **Draw** and **Edit**. **2** Choose the class for your next box. **3** Select an existing box from the list. **4** Go to the next image. **5** Mark a checked photo as a background if it has no target.
 
 | Task | How to do it |
 |---|---|
@@ -64,7 +80,13 @@ A class is an object type. Use a distinct, non-empty name for each one. The numb
 
 ## Export your training ZIP
 
-You can export once every image has boxes or a confirmed background and you have resolved the dataset issues. If export is blocked, check the filenames in **Dataset summary**. For a one-photo dataset, the ZIP contains these files.
+You can export once every image has boxes or a confirmed background and you have resolved the dataset issues. If export is blocked, check the filenames in **Dataset summary**.
+
+![Dataset summary with 100% completion, zero unlabeled or invalid images, and the Download Labeled_data.zip button outlined](docs/guide/05-export-dataset.png)
+
+**1** Check that review is complete. **2** Download the ZIP.
+
+For a one-photo dataset, the ZIP contains these files.
 
 ```text
 Labeled_data.zip
@@ -79,9 +101,13 @@ Each box is one line in its image’s label file. The fields are `class_id x_cen
 
 After the final download, **I have the ZIP** reveals the image, box and background counts and the Colab link. **Return to dataset** takes you back to your work.
 
+![Ready for training dialog showing the example dataset totals and the Continue to Training in Colab link outlined in red](docs/guide/06-open-colab.png)
+
 ## Help and keyboard shortcuts
 
 Click **Help** in the top bar for a reminder about drawing, editing, marking backgrounds, minimum box size, shortcuts and saving. While labeling, expand **Box guide & shortcuts** below the bounding-box list to see a loose box and a tight box around the same hex nut.
+
+![Quick help dialog with four annotation tips, a row of common keyboard shortcuts and a note on saving draft ZIPs](docs/guide/07-quick-help.png)
 
 These shortcuts work in the annotation workbench. Finish typing in a text field before using the single-key commands. Use **Ctrl** on Windows or Linux and **⌘** on macOS.
 
