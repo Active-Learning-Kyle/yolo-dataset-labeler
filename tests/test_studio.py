@@ -28,6 +28,19 @@ def run(browser):
     errors = []
     page.on('pageerror', lambda err: errors.append(str(err)))
     page.goto((Path(__file__).resolve().parents[1] / 'index.html').as_uri())
+    labels = page.locator('.kit-photo .photo-box b')
+    expect(labels).to_have_text(['Hex head', 'Socket cap', 'Thumb screw', 'Wing screw', 'Eye screw', 'Set screw'])
+    for width in (320, 390, 820, 1440):
+        page.set_viewport_size({'width': width, 'height': 850})
+        assert labels.evaluate_all("""labels => {
+            const photo = labels[0].closest('.kit-photo').getBoundingClientRect();
+            const tags = labels.map(label => label.getBoundingClientRect());
+            return tags.every((a, i) => a.width > 0 && a.left >= photo.left && a.right <= photo.right
+                && a.top >= photo.top && a.bottom <= photo.bottom
+                && tags.slice(i + 1).every(b => a.right <= b.left || b.right <= a.left
+                    || a.bottom <= b.top || b.bottom <= a.top));
+        }""")
+    page.set_viewport_size({'width': 1024, 'height': 820})
     photo = solid_png(200, 170)
     frames = io.BytesIO()
     with zipfile.ZipFile(frames, 'w') as archive:
