@@ -318,6 +318,8 @@ button:disabled { opacity:.53; cursor:default; }
 .canvas-head { justify-content:space-between; }
 .canvas-head strong { font-size:.9rem; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .zoom-tools { display:flex; gap:3px; }
+.zoom-tools [aria-pressed="true"] { background:#17324d; color:white; }
+.canvas-wrap.pan-mode canvas { cursor:grab; }
 .zoom-tools button { padding:5px 9px; min-width:32px; }
 .canvas-wrap { display:flex; overflow:auto; background:#202932; }
 .canvas-wrap canvas { flex:none; max-width:none; max-height:none; margin:auto; }
@@ -340,6 +342,8 @@ figcaption { margin-top:5px; line-height:1.25; }
 @media (max-width:1000px) {
   .annotation { grid-template-columns:155px minmax(230px,1fr) 184px; }
   .right-body, .panel-head { padding:10px; }
+  .box-row { grid-template-columns:minmax(0,1fr) auto; padding:5px; gap:4px; }
+  .box-row button { min-width:0; padding:8px 5px; overflow-wrap:anywhere; }
   .grid2 { grid-template-columns:1fr; }
 }
 @media (max-width:760px) {
@@ -453,7 +457,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       <section class="panel canvas-panel">
         <div class="canvas-head"><strong id="frameName">Image</strong><div class="zoom-tools" aria-label="Canvas zoom">
-          <button id="zoomOut" aria-label="Zoom out">−</button><button id="zoomFit" title="Fit image to canvas">Fit</button><button id="zoomIn" aria-label="Zoom in">+</button>
+          <button id="panTool" aria-pressed="false" title="Drag the zoomed image to pan">Pan</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="zoomFit" title="Fit image to canvas">Fit</button><button id="zoomIn" aria-label="Zoom in">+</button>
         </div></div>
         <div id="canvasWrap" class="canvas-wrap">
           <canvas id="canvas"></canvas>
@@ -700,6 +704,21 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     // --- Writing ----------------------------------------------------------
+    async removeLabel(name) {
+      if (this.mode === 'direct') {
+        const directory = await this.childDir('labels');
+        if (directory) {
+          try {
+            await directory.removeEntry(name);
+          } catch (error) {
+            if (error.name !== 'NotFoundError') throw error;
+          }
+        }
+      } else {
+        this.files.delete('labels/' + name);
+      }
+    }
+
     async writeText(path, text) {
       const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
       if (this.mode === 'direct') {
@@ -1183,7 +1202,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     // --- Undo / redo -------------------------------------------------------
     snapshot() {
-      return JSON.stringify(this.boxes);
+      return JSON.stringify({boxes: this.boxes, background: this.background});
     }
 
     pushUndo() {
@@ -1193,9 +1212,12 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     restore(s) {
-      this.boxes = JSON.parse(s);
+      const state = JSON.parse(s);
+      this.boxes = state.boxes;
+      this.background = state.background;
       this.selected = -1;
       this.changed();
+      this.draw();
       this.renderList();
     }
 
@@ -1217,6 +1239,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.img = null;
       this.action = null;
       this.zoom = 1;
+      this.setPan(false);
       $('canvasWrap').scrollTo(0, 0);
       $('frameName').textContent = item.name;
 
@@ -1225,6 +1248,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       this.item = item;
       this.boxes = JSON.parse(JSON.stringify(item.boxes || []));
+      this.background = item.status === 'background';
       this.selected = -1;
       this.undo = [];
       this.redo = [];
@@ -1278,6 +1302,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('zoomFit').textContent = this.zoom === 1 ? 'Fit' : Math.round(this.zoom * 100) + '%';
       $('zoomIn').disabled = this.zoom >= 3;
       $('zoomOut').disabled = this.zoom <= 1;
+      $('panTool').disabled = this.zoom <= 1;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       this.canvas.style.width = t.cssW + 'px';
@@ -1369,10 +1394,22 @@ figcaption { margin-top:5px; line-height:1.25; }
       return null;
     }
 
+    setPan(active) {
+      this.panning = active;
+      $('panTool').setAttribute('aria-pressed', String(active));
+      $('canvasWrap').classList.toggle('pan-mode', active);
+    }
+
     down(e) {
       if (!this.img || this.action || e.button !== 0 || !e.isPrimary || this.app.switching) return;
 
       const p = this.point(e);
+      if (this.panning) {
+        const wrap = $('canvasWrap');
+        this.canvas.setPointerCapture(e.pointerId);
+        this.action = {type: 'pan', x: e.clientX, y: e.clientY, left: wrap.scrollLeft, top: wrap.scrollTop};
+        return;
+      }
       const hit = this.hit(p);
       clearTimeout(this.timer);
       this.canvas.setPointerCapture?.(e.pointerId);
@@ -1405,6 +1442,10 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       const p = this.point(e);
       const a = this.action;
+      if (a.type === 'pan') {
+        $('canvasWrap').scrollTo(a.left + a.x - e.clientX, a.top + a.y - e.clientY);
+        return;
+      }
       const W = this.img.naturalWidth;
       const H = this.img.naturalHeight;
 
@@ -1450,11 +1491,13 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       const a = this.action;
       this.action = null;
+      if (a.type === 'pan') return;
 
       if (a.type === 'draw') {
         if (a.box.w >= 3 && a.box.h >= 3) {
           this.pushUndo();
           this.boxes.push(a.box);
+          this.background = false;
           this.selected = this.boxes.length - 1;
           this.changed();
         } else {
@@ -1471,14 +1514,14 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     // --- Box list / edits --------------------------------------------------
-    /** Mark the image as modified and schedule autosave in direct mode. */
+    /** Mark the image as modified and schedule a save in the active storage mode. */
     changed() {
       this.revision++;
       this.dirty = true;
       this.app.saveState('Unsaved changes');
       clearTimeout(this.timer);
-      if (this.boxes.length && this.item?.status !== 'invalid') {
-        this.timer = setTimeout(() => this.save(), 650);
+      if (this.item?.status !== 'invalid') {
+        this.timer = setTimeout(() => this.saveEdits(), 650);
       }
     }
 
@@ -1542,13 +1585,21 @@ figcaption { margin-top:5px; line-height:1.25; }
       }).join('\n') + (this.boxes.length ? '\n' : '');
     }
 
-    async save(empty = false) {
+    saveEdits() {
+      const unreviewed = !this.boxes.length && !this.background && this.item?.status !== 'invalid';
+      return this.save(this.background && !this.boxes.length, unreviewed);
+    }
+
+    async save(empty = false, unreviewed = false) {
       if (!this.item || !this.img) return false;
 
       clearTimeout(this.timer);
       const item = this.item;
-      if (!empty && !this.boxes.length && item.status !== 'background' &&
-          !confirm('Have you checked the whole image? Saving without boxes marks it as No Object.')) return false;
+      if (!empty && !unreviewed && !this.boxes.length && !this.background) {
+        if (!confirm('Have you checked the whole image? Saving without boxes marks it as No Object.')) return false;
+        this.pushUndo();
+        this.background = true;
+      }
       if (item.status === 'invalid' &&
           !confirm('Replace this invalid label file with the boxes currently shown?')) return false;
 
@@ -1559,12 +1610,16 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.app.saveState('Saving…');
       const persist = async () => {
         try {
-          await this.app.store.writeText('labels/' + filename, contents);
+          if (unreviewed) {
+            if (item.labelEntry) await this.app.store.removeLabel(filename);
+          } else {
+            await this.app.store.writeText('labels/' + filename, contents);
+          }
           item.boxes = boxes;
           item.errors = [];
           item.totalBoxes = boxes.length;
-          item.status = boxes.length ? 'labeled' : 'background';
-          item.labelEntry = {name: filename, getFile: () => this.app.store.readFile('labels/' + filename)};
+          item.status = unreviewed ? 'unlabeled' : boxes.length ? 'labeled' : 'background';
+          item.labelEntry = unreviewed ? null : {name: filename, getFile: () => this.app.store.readFile('labels/' + filename)};
           if (this.app.store.mode === 'memory') this.app.needsDownload = true;
           if (this.item === item && revision === this.revision) {
             this.dirty = false;
@@ -1587,6 +1642,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (this.boxes.length && !confirm('This image has boxes. Marking it as No Object will replace them with an empty label file. Continue?')) return;
       this.pushUndo();
       this.boxes = [];
+      this.background = true;
       this.selected = -1;
       this.changed();
       await this.save(true);
@@ -1624,8 +1680,12 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('resetBtn').onclick = () => this.reset();
       $('prevBtn').onclick = () => this.navigate(-1);
       $('nextBtn').onclick = () => this.navigate(1);
-      $('saveBtn').onclick = () => this.ann.save();
-      $('saveNextBtn').onclick = async () => { const item = this.ann.item; if (await this.ann.save() && this.ann.item === item) this.navigate(1); };
+      $('saveBtn').onclick = () => this.ann.dirty ? this.ann.saveEdits() : this.ann.save();
+      $('saveNextBtn').onclick = async () => {
+        const item = this.ann.item;
+        const saved = await (this.ann.dirty ? this.ann.saveEdits() : this.ann.save());
+        if (saved && this.ann.item === item) await this.navigate(1);
+      };
       $('undoBtn').onclick = () => this.ann.undoDo();
       $('redoBtn').onclick = () => this.ann.redoDo();
       $('backSetupBtn').onclick = async () => { if (await this.guardUnsaved()) this.showSetup(); };
@@ -1635,9 +1695,11 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.filter = e.target.value;
         this.renderImageList();
       };
+      $('panTool').onclick = () => this.ann.setPan(!this.ann.panning);
       for (const [id, delta] of [['zoomIn', 0.5], ['zoomOut', -0.5], ['zoomFit', 0]]) {
         $(id).onclick = () => {
           this.ann.zoom = delta ? Math.max(1, Math.min(3, this.ann.zoom + delta)) : 1;
+          if (this.ann.zoom === 1) this.ann.setPan(false);
           this.ann.draw();
         };
       }
@@ -1970,6 +2032,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         return;
       }
 
+      this.lastToast?.remove();
       this.filter = filter;
       $('statusFilter').value = filter;
       $('imageSearch').value = '';
@@ -2048,7 +2111,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     renderProgress() {
       const s = this.model.summary();
       const remaining = s.total - s.labeled - s.background;
-      $('progressText').textContent = `Image ${this.current + 1} of ${s.total} · Labeled ${s.labeled + s.background} · Remaining ${remaining} · ${s.complete}%`;
+      $('progressText').textContent = `Image ${this.current + 1} of ${s.total} · Reviewed ${s.labeled + s.background} · Remaining ${remaining} · ${s.complete}%`;
       $('progressFill').style.width = s.complete + '%';
     }
 
@@ -2076,7 +2139,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     async guardUnsaved() {
       await this.ann.writes;
-      return !this.ann.dirty || await this.ann.save();
+      return !this.ann.dirty || await this.ann.saveEdits();
     }
 
     normalizeClasses(text) {
@@ -2272,7 +2335,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Export ------------------------------------------------------------
     async exportZip(draft = false) {
       if (this.classEdits) return this.toast('Save Classes before downloading.', true);
-      if (this.ann.dirty && !await this.ann.save()) return;
+      if (this.ann.dirty && !await this.ann.saveEdits()) return;
       if (!await this.refresh()) return;
 
       const s = this.model.summary();
@@ -2365,7 +2428,9 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     toast(msg, bad = false) {
+      this.lastToast?.remove();
       const d = document.createElement('div');
+      this.lastToast = d;
       d.textContent = msg;
       Object.assign(d.style, {
         position: 'fixed',
