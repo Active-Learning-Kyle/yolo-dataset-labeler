@@ -510,6 +510,11 @@ figcaption { margin-top:5px; line-height:1.25; }
 .image-list > p { padding:0 8px; }
 .canvas-wrap.boxes-hidden canvas { cursor:default; }
 .right-body .box-list { margin-bottom:14px; }
+.suggest-tools { margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #dbe3ee; }
+.suggest-tools p { margin:5px 0; }
+.suggest-tools p:empty { display:none; }
+.suggest-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.suggest-actions button { min-height:36px; }
 .examples { gap:6px; }
 .sample { background:#dce9e6; height:70px; overflow:hidden; }
 .sample i { display:block; width:84px; height:66px; border-radius:0; position:relative; background:var(--kit-photo) -170px -110px/325px 244px; }
@@ -655,7 +660,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     <div class="grid2">
       <div class="card">
         <h2>2. Classes</h2>
-        <p class="small">For classroom training, use the class names and order specified by your notebook. The first class has ID 0. Save Classes before drawing.</p>
+        <p class="small">Choose the object types you want to detect. The first class has ID 0. Save Classes before drawing.</p>
         <div id="classList" class="class-list"></div>
         <div class="actions">
           <button id="addClassBtn">Add Class</button>
@@ -720,6 +725,18 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       <aside class="panel right-panel">
         <div class="right-body">
+          <div class="suggest-tools">
+            <div class="suggest-actions">
+              <button id="suggestBoxes" class="ghost" type="button">Suggest boxes</button>
+              <button id="cancelSuggestions" class="ghost hidden" type="button">Cancel</button>
+            </div>
+            <p id="suggestHint" class="small"></p>
+            <p id="suggestStatus" class="small" role="status"></p>
+            <div id="suggestReview" class="suggest-actions hidden">
+              <button id="saveSuggestions" class="primary" type="button">Save reviewed boxes</button>
+              <button id="discardSuggestions" class="ghost" type="button">Discard suggestions</button>
+            </div>
+          </div>
           <h3>Bounding boxes</h3>
           <div id="boxList" class="box-list"></div>
           <label id="editClassField" class="edit-class hidden" for="editClass">Change selected box class<select id="editClass"></select></label>
@@ -763,6 +780,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       <li>Choose <b>Edit</b>, then tap a box or its row. Drag inside to move it, drag a corner to resize it, or use <b>Change selected box class</b>.</li>
       <li>To mark an image as a background image with no target object, choose <b>Confirm no object</b>. This creates an empty label file.</li>
       <li>Boxes smaller than 3 original-image pixels are rejected.</li>
+      <li>On an unlabeled photo, <b>Suggest boxes</b> can propose boxes and classes. Check the results and missing objects, then choose <b>Save reviewed boxes</b>.</li>
     </ol>
     <p>
       <b>Shortcuts:</b>
@@ -1525,6 +1543,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.writes = Promise.resolve();
       this.revision = 0;
       this.history = new WeakMap();
+      this.suggestionReview = null;
       this.bind();
     }
 
@@ -1679,6 +1698,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     drawBox(b, i, s) {
       const c = this.color(b.classId);
+      if (b.score !== undefined) this.ctx.setLineDash([6 / s, 4 / s]);
       this.ctx.lineWidth = 4 / s;
       this.ctx.strokeStyle = '#172b42';
       this.ctx.strokeRect(b.x, b.y, b.w, b.h);
@@ -1686,6 +1706,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.ctx.strokeStyle = c;
       this.ctx.fillStyle = c;
       this.ctx.strokeRect(b.x, b.y, b.w, b.h);
+      this.ctx.setLineDash([]);
 
       // Class label chip above the box.
       const name = this.app.model.classes[b.classId] ?? 'Unknown';
@@ -1894,6 +1915,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         if (b.w < 3 || b.h < 3) this.boxes[this.selected] = a.original;
         else if (this.snapshot() !== a.previous) {
           this.pushUndo(a.previous);
+          delete b.score;
           this.changed();
         }
       }
@@ -1906,6 +1928,8 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Box list / edits --------------------------------------------------
     /** Mark the image as modified and schedule a save in the active storage mode. */
     changed() {
+      if (this.suggestionReview) return;
+      if (this.app.suggestionJob) this.app.cancelSuggestionJob();
       this.revision++;
       this.dirty = true;
       this.app.saveState('Unsaved changes');
@@ -1933,12 +1957,14 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (this.selected < 0 || this.boxes[this.selected].classId === id) return;
       this.pushUndo();
       this.boxes[this.selected].classId = id;
+      delete this.boxes[this.selected].score;
       this.changed();
       this.draw();
       this.renderList();
     }
 
     renderList() {
+      this.app.renderSuggestionControls();
       $('undoBtn').disabled = !this.undo.length;
       $('redoBtn').disabled = !this.redo.length;
       const editing = this.tool === 'edit' && this.selected >= 0;
@@ -1950,6 +1976,10 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.boxes.forEach((b, i) => {
         const r = el('div', undefined, 'box-row' + (i === this.selected ? ' selected' : ''));
         const btn = el('button', `#${i + 1} · ${b.classId}: ${this.app.model.classes[b.classId] || 'Unknown'}`, 'ghost');
+        if (b.score !== undefined) {
+          btn.append(el('small', ` · AI ${b.score.toFixed(2)}`));
+          btn.title = 'Model score for this suggestion';
+        }
         btn.style.borderLeft = '5px solid ' + this.color(b.classId);
         const del = el('button', 'Delete', 'danger');
 
@@ -1969,6 +1999,38 @@ figcaption { margin-top:5px; line-height:1.25; }
       });
 
       if (!this.boxes.length) host.append(el('p', 'No bounding boxes.', 'small'));
+    }
+
+    startSuggestionReview(boxes) {
+      this.suggestionReview = { snapshot: this.snapshot(), undo: this.undo, redo: this.redo };
+      this.undo = [];
+      this.redo = [];
+      this.boxes = boxes;
+      this.selected = -1;
+      this.app.saveState('Suggestions · review before saving');
+      this.setTool('edit');
+    }
+
+    async finishSuggestionReview(keep) {
+      if (!this.suggestionReview || (keep && !this.boxes.length)) return;
+      this.cancelDrag();
+      const previous = this.suggestionReview;
+      this.suggestionReview = null;
+      this.undo = previous.undo;
+      this.redo = previous.redo;
+      this.selected = -1;
+      if (keep) {
+        this.pushUndo(previous.snapshot);
+        this.boxes = this.boxes.map(({ classId, x, y, w, h }) => ({ classId, x, y, w, h }));
+        this.changed();
+      } else {
+        this.boxes = JSON.parse(previous.snapshot).boxes;
+        this.app.saveState('Not reviewed');
+      }
+      this.app.suggestionMessage = '';
+      this.draw();
+      this.renderList();
+      if (keep) await this.saveEdits();
     }
 
     // --- Persistence -------------------------------------------------------
@@ -2039,6 +2101,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     /** Explicitly mark the current image as "no object" (empty label file). */
     async noObject() {
+      if (!this.app.suggestionsResolved()) return;
       if (!this.img || (this.background && !this.boxes.length)) return;
       if (this.boxes.length && !confirm('This image has boxes. Marking it as No Object will replace them with an empty label file. Continue?')) return;
       this.pushUndo();
@@ -2065,6 +2128,12 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.store = new StorageAdapter();
       this.model = new DatasetModel(this.store);
       this.ann = new AnnotationController(this);
+      this.suggestionWorker = null;
+      this.suggestionJob = null;
+      this.suggestionMessage = '';
+      this.suggestionModelReady = false;
+      this.canSuggest = location.protocol !== 'file:' && typeof Worker === 'function'
+        && typeof OffscreenCanvas === 'function' && typeof createImageBitmap === 'function';
       this.current = -1;
       this.filter = 'all';
       this.imageButtons = new WeakMap();
@@ -2121,6 +2190,10 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.ann.draw();
         this.ann.renderList();
       };
+      $('suggestBoxes').onclick = () => this.suggestBoxes();
+      $('cancelSuggestions').onclick = () => this.cancelSuggestionJob('Suggestions canceled. You can keep labeling by hand.');
+      $('saveSuggestions').onclick = () => this.ann.finishSuggestionReview(true);
+      $('discardSuggestions').onclick = () => this.ann.finishSuggestionReview(false);
       $('draftBtn').onclick = () => this.exportZip(true);
       $('repairBtn').onclick = () => this.ann.saveEdits();
       $('browseImages').onclick = () => this.showImageBrowser(!$('imageBrowser').classList.contains('open'));
@@ -2187,7 +2260,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.bindDropZone();
 
       window.addEventListener('beforeunload', e => {
-        if (this.ann.dirty || this.needsDownload || this.classEdits) { e.preventDefault(); e.returnValue = ''; }
+        if (this.ann.dirty || this.ann.suggestionReview || this.needsDownload || this.classEdits) { e.preventDefault(); e.returnValue = ''; }
       });
       document.addEventListener('keydown', e => this.keys(e));
     }
@@ -2781,6 +2854,105 @@ figcaption { margin-top:5px; line-height:1.25; }
       }
     }
 
+    // --- Suggestions for the current photo --------------------------------
+    canSuggestCurrentPhoto() {
+      const ann = this.ann;
+      return this.canSuggest && ann.img && ann.item?.status === 'unlabeled'
+        && !ann.dirty && !ann.boxes.length && !ann.suggestionReview;
+    }
+
+    renderSuggestionControls() {
+      const review = this.ann.suggestionReview;
+      const busy = Boolean(this.suggestionJob);
+      const eligible = this.canSuggestCurrentPhoto();
+      $('suggestBoxes').classList.toggle('hidden', Boolean(review));
+      $('suggestBoxes').disabled = !eligible || busy;
+      $('cancelSuggestions').classList.toggle('hidden', !busy);
+      $('suggestReview').classList.toggle('hidden', !review);
+      $('saveSuggestions').disabled = !this.ann.boxes.length;
+      $('suggestHint').textContent = this.suggestionHint(review, eligible);
+      $('suggestStatus').textContent = this.suggestionMessage;
+    }
+
+    suggestionHint(review, eligible) {
+      if (review) return this.ann.boxes.length
+        ? 'Check every class and box, and draw any missing boxes before saving.'
+        : 'Discard suggestions to leave this photo unreviewed, or draw any missing boxes.';
+      if (!this.canSuggest) return 'Try the hosted labeler in a recent desktop browser for suggestions.';
+      if (!eligible) return 'Available on unlabeled photos.';
+      return this.suggestionModelReady ? 'Find objects using your saved class names.'
+        : 'First use downloads 155 MB of model files. Photos stay on this device.';
+    }
+
+    cancelSuggestionJob(message = '') {
+      if (this.suggestionJob) {
+        this.suggestionWorker?.terminate();
+        this.suggestionWorker = this.suggestionJob = null;
+      }
+      this.suggestionMessage = message;
+      this.renderSuggestionControls();
+    }
+
+    async suggestBoxes() {
+      if (!this.canSuggestCurrentPhoto() || this.suggestionJob || this.ann.action) return;
+      const job = { item: this.ann.item };
+      this.suggestionJob = job;
+      this.suggestionMessage = 'Preparing the model…';
+      this.renderSuggestionControls();
+      try {
+        const photo = await job.item.imageEntry.getFile();
+        if (this.suggestionJob !== job) return;
+        if (!this.suggestionWorker) {
+          const worker = new Worker('./suggest-boxes-worker.js', { type: 'module' });
+          this.suggestionWorker = worker;
+          worker.onmessage = event => this.showSuggestionResult(worker, event.data);
+          worker.onerror = () => {
+            if (worker === this.suggestionWorker) this.cancelSuggestionJob('Could not load suggestions. Try again or keep labeling by hand.');
+          };
+        }
+        this.suggestionWorker.postMessage({
+          photo, classes: this.model.classes, width: job.item.width, height: job.item.height,
+        });
+      } catch (error) {
+        if (this.suggestionJob === job) this.cancelSuggestionJob('Could not start suggestions. Try again or keep labeling by hand.');
+      }
+    }
+
+    showSuggestionResult(worker, result) {
+      if (worker !== this.suggestionWorker || !this.suggestionJob) return;
+      if (this.suggestionJob.item !== this.ann.item) {
+        this.cancelSuggestionJob();
+        return;
+      }
+      if (result.type === 'download') {
+        this.suggestionMessage = `Downloading the model… ${result.percent}%`;
+      } else if (result.type === 'analyzing') {
+        this.suggestionModelReady = true;
+        this.suggestionMessage = 'Looking for your objects…';
+      } else if (result.type === 'error') {
+        this.cancelSuggestionJob(result.message);
+        return;
+      } else if (result.type === 'done') {
+        this.suggestionJob = null;
+        if (result.boxes.length && this.canSuggestCurrentPhoto() && !this.ann.action) {
+          this.suggestionMessage = '';
+          this.ann.startSuggestionReview(result.boxes);
+        } else {
+          this.suggestionMessage = result.boxes.length ? '' : 'No suggestions found. Draw any objects you see, or confirm no object after checking.';
+        }
+      }
+      this.renderSuggestionControls();
+    }
+
+    suggestionsResolved() {
+      if (this.ann.suggestionReview) {
+        this.toast('Save reviewed boxes or discard suggestions first.');
+        return false;
+      }
+      this.cancelSuggestionJob();
+      return true;
+    }
+
     // --- Small helpers -----------------------------------------------------
     saveState(t) {
       $('saveState').textContent = t;
@@ -2792,6 +2964,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     async guardUnsaved() {
+      if (!this.suggestionsResolved()) return false;
       await this.ann.writes;
       return !this.ann.dirty || await this.ann.saveEdits();
     }
@@ -3102,7 +3275,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Reset & toast -----------------------------------------------------
     reset() {
       if (this.exporting || this.switching) return;
-      if ((this.ann.dirty || this.needsDownload || this.classEdits) &&
+      if ((this.ann.dirty || this.ann.suggestionReview || this.needsDownload || this.classEdits) &&
           !confirm('Close and discard changes you have not downloaded or saved to your folder?')) return;
       this.ann.dirty = this.needsDownload = this.classEdits = false;
       location.reload();

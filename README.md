@@ -80,6 +80,15 @@ The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1*
 | Reverse a mistake | **Undo** and **Redo** apply to the current image. You can undo a box change or an accidental background decision. |
 | Find another image | Use **Previous**, **Next** or a thumbnail. Type part of a filename in **Find image…** or filter by review status. Previous and Next follow the filtered list. On narrow screens, tap **Images** to open the list. |
 
+### Get suggestions for a photo
+
+1. Save your classes and open an unlabeled photo in the hosted labeler. For the best starting point, try desktop Chrome or Edge and familiar, descriptive class names such as `bolt` and `hex_nut`.
+2. Click **Suggest boxes**. First use downloads about 155 MB of model weights. The browser processes your photos on your device. Use **Cancel** if you want to carry on by hand.
+3. Check the suggested class and position of each dashed box. Use **Edit** to move, resize, reclassify or delete a box. Use **Draw** to add any missed objects. The number marked **AI** is the model's score for its original suggestion.
+4. Click **Save reviewed boxes** when the whole photo is ready. To start over, click **Discard suggestions**. If the model suggests nothing, check the photo yourself, then draw boxes or use **Confirm no object** as appropriate.
+
+The model is [OWL-ViT](https://huggingface.co/google/owlvit-base-patch32), using [quantized ONNX weights](https://huggingface.co/Xenova/owlvit-base-patch32). Fine distinctions, small parts and partly hidden objects may need more hand correction.
+
 ### Use the workbench on a phone
 
 ![Phone-sized view with numbered callouts for the image drawer button, status filter and photo thumbnails](docs/guide/08-mobile-images.png)
