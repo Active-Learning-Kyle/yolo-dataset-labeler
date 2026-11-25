@@ -35,6 +35,7 @@ def run(browser):
     expect(page.locator('#photoKey li')).to_have_text(names)
     for width in (320, 390, 600, 820, 1024, 1440):
         page.set_viewport_size({'width': width, 'height': 850})
+        page.locator('.kit-photo').scroll_into_view_if_needed()
         if page.locator('.kit-photo').bounding_box()['width'] <= 480:
             expect(page.locator('#photoKey')).to_be_visible()
             expect(labels.first.locator('span')).to_be_hidden()
@@ -49,6 +50,13 @@ def run(browser):
                 && tags.slice(i + 1).every(b => a.right <= b.left || b.right <= a.left
                     || a.bottom <= b.top || b.bottom <= a.top));
         }""")
+        covered = labels.evaluate_all("""labels => labels.filter(label => {
+            const r = label.getBoundingClientRect();
+            const y = r.top + r.height / 2;
+            return [r.left + 1, r.left + r.width / 2, r.right - 1].some(x =>
+                !label.contains(document.elementFromPoint(x, y)));
+        }).map(label => label.textContent)""")
+        assert not covered, f'Cover labels obscured at {width}px: {covered}'
     page.set_viewport_size({'width': 1024, 'height': 820})
     photo = solid_png(200, 170)
     frames = io.BytesIO()

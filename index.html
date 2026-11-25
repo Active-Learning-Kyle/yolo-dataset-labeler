@@ -4,6 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>YOLO Dataset Labeler</title>
+<!--
+MIT License
+
+Copyright (c) 2026 Timmy Cheng
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
 
 <!-- ==========================================================================
      STYLES
@@ -443,9 +466,9 @@ figcaption { margin-top:5px; line-height:1.25; }
 .format-notes summary { width:fit-content; font-weight:600; }
 .format-notes p { max-width:48ch; }
 .kit-example { margin:0; align-self:center; min-width:0; container-type:inline-size; }
-.kit-photo { aspect-ratio:4/3; background:#285759 var(--screw-photo) center/100% 100%; border-radius:12px; position:relative; counter-reset:part; }
+.kit-photo { aspect-ratio:4/3; background:#285759 var(--screw-photo) center/100% 100%; border-radius:12px; position:relative; isolation:isolate; counter-reset:part; }
 .photo-box { position:absolute; counter-increment:part; border:1.5px solid var(--tag); left:var(--x); top:var(--y); width:var(--w); height:var(--h); }
-.photo-box b { position:absolute; left:-1px; bottom:100%; padding:0 4px; color:#13253c; background:var(--tag);
+.photo-box b { position:absolute; z-index:1; left:-1px; bottom:100%; padding:0 4px; color:#13253c; background:var(--tag);
   white-space:nowrap; font:650 clamp(10px,1.9cqw,13px)/1.35 ui-monospace,monospace; }
 .tag-end b { left:auto; right:-1px; }
 .tag-below b { top:100%; bottom:auto; }
@@ -749,7 +772,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       the original folder cannot be updated directly.
     </p>
   </div>
-  <p class="credit">Original labeler © 2026 Timmy Cheng · MIT License</p>
+  <p class="credit">HKU Active Learning Teaching Team · MIT License</p>
   <div class="dialog-foot">
     <button id="closeHelp" class="primary">Close</button>
   </div>
