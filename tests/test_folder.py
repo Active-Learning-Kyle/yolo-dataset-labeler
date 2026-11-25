@@ -12,22 +12,29 @@ def check(browser):
     page.route('http://localhost/index.html', lambda route: route.fulfill(
         content_type='text/html; charset=utf-8', body=html.read_bytes()))
     page.goto('http://localhost/index.html')
+    page.evaluate('window.showDirectoryPicker = () => navigator.storage.getDirectory()')
+    folder = page.get_by_role('button', name='Open dataset folder', exact=True)
+    expect(page.locator('.entry-actions button').first).to_have_id('openBtn')
+    expect(page.locator('.entry-actions .primary')).to_have_count(1)
+    folder.click()
+    expect(page.locator('#checklist .missing')).to_have_count(3)
+    page.get_by_role('button', name='Create Missing Items').click()
+    expect(page.locator('#checklist .ok')).to_have_count(3)
     page.evaluate("""async bytes => {
         const root = await navigator.storage.getDirectory();
-        async function write(dir, name, data) {
-            const file = await dir.getFileHandle(name, {create:true});
+        const imgs = await root.getDirectoryHandle('images');
+        for (const name of ['a.png', 'b.png']) {
+            const file = await imgs.getFileHandle(name, {create:true});
             const writer = await file.createWritable();
-            await writer.write(data);
+            await writer.write(new Uint8Array(bytes));
             await writer.close();
         }
-        const imgs = await root.getDirectoryHandle('images', {create:true});
-        await root.getDirectoryHandle('labels', {create:true});
-        await write(root, 'classes.txt', 'disc');
-        for (const name of ['a.png', 'b.png']) await write(imgs, name, new Uint8Array(bytes));
-        window.showDirectoryPicker = async () => root;
     }""", list(solid_png(320, 240)))
-    page.get_by_text('Folders & supported formats', exact=True).click()
-    page.locator('#openBtn').click()
+    page.get_by_role('button', name='Refresh Dataset').click()
+    expect(page.locator('#summaryStats .stat').first).to_have_text('2Images')
+    page.locator('#addClassBtn').click()
+    page.locator('#classList input').fill('disc')
+    page.locator('#saveClassesBtn').click()
     page.get_by_role('button', name='Start Labeling', exact=True).click()
     page.evaluate("""() => {
         const proto = FileSystemFileHandle.prototype;
@@ -62,7 +69,7 @@ def check(browser):
     assert labels['b.txt'] == '' and labels['a.txt'].split()[0] == '0'
     assert len(labels['a.txt'].split()) == 5
     page.close()
-    print('PASS direct write denial, navigation held, retry to original file, empty background label')
+    print('PASS primary folder entry, empty-folder setup, photo refresh, class save, write denial, retry and background label')
 
 
 if __name__ == '__main__':

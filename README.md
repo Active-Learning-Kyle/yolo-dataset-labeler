@@ -68,13 +68,15 @@ Coordinates and dimensions are normalized to the range from `0` to `1`. An empty
 
 ## How to Use
 
-1. Select **Open a ZIP** for a workshop pack or saved draft. Select **Start with my photos** for individual images on a phone or computer. You can also drop photos or one ZIP onto the cover. No folder setup is needed. Add more photos in the summary. Photos with the same name receive separate filenames. To open an existing dataset folder, expand **Folders & supported formats**.
-2. Review the image count and class order in the dataset summary. Enter the agreed class names and select **Save Classes** before starting. The first class has ID 0.
+1. For the classroom exercise, create an empty folder on your computer. In desktop Chrome or Edge, select **Open dataset folder**, choose that folder, and allow write access. Select **Create Missing Items** to create `images/`, `labels/` and `classes.txt`. Copy your workshop photos into `images/` using your file manager, then select **Refresh Dataset**.
+2. Review the image count. Choose **Add Class** for each assigned class, enter the names in the required order, then select **Save Classes**. The first class has ID 0.
 3. Select **Start Labeling**. Choose **New box class** and use **Draw** to box each visible target, even inside another box. For example, in an assembly kit inspection, draw a separate box around each bolt and hex nut. To adjust an existing box, choose **Edit** and select it on the canvas or in the box list. Drag the box or a corner, or use **Change selected box class**. Choose **Hide boxes** to inspect the original photo. Use the thumbnail strip to jump between images. On phones, tap **Images** to open it.
 4. Choose **Confirm no object** only after inspecting the whole image. A missing label means the image still needs review. An empty label records a reviewed background.
-5. Select **Download draft ZIP** before closing a photo or ZIP session. **Next** keeps edits in the tab and advances. Skipping an untouched image keeps it unreviewed. Reopen the draft with **Open a ZIP**. Direct folder mode writes changes back to the selected folder.
+5. Select **Next** to advance. Skipping an untouched image keeps it unreviewed. In direct folder mode, the labeler saves edits to the selected folder. Open that folder again to resume. In a photo, ZIP or imported-folder session, use **Download draft ZIP** before closing the tab and **Open a ZIP** to resume.
 6. When review is complete, download **Labeled_data.zip**. The labeler packages the images, matching label files and class list. Check your Downloads folder before selecting **I have the ZIP**.
 7. **Continue to Training in Colab** opens the Colab home page. Sign in there, upload the notebook supplied by your instructor, then upload your own ZIP to session storage. Match the class names and order required by that notebook. Keep unseen test images outside the training ZIP.
+
+If you already have a workshop pack or a saved draft, select **Open a ZIP**. To use individual photos without preparing a folder, select **Start with my photos**. You can also drop photos or one ZIP onto the cover. When direct folder writing is unavailable, opening a prepared folder imports a copy into the tab. Download a draft ZIP before closing a tab that holds your edits.
 
 For phone photos, choose JPG/JPEG, PNG, WebP or BMP. Convert HEIC/HEIF before importing. The ZIP writer re-encodes JPEGs with EXIF rotation or reflection in their displayed orientation so their labels align in readers that ignore metadata. Original photos on your device are preserved.
 
