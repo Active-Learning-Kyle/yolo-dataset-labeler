@@ -79,53 +79,14 @@ select:focus-visible { outline: 3px solid #8bb8ff; outline-offset: 2px; }
 
 .screen { max-width: 1280px; margin: 0 auto; padding: 26px; }
 
-/* --- Landing / hero ------------------------------------------------------ */
-.hero { min-height: calc(100vh - 120px); display: grid; place-items: center; }
-.hero-card {
-  max-width: 1520px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  padding: 44px;
-  box-shadow: var(--shadow);
-  text-align: center;
-}
-.hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); margin: .2em 0; }
-.hero p { color: var(--muted); font-size: 1.05rem; }
-
-.privacy {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  background: #eaf6ee;
-  color: #14532d;
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-weight: 700;
-}
-
-.mode-note {
-  margin: 18px auto;
-  max-width: 760px;
-  padding: 14px;
-  background: #f3f6fb;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-}
-
-.workflow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin: 22px 0;
-}
-.workflow span {
-  background: #edf2fa;
-  padding: 7px 10px;
-  border-radius: 999px;
-  font-size: .9rem;
-}
+/* --- Dataset entry ------------------------------------------------------- */
+.hero { min-height: calc(100svh - 64px); display: grid; align-items: center; }
+.hero-card { width: min(100%, 820px); margin: 0 auto; background: white; border: 1px solid var(--line); border-top: 4px solid var(--primary); padding: clamp(24px,5vw,64px); }
+.hero h1 { font-size: clamp(2rem,5vw,3.6rem); letter-spacing: -.05em; line-height: 1.05; margin: 0 0 14px; }
+.entry-copy > p { max-width: 47ch; color: var(--muted); font-size: 1.1rem; }
+.entry-copy .actions { margin: 28px 0; }
+.mode-note { padding-top: 20px; margin-top: 30px; border-top: 1px solid var(--line); color: var(--muted); }
+.format-notes { color: var(--muted); font-size: .86rem; }
 
 /* --- Cards --------------------------------------------------------------- */
 .card {
@@ -323,25 +284,78 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
 .finish { border: 2px solid #71c590; background: #effcf3; }
 .small { font-size: .86rem; color: var(--muted); }
 
-/* --- Responsive ---------------------------------------------------------- */
-@media (max-width: 980px) {
-  .annotation { grid-template-columns: 210px 1fr; }
-  .right-panel { grid-column: 1 / -1; height: 280px; }
-  .grid2 { grid-template-columns: 1fr; }
+/* --- Workspace and responsive layout ------------------------------------ */
+:root { --bg:#f2f4f7; --primary:#214a77; --primary2:#153757; --ink:#15283c; --line:#cdd5de; --radius:6px; }
+body { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+h2, h3, .brand { letter-spacing:-.025em; }
+.appbar { background:#132c45; color:white; height:58px; }
+.brand { display:flex; align-items:center; gap:10px; }
+.brandmark { font-size:1.5rem; line-height:1; color:#a8ccee; }
+.appbar button { color:#fff; border-color:#638099; }
+button, input, select, .class-row input, .search { border-radius:5px; }
+button { font-weight:600; }
+button:disabled { opacity:.53; cursor:default; }
+.card, .panel, .stat, .check, .box-row { box-shadow:none; border-radius:5px; }
+.check { padding:8px 0; border:0; border-bottom:1px solid #e4e8ec; }
+.stat { background:white; padding:10px; }
+.stat b { font-variant-numeric:tabular-nums; }
+.stats { grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:6px; }
+.top-progress { font-size:.85rem; padding:6px 18px; }
+.progress { height:4px; margin-top:3px; }
+.annotation { grid-template-columns:minmax(166px,18%) minmax(260px,1fr) minmax(200px,21%); gap:0; height:calc(100dvh - 126px); min-height:450px; }
+.panel { border-radius:0; min-width:0; }
+.left-panel { display:flex; flex-direction:column; }
+.panel-head { display:grid; gap:7px; }
+.field-title { font-weight:700; }
+.image-list { flex:1; height:auto; }
+.image-item { white-space:normal; overflow-wrap:anywhere; padding:9px 12px; }
+.image-item.current { background:#e8eff7; box-shadow:inset 3px 0 var(--primary); }
+.status-pill { font-size:.72rem; font-weight:500; padding:1px 6px; color:#526273; border-color:#d3dce4; }
+[data-status="labeled"] .status-pill { color:#246048; background:#edf6f0; }
+[data-status="background"] .status-pill { color:#345a8a; background:#eff4fb; }
+[data-status="invalid"] .status-pill { color:#922d20; background:#fff1ef; }
+.canvas-head, .toolbar { display:flex; gap:5px; align-items:center; padding:8px 10px; background:white; }
+.canvas-head { justify-content:space-between; }
+.canvas-head strong { font-size:.9rem; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.zoom-tools { display:flex; gap:3px; }
+.zoom-tools button { padding:5px 9px; min-width:32px; }
+.canvas-wrap { display:flex; overflow:auto; background:#202932; }
+.canvas-wrap canvas { flex:none; max-width:none; max-height:none; margin:auto; }
+.canvas-message { margin:auto; }
+.toolbar button { font-size:.82rem; padding:8px 10px; }
+.right-body { padding:16px; }
+.right-body h3 { margin:22px 0 8px; }
+.field-guide, .credit { border-top:1px solid var(--line); margin-top:18px; padding-top:12px; }
+.field-guide { font-size:.83rem; }
+summary { cursor:pointer; }
+.examples { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.examples figure { margin:0; }
+.sample { height:58px; position:relative; background:#e5eaf0; display:grid; place-items:center; }
+.sample i { width:24px; height:24px; border-radius:50%; background:#3865a6; }
+.sample:after { content:""; position:absolute; border:1.5px solid #2b5546; width:24px; height:24px; box-sizing:border-box; }
+.sample.loose:after { width:78%; height:47px; border-color:#a84639; }
+figcaption { margin-top:5px; line-height:1.25; }
+.credit { padding:10px 22px; font-size:.8rem; color:var(--muted); }
+#noObjectBtn { width:100%; margin-top:10px; }
+@media (max-width:1000px) {
+  .annotation { grid-template-columns:155px minmax(230px,1fr) 184px; }
+  .right-body, .panel-head { padding:10px; }
+  .grid2 { grid-template-columns:1fr; }
 }
-
-@media (max-width: 700px) {
-  .screen { padding: 14px; }
-  .hero-card { padding: 25px; }
-  .annotation { display: flex; flex-direction: column; height: auto; }
-  .left-panel, .right-panel { height: 260px; }
-  .canvas-panel { height: 65vh; }
-  .appbar { padding: 0 10px; }
-  .brand { font-size: 1rem; }
-  .bar-actions button { padding: .55rem; }
-  .top-progress { grid-template-columns: 1fr; }
-  .grid2 { grid-template-columns: 1fr; }
+@media (max-width:760px) {
+  .annotation { grid-template-columns:minmax(128px,30%) minmax(0,1fr); height:auto; min-height:0; }
+  .left-panel,.canvas-panel { height: max(410px,60dvh); }
+  .right-panel { grid-column:1 / -1; }
+  .right-body { height:auto; }
+  .top-progress { grid-template-columns:1fr; gap:0; }
+  .save-state { padding:0; }
+  .brand { font-size:.94rem; gap:5px; }
+  .appbar { padding:0 10px; }
+  .appbar button { padding:6px; }
+  .screen { padding:12px; }
+  .toolbar button { flex:auto; }
 }
+@media (pointer:coarse) { .toolbar button,.zoom-tools button,.image-item,summary { min-height:42px; } }
 </style>
 </head>
 <body>
@@ -352,10 +366,10 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
      ========================================================================== -->
 
 <header class="appbar">
-  <div class="brand">YOLO Dataset Labeler</div>
+  <div class="brand"><span class="brandmark" aria-hidden="true">▣</span> YOLO Dataset Labeler</div>
   <div class="bar-actions">
     <button id="helpBtn" class="ghost">Help</button>
-    <button id="resetBtn" class="danger">Reset Application</button>
+    <button id="resetBtn" class="ghost hidden">Close dataset</button>
   </div>
 </header>
 
@@ -364,7 +378,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     <div id="progressText"></div>
     <div class="progress"><div id="progressFill"></div></div>
   </div>
-  <div id="saveState" class="save-state">Saved</div>
+  <div id="saveState" class="save-state" role="status">Ready</div>
 </div>
 
 <main>
@@ -372,29 +386,19 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
   <!-- ---------------------------------------------------------------- Landing -->
   <section id="landing" class="screen hero">
     <div class="hero-card">
-      <div class="privacy">🔒 Selected images and labels are processed locally and are not uploaded by this application.</div>
-      <h1>YOLO Dataset Labeler</h1>
-      <p>
-        Draw rectangular bounding boxes and save standard YOLO labels in your browser.
-        Supported images: JPG, JPEG, PNG, WebP and BMP.
-      </p>
-      <div class="workflow">
-        <span>Open folder</span>
-        <span>→ Check structure</span>
-        <span>→ Define classes</span>
-        <span>→ Label images</span>
-        <span>→ Validate</span>
-        <span>→ Export</span>
-      </div>
-      <div class="actions" style="justify-content:center">
-        <button id="openBtn" class="primary">Open Dataset Folder</button>
-        <button id="openZipBtn" class="ghost">Import Images ZIP</button>
+      <div class="entry-copy">
+        <h1>Open a dataset</h1>
+        <p>Import the classroom ZIP or choose a folder of images and YOLO labels.</p>
+        <div class="actions">
+          <button id="openZipBtn" class="primary">Import Images ZIP</button>
+          <button id="openBtn" class="ghost">Open Dataset Folder</button>
+        </div>
       </div>
       <input id="folderInput" class="hidden" type="file" webkitdirectory multiple>
       <input id="zipInput" class="hidden" type="file" accept=".zip,application/zip">
       <input id="zipImagesInput" class="hidden" type="file" accept=".zip,application/zip">
       <div id="modeNote" class="mode-note"></div>
-      <p class="small">Recommended: latest desktop Chrome or Edge for direct folder saving. Safari and Firefox use compatibility mode.</p><p class="small">ZIP filenames must be UTF-8 or ASCII. Limits: 50,000 entries, 1 GiB input, 512 MiB per file, 2 GiB extracted total.</p>
+      <p class="small">Images stay on this device. No account required.</p><details class="format-notes"><summary>Supported files</summary><p>JPG, PNG, WebP and BMP. ZIP filenames must be UTF-8 or ASCII. Limits: 50,000 entries, 1 GiB input, 512 MiB per file and 2 GiB extracted.</p></details>
     </div>
   </section>
 
@@ -437,12 +441,20 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
 
       <aside class="panel left-panel">
         <div class="panel-head">
+          <label class="field-title" for="imageSearch">Images</label>
+          <select id="statusFilter" aria-label="Filter by review status">
+            <option value="all">All statuses</option><option value="unlabeled">Unlabeled</option>
+            <option value="labeled">Labeled</option><option value="background">No Object</option><option value="invalid">Invalid</option>
+          </select>
           <input id="imageSearch" class="search" aria-label="Search images" placeholder="Search images...">
         </div>
         <div id="imageList" class="image-list"></div>
       </aside>
 
       <section class="panel canvas-panel">
+        <div class="canvas-head"><strong id="frameName">Image</strong><div class="zoom-tools" aria-label="Canvas zoom">
+          <button id="zoomOut" aria-label="Zoom out">−</button><button id="zoomFit" title="Fit image to canvas">Fit</button><button id="zoomIn" aria-label="Zoom in">+</button>
+        </div></div>
         <div id="canvasWrap" class="canvas-wrap">
           <canvas id="canvas"></canvas>
           <div id="canvasMessage" class="canvas-message">Choose an image.</div>
@@ -467,7 +479,13 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
           </div>
           <h3>Bounding boxes</h3>
           <div id="boxList" class="box-list"></div>
+          <button id="noObjectBtn" class="ghost">Confirm no object</button>
           <div id="invalidDetails"></div>
+          <details class="field-guide"><summary>Box guide &amp; shortcuts</summary>
+            <div class="examples"><figure><div class="sample loose"><i></i></div><figcaption>Too much background</figcaption></figure><figure><div class="sample tight"><i></i></div><figcaption>Tight to the disc</figcaption></figure></div>
+            <p>Box only the visible part of each target. Two discs need two boxes. Use Next to skip an unchecked image.</p>
+            <p><kbd>A</kbd> / <kbd>D</kbd> move between images · <kbd>1–9</kbd> choose class · <kbd>Delete</kbd> remove box · <kbd>Ctrl/⌘ Z</kbd> undo.</p>
+          </details>
         </div>
       </aside>
 
@@ -482,7 +500,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     <ol>
       <li>Select a class, then drag on the image to draw a box.</li>
       <li>Click a box to select it. Drag inside it to move it, or drag a square handle to resize it.</li>
-      <li>To mark an image as a background image with no target object, leave it without boxes and select <b>Save</b>. This creates an empty label file.</li>
+      <li>To mark an image as a background image with no target object, choose <b>Confirm no object</b>. This creates an empty label file.</li>
       <li>Boxes smaller than 3 original-image pixels are rejected.</li>
     </ol>
     <p>
@@ -496,10 +514,11 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       <span class="kbd">Esc</span> cancel/deselect.
     </p>
     <p class="small">
-      All work remains local. In Safari and Firefox, use compatibility mode and download the completed ZIP;
+      All work remains local. For ZIP sessions, use <b>Download draft ZIP</b> in Dataset Summary before closing. Reopen the draft with <b>Import Images ZIP</b>. In compatibility mode
       the original folder cannot be updated directly.
     </p>
   </div>
+  <p class="credit">Original labeler © 2026 Timmy Cheng · MIT License</p>
   <div class="dialog-foot">
     <button id="closeHelp" class="primary">Close</button>
   </div>
@@ -822,13 +841,13 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
         return;
       }
 
+      await this.imageDimensions(item);
+      if (item.errors.length) return;
+
       if (!text.trim()) {
         item.status = 'background'; // deliberate no-object image
         return;
       }
-
-      await this.imageDimensions(item);
-      if (item.errors.length) return;
 
       const lines = text.split(/\r?\n/);
       for (let idx = 0; idx < lines.length; idx++) {
@@ -1147,14 +1166,18 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       this.undo = [];
       this.redo = [];
       this.dirty = false;
-      this.timer = null;    // debounce handle for direct-mode autosave
+      this.timer = null;
+      this.zoom = 1;
+      this.writes = Promise.resolve();
+      this.revision = 0;
       this.bind();
     }
 
     bind() {
       this.canvas.addEventListener('pointerdown', e => this.down(e));
       this.canvas.addEventListener('pointermove', e => this.move(e));
-      window.addEventListener('pointerup', e => this.up(e));
+      window.addEventListener('pointerup', e => { if (e.isPrimary) this.up(); });
+      this.canvas.addEventListener('pointercancel', () => this.cancelDrag());
       new ResizeObserver(() => this.draw()).observe($('canvasWrap'));
     }
 
@@ -1190,7 +1213,12 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
 
     // --- Loading an image --------------------------------------------------
     async load(item) {
-      if (this.dirty && !await this.app.guardUnsaved()) return false;
+      if (!await this.app.guardUnsaved()) return false;
+      this.img = null;
+      this.action = null;
+      this.zoom = 1;
+      $('canvasWrap').scrollTo(0, 0);
+      $('frameName').textContent = item.name;
 
       clearTimeout(this.timer);
       if (this.url) URL.revokeObjectURL(this.url);
@@ -1201,7 +1229,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       this.undo = [];
       this.redo = [];
       this.dirty = false;
-      this.app.saveState('Saved');
+      this.app.saveState(item.status === 'unlabeled' ? 'Not reviewed' : this.app.savedMessage());
 
       const f = await item.imageEntry.getFile();
       this.url = URL.createObjectURL(f);
@@ -1235,8 +1263,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     transform() {
       if (!this.img) return null;
       const wrap = $('canvasWrap');
-      const r = wrap.getBoundingClientRect();
-      const scale = Math.min(r.width / this.img.naturalWidth, r.height / this.img.naturalHeight);
+      const scale = this.zoom * Math.min(wrap.clientWidth / this.img.naturalWidth, wrap.clientHeight / this.img.naturalHeight);
       return {
         scale,
         cssW: this.img.naturalWidth * scale,
@@ -1248,7 +1275,10 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       if (!this.img) return;
 
       const t = this.transform();
-      const dpr = window.devicePixelRatio || 1;
+      $('zoomFit').textContent = this.zoom === 1 ? 'Fit' : Math.round(this.zoom * 100) + '%';
+      $('zoomIn').disabled = this.zoom >= 3;
+      $('zoomOut').disabled = this.zoom <= 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       this.canvas.style.width = t.cssW + 'px';
       this.canvas.style.height = t.cssH + 'px';
@@ -1340,14 +1370,16 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     }
 
     down(e) {
-      if (!this.img || e.button !== 0) return;
+      if (!this.img || this.action || e.button !== 0 || !e.isPrimary || this.app.switching) return;
 
       const p = this.point(e);
       const hit = this.hit(p);
+      clearTimeout(this.timer);
       this.canvas.setPointerCapture?.(e.pointerId);
 
       if (hit) {
         this.selected = hit.i;
+        $('classSelect').value = this.boxes[hit.i].classId;
         this.pushUndo();
         this.action = {
           type: hit.handle ? 'resize' : 'move',
@@ -1369,7 +1401,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     }
 
     move(e) {
-      if (!this.action || !this.img) return;
+      if (!this.action || !this.img || !e.isPrimary) return;
 
       const p = this.point(e);
       const a = this.action;
@@ -1403,6 +1435,16 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       this.draw();
     }
 
+    cancelDrag() {
+      if (!this.action) return;
+      if (this.action.original) {
+        this.boxes[this.selected] = this.action.original;
+        this.undo.pop();
+      }
+      this.action = null;
+      this.draw();
+    }
+
     up() {
       if (!this.action) return;
 
@@ -1431,10 +1473,11 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     // --- Box list / edits --------------------------------------------------
     /** Mark the image as modified and schedule autosave in direct mode. */
     changed() {
+      this.revision++;
       this.dirty = true;
       this.app.saveState('Unsaved changes');
-      if (this.app.store.mode === 'direct') {
-        clearTimeout(this.timer);
+      clearTimeout(this.timer);
+      if (this.boxes.length && this.item?.status !== 'invalid') {
         this.timer = setTimeout(() => this.save(), 650);
       }
     }
@@ -1502,28 +1545,41 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     async save(empty = false) {
       if (!this.item || !this.img) return false;
 
-      this.app.saveState('Saving');
-      try {
-        await this.app.store.writeText(`labels/${this.item.stem}.txt`, empty ? '' : this.yolo());
+      clearTimeout(this.timer);
+      const item = this.item;
+      if (!empty && !this.boxes.length && item.status !== 'background' &&
+          !confirm('Have you checked the whole image? Saving without boxes marks it as No Object.')) return false;
+      if (item.status === 'invalid' &&
+          !confirm('Replace this invalid label file with the boxes currently shown?')) return false;
 
-        this.item.boxes = empty ? [] : JSON.parse(JSON.stringify(this.boxes));
-        this.boxes = JSON.parse(JSON.stringify(this.item.boxes));
-        this.item.errors = [];
-        this.item.status = (empty || this.boxes.length === 0) ? 'background' : 'labeled';
-        this.item.labelEntry = {
-          name: this.item.stem + '.txt',
-          getFile: () => this.app.store.readFile(`labels/${this.item.stem}.txt`)
-        };
-
-        this.dirty = false;
-        this.app.saveState('Saved');
-        this.app.renderAll();
-        return true;
-      } catch (e) {
-        this.app.saveState('Save failed');
-        this.app.toast(`Save failed: ${e.message}`, true);
-        return false;
-      }
+      const revision = this.revision;
+      const boxes = this.boxes.map(box => ({ ...box }));
+      const contents = empty ? '' : this.yolo();
+      const filename = item.labelEntry?.name || item.stem + '.txt';
+      this.app.saveState('Saving…');
+      const persist = async () => {
+        try {
+          await this.app.store.writeText('labels/' + filename, contents);
+          item.boxes = boxes;
+          item.errors = [];
+          item.totalBoxes = boxes.length;
+          item.status = boxes.length ? 'labeled' : 'background';
+          item.labelEntry = {name: filename, getFile: () => this.app.store.readFile('labels/' + filename)};
+          if (this.app.store.mode === 'memory') this.app.needsDownload = true;
+          if (this.item === item && revision === this.revision) {
+            this.dirty = false;
+            this.app.saveState(this.app.savedMessage());
+          }
+          this.app.renderAll();
+          return true;
+        } catch (e) {
+          this.app.saveState('Save failed');
+          this.app.toast('Save failed: ' + e.message, true);
+          return false;
+        }
+      };
+      this.writes = this.writes.then(persist, persist);
+      return this.writes;
     }
 
     /** Explicitly mark the current image as "no object" (empty label file). */
@@ -1569,11 +1625,22 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       $('prevBtn').onclick = () => this.navigate(-1);
       $('nextBtn').onclick = () => this.navigate(1);
       $('saveBtn').onclick = () => this.ann.save();
-      $('saveNextBtn').onclick = async () => { if (await this.ann.save()) this.navigate(1); };
+      $('saveNextBtn').onclick = async () => { const item = this.ann.item; if (await this.ann.save() && this.ann.item === item) this.navigate(1); };
       $('undoBtn').onclick = () => this.ann.undoDo();
       $('redoBtn').onclick = () => this.ann.redoDo();
       $('backSetupBtn').onclick = async () => { if (await this.guardUnsaved()) this.showSetup(); };
       $('classSelect').onchange = e => this.ann.changeClass(Number(e.target.value));
+      $('noObjectBtn').onclick = () => this.ann.noObject();
+      $('statusFilter').onchange = e => {
+        this.filter = e.target.value;
+        this.renderImageList();
+      };
+      for (const [id, delta] of [['zoomIn', 0.5], ['zoomOut', -0.5], ['zoomFit', 0]]) {
+        $(id).onclick = () => {
+          this.ann.zoom = delta ? Math.max(1, Math.min(3, this.ann.zoom + delta)) : 1;
+          this.ann.draw();
+        };
+      }
       $('imageSearch').oninput = () => this.renderImageList();
       $('folderInput').onchange = e => this.importFolder(e.target.files);
       $('zipInput').onchange = e => this.importZip(e.target.files[0]);
@@ -1581,7 +1648,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       $('zipImagesInput').onchange = e => this.importImagesZip(e.target.files[0]);
 
       window.addEventListener('beforeunload', e => {
-        if (this.ann.dirty) { e.preventDefault(); e.returnValue = ''; }
+        if (this.ann.dirty || this.needsDownload || this.classEdits) { e.preventDefault(); e.returnValue = ''; }
       });
       document.addEventListener('keydown', e => this.keys(e));
     }
@@ -1620,13 +1687,16 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       try {
         await this.model.scan();
         this.renderAll();
+        return true;
       } catch (e) {
         this.toast(`Dataset scan failed: ${e.message}`, true);
+        return false;
       }
     }
 
     showSetup() {
       $('landing').classList.add('hidden');
+      $('resetBtn').classList.remove('hidden');
       $('labeler').classList.add('hidden');
       $('topProgress').classList.add('hidden');
       $('setup').classList.remove('hidden');
@@ -1681,7 +1751,10 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
         }
       }
       const r = el('button', 'Refresh Dataset');
-      r.onclick = () => this.refresh();
+      r.onclick = () => {
+        if (this.classEdits) return this.toast('Save Classes before refreshing.', true);
+        this.refresh();
+      };
       a.append(r);
 
       const n = $('structureNotice');
@@ -1710,6 +1783,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       const id = el('div', String(i), 'class-id');
       const inp = el('input');
       inp.value = name;
+      inp.oninput = () => { this.classEdits = true; };
       inp.setAttribute('aria-label', `Class ${i} name`);
 
       const up = el('button', '↑', 'ghost');
@@ -1729,6 +1803,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
 
     addClass() {
       const names = this.collectClasses();
+      this.classEdits = true;
       names.push('');
       this.model.classes = names;
       this.renderClasses();
@@ -1744,6 +1819,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     reorderClass(i, j) {
       if(this.labelsExist())return this.toast('Class order is locked because labels exist.',true);
       const a = this.collectClasses();
+      this.classEdits = true;
       [a[i], a[j]] = [a[j], a[i]];
       this.model.classes = a;
       this.renderClasses();
@@ -1752,6 +1828,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     deleteClass(i) {
       if(this.labelsExist())return this.toast('Classes cannot be deleted because labels exist.',true);
       const a = this.collectClasses();
+      this.classEdits = true;
       a.splice(i, 1);
       this.model.classes = a;
       this.renderClasses();
@@ -1774,6 +1851,8 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       try {
         await this.store.writeText('classes.txt', a.join('\n') + (a.length ? '\n' : ''));
         this.model.classes = a;
+        this.classEdits = false;
+        if (this.store.mode === 'memory') this.needsDownload = true;
         await this.refresh();
         this.toast('Classes saved.');
       } catch (e) {
@@ -1838,8 +1917,14 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
         a.append(button);
       }
 
-      const importButton = el('button', 'Import Labeled_data.zip');
-      importButton.onclick = () => $('zipInput').click();
+      const draft = el('button', 'Download draft ZIP');
+      draft.onclick = () => this.exportZip(true);
+      a.append(draft);
+      const importButton = el('button', 'Merge labeled ZIP');
+      importButton.onclick = () => {
+        if (this.classEdits) return this.toast('Save Classes before merging.', true);
+        $('zipInput').click();
+      };
       a.append(importButton);
 
       const ex = el('button', 'Download Labeled_data.zip', 'success');
@@ -1847,7 +1932,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       a.append(ex);
 
       const card = $('completionCard');
-      if (s.total && s.complete === 100 && !s.invalid) {
+      if (s.total && !s.unlabeled && !s.invalid && !s.orphans && !this.model.duplicates.length) {
         card.classList.remove('hidden');
         const counts = this.model.classes.map((n, id) =>
           `${id}: ${n} — ${this.model.images.reduce((q, i) => q + i.boxes.filter(b => b.classId === id).length, 0)}`
@@ -1864,7 +1949,11 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
 
     // --- Entering the labeler ---------------------------------------------
     async start(filter) {
-      await this.refresh();
+      if (this.classEdits) {
+        this.toast('Save Classes before starting. Your edits are still on screen.', true);
+        return;
+      }
+      if (!await this.refresh()) return;
 
       const problems = [];
       if (!this.model.structure.images) problems.push('The images/ folder is missing.');
@@ -1882,6 +1971,8 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
       }
 
       this.filter = filter;
+      $('statusFilter').value = filter;
+      $('imageSearch').value = '';
       $('setup').classList.add('hidden');
       $('labeler').classList.remove('hidden');
       $('topProgress').classList.remove('hidden');
@@ -1921,6 +2012,8 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
           el('div', x.name),
           el('span', i === this.current ? 'Current · ' + statusLabel(x.status) : statusLabel(x.status), 'status-pill')
         );
+        b.dataset.status = x.status;
+        b.setAttribute('aria-current', String(i === this.current));
         b.onclick = () => this.openIndex(i);
         h.append(b);
       }
@@ -1929,28 +2022,27 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     }
 
     async openIndex(i) {
-      if (i < 0 || i >= this.model.images.length) return;
-      const ok = await this.ann.load(this.model.images[i]);
-      if (!ok) return;
-      this.current = i;
-      this.renderAll();
+      if (this.switching || i < 0 || i >= this.model.images.length) return;
+      this.switching = true;
+      $('labeler').inert = true;
+      try {
+        this.ann.cancelDrag();
+        if (await this.ann.load(this.model.images[i])) {
+          this.current = i;
+          this.renderAll();
+        }
+      } finally {
+        this.switching = false;
+        $('labeler').inert = false;
+      }
     }
 
     async navigate(d) {
       if (this.current < 0) return;
-      let i = this.current + d;
-      while (i >= 0 && i < this.model.images.length) {
-        const x = this.model.images[i];
-        const matches =
-          this.filter === 'all' ||
-          (this.filter === 'remaining' && (x.status === 'unlabeled' || x.status === 'invalid')) ||
-          x.status === this.filter;
-        if (matches) {
-          await this.openIndex(i);
-          return;
-        }
-        i += d;
-      }
+      const visible = this.visibleImages();
+      const target = d > 0 ? visible.find(row => row.i > this.current)
+                           : visible.reverse().find(row => row.i < this.current);
+      if (target) await this.openIndex(target.i);
     }
 
     renderProgress() {
@@ -1975,15 +2067,16 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     // --- Small helpers -----------------------------------------------------
     saveState(t) {
       $('saveState').textContent = t;
-      $('saveState').style.color = t === 'Save failed' ? 'var(--bad)' : t === 'Saved' ? 'var(--good)' : 'var(--warn)';
+      $('saveState').style.color = t === 'Save failed' ? 'var(--bad)' : t === 'Unsaved changes' ? 'var(--warn)' : 'var(--muted)';
+    }
+
+    savedMessage() {
+      return this.store.mode === 'direct' ? 'Saved to folder' : 'In this tab · download ZIP to keep';
     }
 
     async guardUnsaved() {
-      if (!this.ann.dirty) return true;
-      if (this.store.mode === 'direct') return await this.ann.save();
-      const choice = confirm('You have unsaved changes. Choose OK to save them in browser memory, or Cancel to stay on this image.');
-      if (!choice) return false;
-      return await this.ann.save();
+      await this.ann.writes;
+      return !this.ann.dirty || await this.ann.save();
     }
 
     normalizeClasses(text) {
@@ -2028,6 +2121,19 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
         // Prefer entries already inside an images/ folder, else take them all.
         const preferred = allImages.filter(e => /^images\//i.test(e.name));
         const chosen = preferred.length ? preferred : allImages;
+        const imageCounts = new Map();
+        for (const entry of chosen) {
+          const key = stem(entry.name.split('/').pop()).toLowerCase();
+          imageCounts.set(key, (imageCounts.get(key) || 0) + 1);
+        }
+        const paired = new Set();
+        for (const entry of clean.filter(e => /(?:^|\/)labels\/[^/]+\.txt$/i.test(e.name))) {
+          const key = stem(entry.name.split('/').pop()).toLowerCase();
+          if (imageCounts.get(key) !== 1 || paired.has(key)) {
+            throw new Error('Expected one matching image and one label for ' + entry.name);
+          }
+          paired.add(key);
+        }
 
         this.store.mode = 'memory';
         this.store.name = file.name.replace(/\.zip$/i, '') || 'Imported dataset';
@@ -2150,6 +2256,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
           await this.store.writeBlob(`images/${newStem}${extension}`, imageBlob);
           await this.store.writeText(`labels/${newStem}.txt`, labelText);
           imported++;
+          if (this.store.mode === 'memory') this.needsDownload = true;
         }
 
         await this.refresh();
@@ -2163,17 +2270,19 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
     }
 
     // --- Export ------------------------------------------------------------
-    async exportZip() {
+    async exportZip(draft = false) {
+      if (this.classEdits) return this.toast('Save Classes before downloading.', true);
       if (this.ann.dirty && !await this.ann.save()) return;
-      await this.refresh();
+      if (!await this.refresh()) return;
 
       const s = this.model.summary();
       const problems = [];
 
       if (!this.model.classes.length) problems.push('classes.txt has no valid class names.');
+      if (new Set(this.model.classes).size !== this.model.classes.length) problems.push('Remove duplicate class names.');
       if (this.model.duplicates.length) problems.push('Duplicate image filename stems exist.');
       for (const i of this.model.images) {
-        if (i.status === 'unlabeled' || i.status === 'invalid') problems.push(`${i.name}: ${statusLabel(i.status)}`);
+        if (!draft && (i.status === 'unlabeled' || i.status === 'invalid')) problems.push(`${i.name}: ${statusLabel(i.status)}`);
       }
       if (this.model.orphans.length) problems.push(...this.model.orphans.map(x => `${x}: orphan label file`));
       if (!s.total) problems.push('No supported images found.');
@@ -2189,7 +2298,8 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
 
         for (const i of this.model.images) {
           z.add(`images/${i.name}`, new Uint8Array(await (await i.imageEntry.getFile()).arrayBuffer()));
-          const label = await this.store.readFile(`labels/${i.stem}.txt`);
+          if (!i.labelEntry && draft) continue;
+          const label = await i.labelEntry.getFile();
           z.add(`labels/${i.stem}.txt`, new Uint8Array(await label.arrayBuffer()));
         }
 
@@ -2197,8 +2307,10 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
         const u = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = u;
-        a.download = 'Labeled_data.zip';
+        a.download = draft ? 'Labeler-draft.zip' : 'Labeled_data.zip';
         a.click();
+        this.needsDownload = false;
+        this.toast(draft ? 'Draft ZIP prepared. Resume with Import Images ZIP.' : 'Labeled_data.zip prepared for download.');
         setTimeout(() => URL.revokeObjectURL(u), 1000);
       } catch (e) {
         this.toast(`Export failed: ${e.message}`, true);
@@ -2207,6 +2319,8 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
 
     // --- Keyboard shortcuts ------------------------------------------------
     keys(e) {
+      if ($('labeler').classList.contains('hidden') || $('helpDialog').open || this.switching) return;
+      if ((e.ctrlKey || e.metaKey || e.altKey) && !['s', 'z'].includes(e.key.toLowerCase())) return;
       // Let typing in inputs pass through, except for Ctrl/Cmd+S.
       if (e.target.matches('input,select,textarea') && !((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's')) return;
 
@@ -2229,7 +2343,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
         e.preventDefault();
         this.ann.deleteSelected();
       } else if (k === 'escape') {
-        this.ann.action = null;
+        this.ann.cancelDrag();
         this.ann.selected = -1;
         this.ann.draw();
         this.ann.renderList();
@@ -2244,8 +2358,9 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
 
     // --- Reset & toast -----------------------------------------------------
     reset() {
-      if (!confirm('Reset the application view and forget the currently opened folder? Dataset files will NOT be deleted.')) return;
-      if (!confirm('Are you sure? Unsaved in-memory changes may be lost. Existing dataset files will remain untouched.')) return;
+      if ((this.ann.dirty || this.needsDownload || this.classEdits) &&
+          !confirm('Close and discard changes you have not downloaded or saved to your folder?')) return;
+      this.ann.dirty = this.needsDownload = this.classEdits = false;
       location.reload();
     }
 
@@ -2265,6 +2380,7 @@ dialog::backdrop { background: rgba(15, 23, 42, .55); }
         background: bad ? '#a61b12' : '#174ea6',
         boxShadow: '0 10px 25px rgba(0,0,0,.25)'
       });
+      d.setAttribute('role', bad ? 'alert' : 'status');
       document.body.append(d);
       setTimeout(() => d.remove(), bad ? 9000 : 3000);
     }

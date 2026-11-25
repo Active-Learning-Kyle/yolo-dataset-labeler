@@ -2,9 +2,9 @@
 
 A browser-based tool for creating, editing, validating, importing, and exporting object-detection annotations in the standard YOLO bounding-box format.
 
-## Live Website
+## Classroom entry point
 
-Use the labeler at:
+The current classroom link is Timmy Cheng’s original release. To try the workshop branch, download its `index.html` and open it in a browser.
 
 https://timmy-wccheng.github.io/yolo-dataset-labeler/
 
@@ -35,7 +35,7 @@ For the best experience, use the latest desktop version of Google Chrome or Micr
 | Browser | Folder access | Saving behaviour |
 | --- | --- | --- |
 | Chrome or Edge on desktop | Direct folder mode when the File System Access API is available | Labels and `classes.txt` can be written back to the selected folder |
-| Safari or Firefox on desktop | Compatibility mode | Edits remain in browser memory until the completed ZIP is downloaded |
+| Safari or Firefox on desktop | Compatibility mode | Download a draft ZIP before closing the tab, or the final ZIP when review is complete |
 
 ## Dataset Structure
 
@@ -68,14 +68,12 @@ Coordinates and dimensions are normalized to the range from `0` to `1`. An empty
 
 ## How to Use
 
-1. Open the live website or download `index.html` and open it locally.
-2. Select **Open Dataset Folder** in a supported Chromium-based desktop browser, or import a dataset folder or ZIP in compatibility mode.
-3. Check the dataset structure and create missing items if direct folder mode is available.
-4. Add or review the class names in `classes.txt`.
-5. Select **Start Labeling** and draw bounding boxes on each image.
-6. Save each annotation. Leave an image without boxes and save it to create an empty background-image label.
-7. Review the validation summary.
-8. Download `Labeled_data.zip` when all images have valid labels.
+1. Select **Import Images ZIP**. Open the classroom images, a draft ZIP, or a dataset with `images/`, `labels/` and `classes.txt`. Desktop browsers that support writable folder access can also use **Open Dataset Folder**.
+2. Review the image count and class order in the dataset summary. Enter the agreed class names and select **Save Classes** before starting. The first class has ID 0.
+3. Select **Start Labeling**. Drag a box around the visible part of each target. Select a box to move it or drag a handle to resize it. Expand the box guide for examples.
+4. Choose **Confirm no object** only after inspecting the whole image. A missing label means the image still needs review. An empty label records a reviewed background.
+5. Return to the dataset summary to download a **draft ZIP** before you leave a ZIP session. Reopen the draft with **Import Images ZIP**. Direct folder mode writes changes back to the selected folder.
+6. When review is complete, download **Labeled_data.zip**. The class list, images and labels at the root match the classroom notebook’s input. Keep unseen test images outside this training ZIP.
 
 ## Keyboard Shortcuts
 
