@@ -457,6 +457,8 @@ figcaption { margin-top:5px; line-height:1.25; }
 .entry-actions { display:grid; gap:9px; max-width:345px; }
 .entry-alternatives { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:8px; }
 .entry-alternatives button { min-height:44px; padding:7px 10px; border-radius:8px; font-size:.88rem; }
+.folder-feedback { max-width:42ch; margin:12px 0; padding:8px 12px; border-left:3px solid var(--primary); background:#eef4ff; font-size:.86rem; }
+.folder-feedback:empty { display:none; }
 .entry-action { display:grid; gap:2px; text-align:left; position:relative; padding:10px 38px 11px 16px; border-radius:9px; }
 .entry-action::after { content:"→"; position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:1.25rem; }
 .entry-action span { font-size:1rem; }
@@ -605,6 +607,7 @@ figcaption { margin-top:5px; line-height:1.25; }
             <button id="photosBtn" class="ghost" title="Choose individual photos from your device">Start with my photos</button>
           </div>
         </div>
+        <p id="folderFeedback" class="folder-feedback" role="status"></p>
         <p class="drop-hint">You can also drop photos or one ZIP here.</p>
         <details class="format-notes"><summary>File formats &amp; folder access</summary>
           <p>Choose JPG, JPEG, PNG, WebP or BMP. Convert HEIC or HEIF photos to JPEG or PNG first.</p>
@@ -2177,6 +2180,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.scrollToCurrentImage();
       };
       $('folderInput').onchange = e => this.importFolder(e.target.files);
+      $('folderInput').oncancel = () => this.emptyFolderFeedback();
       $('zipInput').onchange = e => this.importZip(e.target.files[0]);
       $('openZipBtn').onclick = () => $('zipImagesInput').click();
       $('zipImagesInput').onchange = e => this.importImagesZip(e.target.files[0]);
@@ -2267,8 +2271,8 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (this.canWriteFolder()) {
         $('modeNote').textContent = 'Allow folder access to create missing dataset files and save labels on this device.';
       } else {
-        $('entryIntro').textContent = 'On this device, open a prepared dataset folder, a ZIP, or your own photos.';
-        $('folderHint').textContent = 'Import a copy and save your work as a ZIP';
+        $('entryIntro').textContent = 'Starting with an empty folder? Choose Start with my photos. Your dataset will download as a ZIP.';
+        $('folderHint').textContent = 'Import an existing dataset with files';
         $('modeNote').textContent = 'An imported folder needs images/, labels/ and classes.txt. Download a draft ZIP before closing this tab.';
       }
     }
@@ -2278,25 +2282,46 @@ figcaption { margin-top:5px; line-height:1.25; }
       return window.isSecureContext && typeof window.showDirectoryPicker === 'function';
     }
 
+    emptyFolderFeedback() {
+      $('folderFeedback').textContent = 'No files were received. To start a new dataset, choose Start with my photos. To resume, open a folder that already contains your dataset, or open a ZIP.';
+    }
+
     async open() {
+      const feedback = $('folderFeedback');
       try {
         if (this.canWriteFolder()) {
+          feedback.textContent = 'Select your dataset folder and allow access. You can also start with photos.';
           await this.store.openDirect();
         } else {
-          return $('folderInput').click();
+          const input = $('folderInput');
+          if (!('webkitdirectory' in input)) {
+            feedback.textContent = 'Folder selection is unavailable here. Choose Start with my photos or Open a ZIP.';
+            return;
+          }
+          feedback.textContent = 'This browser can import existing files only. If you chose an empty folder, select Start with my photos to continue.';
+          input.value = '';
+          return input.click();
         }
-        await this.refresh();
-        this.showSetup();
+        if (await this.refresh()) this.showSetup();
       } catch (e) {
-        if (e.name !== 'AbortError') this.toast(`Could not open folder: ${e.message}`, true);
+        feedback.textContent = e.name === 'AbortError'
+          ? 'Folder selection was closed. Choose the folder again or start with your photos.'
+          : 'Could not open the folder. Try again and allow access, or choose Start with my photos.';
       }
     }
 
     async importFolder(files) {
-      if (!files.length) return;
-      await this.store.openMemory(files);
-      await this.refresh();
-      this.showSetup();
+      if (!files.length) return this.emptyFolderFeedback();
+      if (!files[0].webkitRelativePath) {
+        $('folderFeedback').textContent = 'This picker returned individual files. Choose Start with my photos to import them.';
+        return;
+      }
+      try {
+        await this.store.openMemory(files);
+        if (await this.refresh()) this.showSetup();
+      } catch (e) {
+        $('folderFeedback').textContent = 'Could not read the folder. Choose it again or use Start with my photos.';
+      }
     }
 
     async refresh() {
