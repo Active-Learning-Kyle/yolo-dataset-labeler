@@ -4,9 +4,9 @@ A browser-based tool for creating, editing, validating, importing, and exporting
 
 ## Classroom entry point
 
-The current classroom link is Timmy Cheng’s original release. To try the workshop branch, download its `index.html` and open it in a browser.
+For the Vietnam AI Workshop, [open the classroom labeler](https://active-learning-kyle.github.io/yolo-dataset-labeler/).
 
-https://timmy-wccheng.github.io/yolo-dataset-labeler/
+This workshop edition is based on [Timmy Cheng’s original YOLO Dataset Labeler](https://timmy-wccheng.github.io/yolo-dataset-labeler/).
 
 ## Features
 
