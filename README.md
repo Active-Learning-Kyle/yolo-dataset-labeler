@@ -25,13 +25,14 @@ The example uses photos of loose fasteners, an assembled bolt, a bolted plate, r
 
 ## Try the sample photos
 
-Choose one pack to try first. All three use the same five photos. The target classes are `bolt` and `hex_nut`.
+Use these five photos to practice labeling `bolt` and `hex_nut`. Choose the workflow you want to try.
+
+**Open dataset folder.** On your computer, create an empty folder called `My Dataset`. In desktop Chrome or Edge, choose **Open dataset folder**, select it and click **Create Missing Items**. To practice with the example photos, unzip the **Unlabeled photos** download below, copy the five JPGs into `My Dataset/images/`, then click **Refresh Dataset**. Follow steps 3–6 in the [walkthrough](#your-first-dataset).
 
 | Labeler button | Download | What to do |
 |---|---|---|
-| **1 · Open dataset folder** | [Dataset folder with starter labels](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-dataset-folder.zip) | Unzip the download. In desktop Chrome or Edge, select the extracted **Fastener-Dataset** folder containing `images/`, `labels/` and `classes.txt`. Click **Show Only Unlabeled**. Draw a box for the bolt and one for the nut in `02-fastened-bolt.jpg`, then review the washers photo. |
-| **2 · Open a ZIP** | [Nearly finished dataset ZIP](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-labeled-dataset.zip) | Select the downloaded ZIP as-is. Four photos already have boxes. Click **Show Only Unlabeled** and review the washers photo, then try the final export. |
-| **3 · Start with my photos** | [Unlabeled photos](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-photos.zip) | Unzip the download. Select the five JPGs inside **Fastener-Photos**, using your photo library or file picker. Add `bolt` first and `hex_nut` second, click **Save Classes**, then **Start Labeling**. |
+| **Open a ZIP** | [Nearly finished dataset ZIP](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-labeled-dataset.zip) | Select the downloaded ZIP as-is. Four photos already have boxes. Click **Show Only Unlabeled** and review the washers photo, then try the final export. |
+| **Start with my photos** | [Unlabeled photos](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-photos.zip) | Unzip the download. Select the five JPGs inside **Fastener-Photos**, using your photo library or file picker. Add `bolt` first and `hex_nut` second, click **Save Classes**, then **Start Labeling**. |
 
 The washers photo contains neither target class. Use **Confirm no object** after checking it. When every photo has been reviewed, open **Dataset summary** and download **Labeled_data.zip**. Keep the photo credits from the pack with any copy you share. [Photo sources and licenses](docs/guide/photo-credits.md)
 
