@@ -28,6 +28,9 @@ def validate_review(browser, site):
         page.locator('#zipImagesInput').set_input_files({'name':'review.zip','mimeType':'application/zip','buffer':data.getvalue()})
     def reset():
         page.reload()
+    page.locator('#photosInput').set_input_files({
+        'name':'sample.heic', 'mimeType':'image/heic', 'buffer':b'sample'})
+    expect(page.get_by_role('alert')).to_contain_text('Choose JPG')
     img = {'images/a.png':sample, 'classes.txt':'blue_disc\n'}
     upload({})
     expect(page.get_by_role('alert')).to_contain_text('No supported images')
@@ -40,6 +43,16 @@ def validate_review(browser, site):
     expect(page.get_by_role('alert')).to_contain_text('Export blocked')
     reset()
     upload({**img,'images/b.png':sample,'labels/b.txt':''})
+    expect(page.locator('#datasetName')).to_contain_text('review')
+    ambiguous = io.BytesIO()
+    with zipfile.ZipFile(ambiguous, 'w') as z:
+        for name, value in {'classes.txt':'blue_disc\n', 'images/x.png':sample,
+                            'images/X.jpg':sample, 'labels/x.txt':''}.items():
+            z.writestr(name, value)
+    page.locator('#zipInput').set_input_files({
+        'name':'ambiguous.zip', 'mimeType':'application/zip', 'buffer':ambiguous.getvalue()})
+    expect(page.get_by_role('alert')).to_contain_text('one matching image')
+    expect(page.locator('#summaryStats .stat').first).to_have_text('2Images')
     page.get_by_text('Start Labeling',exact=True).click()
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
     page.locator('#nextBtn').click()
@@ -81,7 +94,7 @@ def validate_review(browser, site):
         page.set_viewport_size({'width':w,'height':h})
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     page.close()
-    print('PASS empty ZIP, orphan label, invalid class, blocked export, cancelled background, status filter, touch-drag box and pan, portrait/landscape bounds',flush=True)
+    print('PASS format hint, rejected ambiguous merge, empty ZIP, orphan label, invalid class, blocked export, background undo, status filter, touch-drag box and pan, portrait/landscape bounds',flush=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check label review, export guards and touch controls.')

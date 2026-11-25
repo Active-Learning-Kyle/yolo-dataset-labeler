@@ -73,7 +73,10 @@ Coordinates and dimensions are normalized to the range from `0` to `1`. An empty
 3. Select **Start Labeling**. Choose **New box class** and use **Draw** to box each visible target, even inside another box. To adjust an existing box, choose **Edit** and select it on the canvas or in the box list. Drag the box or a corner, or use **Change selected box class**. Expand the box guide for examples.
 4. Choose **Confirm no object** only after inspecting the whole image. A missing label means the image still needs review. An empty label records a reviewed background.
 5. Select **Download draft ZIP** before you leave a ZIP session. **Next** keeps edits in the tab and advances. Skipping an untouched image keeps it unreviewed. Reopen the draft with **Import Images ZIP**. Direct folder mode writes changes back to the selected folder.
-6. When review is complete, download **Labeled_data.zip**. The class list, images and labels at the root match the classroom notebook’s input. Keep unseen test images outside this training ZIP.
+6. When review is complete, download **Labeled_data.zip**. Check your Downloads folder before selecting **I have the ZIP**. Dismissing the prompt keeps the reminder about edits that still need a download. Drafts reopen with **Import Images ZIP** and preserve unchecked frames.
+7. **Continue to Training in Colab** opens the Colab home page. Sign in there, upload the notebook supplied by your instructor, then upload your own ZIP to session storage. Match the class names and order required by that notebook. Keep unseen test images outside the training ZIP.
+
+For phone photos, choose JPG/JPEG, PNG, WebP or BMP. Convert HEIC/HEIF before importing. The ZIP writer re-encodes JPEGs with EXIF rotation or reflection in their displayed orientation so their labels align in readers that ignore metadata. Original photos on your device are preserved.
 
 ## Keyboard Shortcuts
 

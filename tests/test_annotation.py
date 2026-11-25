@@ -97,18 +97,48 @@ def check_session(browser, site, width, height, touch):
     drag((.42,.42),(.51,.50))
     drag((.64,.63),(.71,.71))
     draft = read_zip(lambda: click('#draftBtn'))
+    expect(page.locator('#trainingStep')).to_be_hidden()
+    click('#dismissDownload')
+    # Dismissing the download prompt must retain the unsaved-session warning.
+    assert page.evaluate("""() => {
+        const event = new Event('beforeunload', {cancelable:true});
+        return !window.dispatchEvent(event);
+    }""")
     lines = draft['labels/OIP.txt'].decode().splitlines()
     assert [line.split()[0] for line in lines] == ['0','1']
     assert float(lines[1].split()[3]) > .28
     assert 'labels/OIP_imported_2.txt' not in draft
     assert draft['images/OIP.png'] == first['buffer']
     assert draft['images/OIP_imported_2.png'] == second['buffer']
+    draft_bytes = io.BytesIO()
+    with zipfile.ZipFile(draft_bytes, 'w') as archive:
+        for name, data in draft.items():
+            archive.writestr(name, data)
+    restored = context.new_page()
+    restored.goto(site)
+    restored.locator('#zipImagesInput').set_input_files({
+        'name':'Labeler-draft.zip', 'mimeType':'application/zip', 'buffer':draft_bytes.getvalue()})
+    restored.get_by_role('button', name='Start Labeling', exact=True).click()
+    expect(restored.locator('#boxList .box-row')).to_have_count(2)
+    restored.locator('#nextBtn').click()
+    expect(restored.locator('#saveState')).to_have_text('Not reviewed')
+    restored.close()
 
     click('#nextBtn')
     expect(page.locator('#frameName')).to_have_text('OIP_imported_2.png')
+    expect(page.locator('#undoBtn')).to_be_disabled()
+    click('#prevBtn')
+    expect(page.locator('#undoBtn')).to_be_enabled()
+    click('#undoBtn')
+    click('#redoBtn')
+    click('#nextBtn')
     click('#noObjectBtn')
     click('#backSetupBtn')
     complete = read_zip(lambda: page.get_by_role('button',name='Download Labeled_data.zip',exact=True).click())
+    expect(page.locator('#trainingStep')).to_be_hidden()
+    click('#confirmDownload')
+    expect(page.get_by_role('link', name='Continue to Training in Colab')).to_have_attribute(
+        'href', 'https://colab.research.google.com/')
     assert complete['classes.txt'].splitlines() == [b'disc', b'plate']
     assert complete['labels/OIP_imported_2.txt'] == b''
     assert complete['labels/OIP.txt'] == draft['labels/OIP.txt']

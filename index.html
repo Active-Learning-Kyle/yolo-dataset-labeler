@@ -374,7 +374,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 .right-body h3 { margin-top:0; }
 #draftBtn, #repairBtn { margin-top:12px; }
 #noObjectBtn { width:auto; margin:0; }
-@media (max-width:760px) {
+@media (max-width:760px), (max-height:520px) and (pointer:coarse) {
   #labeler { padding:6px !important; }
   .annotation { display:flex; flex-direction:column; height:auto; min-height:0; }
   .mobile-only { display:block; margin:0 0 5px; width:100%; text-align:left; }
@@ -403,7 +403,18 @@ figcaption { margin-top:5px; line-height:1.25; }
 }
 @media (max-height:520px) and (pointer:coarse) {
   .appbar,.top-progress { position:static; }
-  .canvas-wrap { min-height:190px; }
+  .canvas-wrap { height:64dvh; min-height:190px; }
+}
+.brandmark { display:grid; place-items:center; width:30px; height:30px; border:1px solid #7795b2; border-radius:6px; }
+.box-row.selected { outline:2px solid var(--primary); outline-offset:-2px; }
+.zoom-tools { flex-shrink:0; }
+.tool-hint { margin:0; padding:4px 10px 6px; background:#f5f7fa; color:var(--ink); font-size:.82rem; }
+#downloadDialog { max-width:480px; border-radius:10px; }
+#downloadDialog h2 { margin-top:0; }
+#downloadDialog a { color:var(--primary); font-weight:650; }
+@media (max-width:400px) {
+  .brandmark { display:none; }
+  .appbar .bar-actions { gap:4px; }
 }
 </style>
 </head>
@@ -437,7 +448,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     <div class="hero-card">
       <div class="entry-copy">
         <h1>Open a dataset</h1>
-        <p>Import the classroom ZIP or choose a folder of images and YOLO labels.</p>
+        <p>Choose photos from your device, open a dataset folder, or resume a draft ZIP.</p>
         <div class="actions">
           <button id="openZipBtn" class="primary">Import Images ZIP</button>
           <button id="photosBtn" class="ghost">Choose photos</button>
@@ -449,7 +460,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       <input id="zipInput" class="hidden" type="file" accept=".zip,application/zip">
       <input id="zipImagesInput" class="hidden" type="file" accept=".zip,application/zip">
       <div id="modeNote" class="mode-note"></div>
-      <p class="small">Images stay on this device. No account required.</p><details class="format-notes"><summary>Supported files</summary><p>JPG, PNG, WebP and BMP. ZIP filenames must be UTF-8 or ASCII. Limits: 50,000 entries, 1 GiB input, 512 MiB per file and 2 GiB extracted.</p></details>
+      <p class="small">Images stay on this device. Choose JPG, JPEG, PNG, WebP or BMP. Convert HEIC photos to JPEG or PNG first.</p><details class="format-notes"><summary>ZIP limits</summary><p>ZIP filenames must be UTF-8 or ASCII. Limits: 50,000 entries, 1 GiB input, 512 MiB per file and 2 GiB extracted.</p></details>
     </div>
   </section>
 
@@ -516,6 +527,7 @@ figcaption { margin-top:5px; line-height:1.25; }
           <label class="next-class" for="classSelect">New box class<select id="classSelect"></select></label>
           <div class="history-tools"><button id="undoBtn" disabled>Undo</button><button id="redoBtn" disabled>Redo</button></div>
         </div>
+        <p id="toolHint" class="tool-hint"></p>
         <div id="canvasWrap" class="canvas-wrap">
           <canvas id="canvas"></canvas>
           <div id="canvasMessage" class="canvas-message">Choose an image.</div>
@@ -549,6 +561,18 @@ figcaption { margin-top:5px; line-height:1.25; }
 
 </main>
 
+<dialog id="downloadDialog" aria-labelledby="downloadTitle">
+  <div class="dialog-body">
+    <h2 id="downloadTitle">Check your download</h2>
+    <p id="downloadInstructions"></p>
+    <button id="confirmDownload" class="primary">I have the ZIP</button>
+    <div id="trainingStep" class="hidden">
+      <p>In Colab, sign in and upload the notebook provided by your instructor. Then upload <b>Labeled_data.zip</b> to session storage.</p>
+      <a href="https://colab.research.google.com/" target="_blank" rel="noopener noreferrer">Continue to Training in Colab ↗</a>
+    </div>
+  </div>
+  <div class="dialog-foot"><button id="dismissDownload">Return to dataset</button></div>
+</dialog>
 <dialog id="helpDialog">
   <div class="dialog-body">
     <h2>Quick help</h2>
@@ -626,6 +650,71 @@ figcaption { margin-top:5px; line-height:1.25; }
 
   /** "cat.jpg" -> "cat" */
   const stem = n => n.replace(/\.[^.]+$/, '');
+
+  // Keep the exported pixels aligned with the boxes even in readers that ignore EXIF.
+  function jpegOrientation(bytes) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (view.byteLength < 4 || view.getUint16(0) !== 0xffd8) return 1;
+    let pos = 2;
+    while (pos + 4 <= view.byteLength && bytes[pos] === 0xff) {
+      const marker = bytes[pos + 1];
+      if (marker === 0xda || marker === 0xd9) break;
+      if (marker === 0xff) { pos++; continue; }
+      const size = view.getUint16(pos + 2);
+      const end = pos + 2 + size;
+      if (size < 2 || end > bytes.length) break;
+      const tiff = pos + 10;
+      if (marker === 0xe1 && tiff + 8 <= end && view.getUint32(pos + 4) === 0x45786966 &&
+          view.getUint16(pos + 8) === 0) {
+        const little = view.getUint16(tiff) === 0x4949;
+        if (view.getUint16(tiff + 2, little) !== 42) return 1;
+        const dir = tiff + view.getUint32(tiff + 4, little);
+        if (dir + 2 > end) return 1;
+        const count = view.getUint16(dir, little);
+        for (let i = 0; i < count; i++) {
+          const tag = dir + 2 + i * 12;
+          if (tag + 12 > end) break;
+          if (view.getUint16(tag, little) === 0x0112 && view.getUint16(tag + 2, little) === 3 &&
+              view.getUint32(tag + 4, little) === 1) return view.getUint16(tag + 8, little);
+        }
+      }
+      pos = end;
+    }
+    return 1;
+  }
+
+  async function exportImage(item) {
+    const file = await item.imageEntry.getFile();
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const orientation = jpegOrientation(bytes);
+    if (orientation < 2 || orientation > 8) return bytes;
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      canvas.getContext('2d').drawImage(bitmap, 0, 0);
+      const jpeg = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.97));
+      if (!jpeg) throw new Error('Could not export the oriented photo ' + item.name);
+      return new Uint8Array(await jpeg.arrayBuffer());
+    } finally {
+      bitmap.close();
+    }
+  }
+
+  function checkLabelPairs(images, labels) {
+    const key = entry => stem(entry.name.split('/').pop()).toLowerCase();
+    const counts = new Map();
+    for (const image of images) counts.set(key(image), (counts.get(key(image)) || 0) + 1);
+    const paired = new Set();
+    for (const label of labels) {
+      const name = key(label);
+      if (counts.get(name) !== 1 || paired.has(name)) {
+        throw new Error('Expected one matching image and one label for ' + label.name);
+      }
+      paired.add(name);
+    }
+  }
 
   const statusLabel = s => ({
     unlabeled: 'Unlabeled',
@@ -739,14 +828,20 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     // --- Reading ----------------------------------------------------------
+    memoryKey(path) {
+      if (this.files.has(path)) return path;
+      const folded = path.toLowerCase();
+      return Array.from(this.files.keys()).find(key => key.toLowerCase() === folded) || path;
+    }
+
     async readFile(path) {
       if (this.mode === 'direct') {
         const [d, n] = path.includes('/') ? path.split(/\/(.+)/) : [null, path];
         const h = d ? await (await this.childDir(d)).getFileHandle(n) : await this.rootFile(n);
         return h.getFile();
       }
-      const key = Array.from(this.files.keys()).find(k => k.toLowerCase() === path.toLowerCase());
-      if (!key) throw new DOMException('File not found', 'NotFoundError');
+      const key = this.memoryKey(path);
+      if (!this.files.has(key)) throw new DOMException('File not found', 'NotFoundError');
       return this.files.get(key);
     }
 
@@ -766,7 +861,7 @@ figcaption { margin-top:5px; line-height:1.25; }
           }
         }
       } else {
-        this.files.delete('labels/' + name);
+        this.files.delete(this.memoryKey('labels/' + name));
       }
     }
 
@@ -781,7 +876,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         await w.write(blob);
         await w.close();
       } else {
-        this.files.set(path, blob);
+        this.files.set(this.memoryKey(path), blob);
       }
     }
 
@@ -839,14 +934,17 @@ figcaption { margin-top:5px; line-height:1.25; }
         ? (await this.store.listDir('labels')).filter(x => /\.txt$/i.test(x.name))
         : [];
 
-      // Duplicate image stems would collide on the label filename.
-      const groups = new Map();
-      for (const i of imgs) {
-        const k = stem(i.name).toLocaleLowerCase();
-        if (!groups.has(k)) groups.set(k, []);
-        groups.get(k).push(i.name);
+      // Each stem may occur once in each directory.
+      this.duplicates = [];
+      for (const entries of [imgs, labs]) {
+        const groups = new Map();
+        for (const entry of entries) {
+          const k = stem(entry.name).toLowerCase();
+          if (!groups.has(k)) groups.set(k, []);
+          groups.get(k).push(entry.name);
+        }
+        this.duplicates.push(...Array.from(groups.values()).filter(names => names.length > 1));
       }
-      this.duplicates = Array.from(groups.values()).filter(a => a.length > 1);
 
       // Pair images with their label files (case-insensitive stem match).
       const labMap = new Map(labs.map(x => [stem(x.name).toLocaleLowerCase(), x]));
@@ -1025,7 +1123,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         const crc = ZipWriter.crc(f.data);
 
         // Local file header
-        const l = new Uint8Array(30 + n.length + f.data.length);
+        const l = new Uint8Array(30 + n.length);
         u32(l, 0, 0x04034b50);
         u16(l, 4, 20);
         u16(l, 6, 0x800);       // UTF-8 filename flag
@@ -1035,8 +1133,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         u32(l, 22, f.data.length);
         u16(l, 26, n.length);
         l.set(n, 30);
-        l.set(f.data, 30 + n.length);
-        locals.push(l);
+        locals.push(l, f.data);
 
         // Central directory record
         const c = new Uint8Array(46 + n.length);
@@ -1052,10 +1149,14 @@ figcaption { margin-top:5px; line-height:1.25; }
         c.set(n, 46);
         centrals.push(c);
 
-        off += l.length;
+        off += l.length + f.data.length;
       }
 
       const cs = centrals.reduce((s, a) => s + a.length, 0);
+      if (off + cs + 22 > MAX_ZIP_INPUT_BYTES || this.files.length > MAX_ZIP_ENTRIES ||
+          this.files.some(file => file.data.length > MAX_ENTRY_BYTES)) {
+        throw new Error('This ZIP exceeds the import limits. Split the dataset into smaller groups.');
+      }
 
       // End of central directory
       const e = new Uint8Array(22);
@@ -1241,6 +1342,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.tool = 'draw';
       this.writes = Promise.resolve();
       this.revision = 0;
+      this.history = new WeakMap();
       this.bind();
     }
 
@@ -1295,6 +1397,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Loading an image --------------------------------------------------
     async load(item) {
       if (!await this.app.guardUnsaved()) return false;
+      if (this.item) this.history.set(this.item, { undo: this.undo, redo: this.redo });
       this.img = null;
       this.action = null;
       this.zoom = 1;
@@ -1309,15 +1412,15 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.boxes = JSON.parse(JSON.stringify(item.boxes || []));
       this.background = item.status === 'background';
       this.selected = -1;
-      this.undo = [];
-      this.redo = [];
+      const history = this.history.get(item);
+      this.undo = history?.undo || [];
+      this.redo = history?.redo || [];
       this.dirty = false;
       this.app.saveState(item.status === 'unlabeled' ? 'Not reviewed' : this.app.savedMessage());
 
-      const f = await item.imageEntry.getFile();
-      this.url = URL.createObjectURL(f);
-
       try {
+        const f = await item.imageEntry.getFile();
+        this.url = URL.createObjectURL(f);
         this.img = await new Promise((res, rej) => {
           const x = new Image();
           x.onload = () => res(x);
@@ -1398,14 +1501,15 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       // Class label chip above the box.
       const name = this.app.model.classes[b.classId] ?? 'Unknown';
-      const txt = `${b.classId}: ${name}`;
+      const txt = i >= 0 ? `#${i + 1} · ${name}` : name;
       const m = this.ctx.measureText(txt).width + 8 / s;
       const h = 20 / s;
       const y = Math.max(0, b.y - h);
+      const x = Math.max(0, Math.min(b.x, this.img.naturalWidth - m));
 
-      this.ctx.fillRect(b.x, y, m, h);
+      this.ctx.fillRect(x, y, m, h);
       this.ctx.fillStyle = '#fff';
-      this.ctx.fillText(txt, b.x + 4 / s, y + 15 / s);
+      this.ctx.fillText(txt, x + 4 / s, y + 15 / s);
 
       // Selection highlight + resize handles.
       if (i === this.selected && this.tool === 'edit') {
@@ -1472,6 +1576,9 @@ figcaption { margin-top:5px; line-height:1.25; }
     setPan(active) {
       this.panning = active;
       $('panTool').setAttribute('aria-pressed', String(active));
+      $('toolHint').textContent = active ? 'Drag to pan the zoomed image.' : this.tool === 'draw'
+        ? 'Drag to draw a new box. Boxes can overlap.'
+        : 'Select a box here or in the list. Drag a corner to resize.';
       $('canvasWrap').classList.toggle('pan-mode', active);
     }
 
@@ -1645,7 +1752,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       this.boxes.forEach((b, i) => {
         const r = el('div', undefined, 'box-row' + (i === this.selected ? ' selected' : ''));
-        const btn = el('button', `${b.classId}: ${this.app.model.classes[b.classId] || 'Unknown'}`, 'ghost');
+        const btn = el('button', `#${i + 1} · ${b.classId}: ${this.app.model.classes[b.classId] || 'Unknown'}`, 'ghost');
         const del = el('button', 'Delete', 'danger');
 
         btn.onclick = () => {
@@ -1769,6 +1876,19 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Wiring ------------------------------------------------------------
     bind() {
       $('openBtn').onclick = () => this.open();
+      $('dismissDownload').onclick = () => $('downloadDialog').close();
+      $('confirmDownload').onclick = () => {
+        this.needsDownload = false;
+        if (this.draftDownload) {
+          $('downloadDialog').close();
+          return;
+        }
+        $('downloadTitle').textContent = 'Ready for training';
+        $('downloadInstructions').textContent = 'Keep the ZIP as a local backup of your labels.';
+        $('confirmDownload').classList.add('hidden');
+        $('trainingStep').classList.remove('hidden');
+        $('trainingStep').querySelector('a').focus();
+      };
       $('addClassBtn').onclick = () => this.addClass();
       $('saveClassesBtn').onclick = () => this.saveClasses();
       $('helpBtn').onclick = () => $('helpDialog').showModal();
@@ -1994,7 +2114,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         n.append(el('div', 'The images folder is empty. Copy .jpg, .jpeg, .png, .webp or .bmp images into it, then choose Refresh Dataset.', 'notice'));
       }
       if (this.model.duplicates.length) {
-        n.append(el('div', 'Duplicate image stems block labeling:\n' + this.model.duplicates.map(x => x.join(', ')).join('\n'), 'errorbox'));
+        n.append(el('div', 'Ambiguous image or label filenames:\n' + this.model.duplicates.map(x => x.join(', ')).join('\n'), 'errorbox'));
       }
     }
 
@@ -2193,7 +2313,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (!this.model.structure.classes) problems.push('classes.txt is missing.');
       if (!this.model.classes.length) problems.push('classes.txt does not contain any classes.');
       if (!this.model.images.length) problems.push('No supported images were found. Add JPG, JPEG, PNG, WebP or BMP files.');
-      if (this.model.duplicates.length) problems.push('Duplicate image filename stems must be renamed.');
+      if (this.model.duplicates.length) problems.push('Resolve the ambiguous image or label filenames.');
       if (filter === 'unlabeled' && !this.model.images.some(item => item.status === 'unlabeled')) problems.push('There are no unlabeled images.');
       if (filter === 'invalid' && !this.model.images.some(item => item.status === 'invalid')) problems.push('There are no invalid files.');
 
@@ -2239,7 +2359,8 @@ figcaption { margin-top:5px; line-height:1.25; }
       const h = $('imageList');
       h.replaceChildren();
 
-      for (const { x, i } of this.visibleImages()) {
+      const visible = this.visibleImages();
+      for (const { x, i } of visible) {
         const b = el('button', undefined, 'image-item' + (i === this.current ? ' current' : ''));
         b.append(
           el('div', x.name),
@@ -2252,6 +2373,8 @@ figcaption { margin-top:5px; line-height:1.25; }
       }
 
       if (!h.children.length) h.append(el('p', 'No images match this view.', 'small'));
+      $('prevBtn').disabled = !visible.some(row => row.i < this.current);
+      $('nextBtn').disabled = !visible.some(row => row.i > this.current);
     }
 
     async openIndex(i) {
@@ -2360,19 +2483,9 @@ figcaption { margin-top:5px; line-height:1.25; }
         // Prefer entries already inside an images/ folder, else take them all.
         const preferred = allImages.filter(e => /^images\//i.test(e.name));
         const chosen = preferred.length ? preferred : allImages;
-        const imageCounts = new Map();
-        for (const entry of chosen) {
-          const key = stem(entry.name.split('/').pop()).toLowerCase();
-          imageCounts.set(key, (imageCounts.get(key) || 0) + 1);
-        }
-        const paired = new Set();
-        for (const entry of clean.filter(e => /(?:^|\/)labels\/[^/]+\.txt$/i.test(e.name))) {
-          const key = stem(entry.name.split('/').pop()).toLowerCase();
-          if (imageCounts.get(key) !== 1 || paired.has(key)) {
-            throw new Error('Expected one matching image and one label for ' + entry.name);
-          }
-          paired.add(key);
-        }
+        checkLabelPairs(chosen, clean.filter(e => /(?:^|\/)labels\/[^/]+\.txt$/i.test(e.name)));
+        const classFiles = clean.filter(e => /(^|\/)classes\.txt$/i.test(e.name));
+        if (classFiles.length > 1) throw new Error('More than one classes.txt. Open one dataset at a time.');
 
         this.store.mode = 'memory';
         this.store.name = file.name.replace(/\.zip$/i, '') || 'Imported dataset';
@@ -2407,7 +2520,7 @@ figcaption { margin-top:5px; line-height:1.25; }
           count++;
         }
 
-        const cls = clean.find(e => /(^|\/)classes\.txt$/i.test(e.name));
+        const [cls] = classFiles;
         await this.store.putMemory(
           'classes.txt',
           new Blob([cls ? dec.decode(cls.data).replace(/^\uFEFF/, '') : ''], { type: 'text/plain;charset=utf-8' })
@@ -2467,6 +2580,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
         const imageEntries = entries.filter(entry => /^images\/[^/]+$/i.test(entry.name) && EXT.test(entry.name));
         if (!imageEntries.length) throw new Error('No supported images were found in the ZIP images/ folder.');
+        checkLabelPairs(imageEntries, entries.filter(entry => /^labels\/[^/]+\.txt$/i.test(entry.name)));
 
         const occupiedStems = new Set(this.model.images.map(item => item.stem.toLocaleLowerCase()));
         let imported = 0;
@@ -2534,7 +2648,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       if (!this.model.classes.length) problems.push('classes.txt has no valid class names.');
       if (new Set(this.model.classes).size !== this.model.classes.length) problems.push('Remove duplicate class names.');
-      if (this.model.duplicates.length) problems.push('Duplicate image filename stems exist.');
+      if (this.model.duplicates.length) problems.push('Image or label filenames are ambiguous.');
       for (const i of this.model.images) {
         if (!draft && (i.status === 'unlabeled' || i.status === 'invalid')) problems.push(`${i.name}: ${statusLabel(i.status)}`);
       }
@@ -2551,7 +2665,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         z.add('classes.txt', enc.encode(this.model.classes.join('\n') + '\n'));
 
         for (const i of this.model.images) {
-          z.add(`images/${i.name}`, new Uint8Array(await (await i.imageEntry.getFile()).arrayBuffer()));
+          z.add(`images/${i.name}`, await exportImage(i));
           if (!i.labelEntry && draft) continue;
           const label = await i.labelEntry.getFile();
           z.add(`labels/${i.stem}.txt`, new Uint8Array(await label.arrayBuffer()));
@@ -2563,8 +2677,15 @@ figcaption { margin-top:5px; line-height:1.25; }
         a.href = u;
         a.download = draft ? 'Labeler-draft.zip' : 'Labeled_data.zip';
         a.click();
-        this.needsDownload = false;
-        this.toast(draft ? 'Draft ZIP prepared. Resume with Import Images ZIP.' : 'Labeled_data.zip prepared for download.');
+        this.draftDownload = draft;
+        $('downloadTitle').textContent = 'Check your download';
+        $('downloadInstructions').textContent = draft
+          ? 'Find Labeler-draft.zip in your downloads. Reopen it with Import Images ZIP to resume.'
+          : 'Find Labeled_data.zip in your downloads before you continue to training.';
+        $('confirmDownload').classList.remove('hidden');
+        $('trainingStep').classList.add('hidden');
+        this.lastToast?.remove();
+        $('downloadDialog').showModal();
         setTimeout(() => URL.revokeObjectURL(u), 1000);
       } catch (e) {
         this.toast(`Export failed: ${e.message}`, true);
@@ -2573,7 +2694,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     // --- Keyboard shortcuts ------------------------------------------------
     keys(e) {
-      if ($('labeler').classList.contains('hidden') || $('helpDialog').open || this.switching) return;
+      if ($('labeler').classList.contains('hidden') || document.querySelector('dialog[open]') || this.switching || this.exporting) return;
       if ((e.ctrlKey || e.metaKey || e.altKey) && !['s', 'z'].includes(e.key.toLowerCase())) return;
       const k = e.key.toLowerCase();
       const typing = e.target.matches('input:not([type="button"]),textarea,[contenteditable="true"]');
@@ -2615,6 +2736,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     // --- Reset & toast -----------------------------------------------------
     reset() {
+      if (this.exporting || this.switching) return;
       if ((this.ann.dirty || this.needsDownload || this.classEdits) &&
           !confirm('Close and discard changes you have not downloaded or saved to your folder?')) return;
       this.ann.dirty = this.needsDownload = this.classEdits = false;
@@ -2630,7 +2752,10 @@ figcaption { margin-top:5px; line-height:1.25; }
         position: 'fixed',
         right: '18px',
         bottom: '18px',
-        maxWidth: '520px',
+        maxWidth: 'min(520px, calc(100vw - 36px))',
+        maxHeight: '36dvh',
+        overflow: 'auto',
+        pointerEvents: bad ? 'auto' : 'none',
         whiteSpace: 'pre-wrap',
         padding: '14px 16px',
         borderRadius: '12px',
