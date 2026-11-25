@@ -1,6 +1,6 @@
 # Screenshot photo credits
 
-The fastener example uses five independent photos from Wikimedia Commons. The photos were resized as needed and shown in the labeler with bounding boxes and numbered guide callouts. The adapted photo portions of the screenshots follow the licenses below. The application code is covered by the repository’s [MIT License](../../LICENSE).
+The screenshots and practice packs use five independent photos from Wikimedia Commons. The practice copies were resized as needed and saved without camera metadata. Some packs also include separate YOLO label files. The adapted photo portions of the screenshots and the practice photos follow the licenses below. The application code is covered by the repository’s [MIT License](../../LICENSE).
 
 | Example image | Photographer and source | License |
 |---|---|---|
