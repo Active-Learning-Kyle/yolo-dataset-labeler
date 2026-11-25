@@ -1695,6 +1695,21 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.filter = e.target.value;
         this.renderImageList();
       };
+      // Chromium can suppress a compatibility click immediately after a touch drag.
+      // Handle a completed tap once, while retaining native mouse and keyboard clicks.
+      const zoomTools = $('panTool').parentElement;
+      zoomTools.addEventListener('pointerup', event => {
+        if (event.pointerType !== 'touch' || !event.isPrimary) return;
+        const button = event.target.closest('button');
+        if (button && !button.disabled && button.contains(document.elementFromPoint(event.clientX, event.clientY))) {
+          button.click();
+        }
+      });
+      zoomTools.addEventListener('click', event => {
+        if (event.pointerType === 'touch' || event.sourceCapabilities?.firesTouchEvents) {
+          event.stopImmediatePropagation();
+        }
+      }, true);
       $('panTool').onclick = () => this.ann.setPan(!this.ann.panning);
       for (const [id, delta] of [['zoomIn', 0.5], ['zoomOut', -0.5], ['zoomFit', 0]]) {
         $(id).onclick = () => {
