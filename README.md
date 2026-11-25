@@ -2,35 +2,98 @@
 
 [Open YOLO Dataset Labeler](https://active-learning-kyle.github.io/yolo-dataset-labeler/)
 
-Draw boxes around objects in your photos and export a dataset for YOLO training. Your photos and labels stay in your browser while you work. No account is needed for labeling.
+Turn your photos into a training dataset by drawing a box around each object you want a detector to recognize. For example, a photo of two bolts and one nut gets three boxes, each with its own class. You can choose your own objects. Labeling runs on your device and requires no account.
 
-## Add your photos
+## Your first dataset
 
-1. On your computer, create an empty folder called `My Dataset`. Open the labeler in Chrome or Edge.
-2. Click **Open dataset folder**, select your folder and allow access if prompted.
-3. Click **Create Missing Items**. The labeler creates `images/`, `labels/` and `classes.txt` for you.
-4. Copy your training photos into `images/`, then click **Refresh Dataset**. Keep a few fresh photos separate for testing later.
+1. **Start with a folder.** On your computer, create an empty folder called `My Dataset`. Open the labeler in desktop Chrome or Edge, click **Open dataset folder**, select it and allow write access if prompted.
+2. **Add your photos.** Click **Create Missing Items**. The labeler creates `images/`, `labels/` and `classes.txt`. Copy your training photos into `images/`, then click **Refresh Dataset**. Keep a few fresh photos aside for testing.
+3. **Choose your classes.** Click **Add Class** for each object type, enter names such as `bolt` and `nut`, then click **Save Classes** and **Start Labeling**.
+4. **Label each photo.** In **Draw**, choose a **New box class** and drag a tight box around each matching object. Use **Edit** to adjust a box. Click **Next** to move on. For a photo you checked that contains none of your targets, click **Confirm no object**.
+5. **Download your work.** Open **Dataset summary**, finish any remaining images and click **Download Labeled_data.zip**. The ZIP contains your photos, matching labels and class list.
+6. **Continue to training.** Find the ZIP in Downloads, click **I have the ZIP**, then **Continue to Training in Colab**. In Colab, sign in and open the notebook supplied in Part 5D. Upload your `Labeled_data.zip` through the **Files** panel, leave it zipped and run the dataset check. Check your class names before training.
 
-**On a phone?** Tap **Start with my photos** to choose pictures directly. You can skip the folder setup. Use JPG, PNG, WebP or BMP. Convert HEIC or HEIF photos to JPEG or PNG first.
+**On a phone?** Start at **Start with my photos**, pick your pictures and continue from step 3. Download a draft ZIP before closing if you want to finish later.
 
-**Already have a dataset or a draft ZIP?** Click **Open a ZIP** and select it.
+[Import photos or ZIPs](#open-or-add-images) · [Classes and merging](#set-up-classes-and-combine-datasets) · [Drawing tools](#use-the-annotation-workbench) · [Saving and repairs](#review-save-and-resume) · [Export](#export-your-training-zip) · [Help and shortcuts](#help-and-keyboard-shortcuts)
 
-## Choose your objects and label them
+## Open or add images
 
-1. Decide what you want to detect. For example, if you want to tell bolts and nuts apart, add `bolt` and `nut` as two classes. Click **Add Class** for each name, then **Save Classes**. Your first class gets ID 0, the next gets ID 1.
-2. Click **Start Labeling**. In **Draw**, choose the **New box class**, then drag a tight box around each matching object. You can draw overlapping boxes. Changing this dropdown sets the class for the next box.
-3. To adjust an existing box, switch to **Edit** and select it on the image or in the box list. Move it, drag a corner to resize it, or change its class. Use **Undo** to reverse a mistake.
-4. Click **Next** to continue. If you checked the whole photo and found none of your objects, click **Confirm no object**. Skipping an untouched photo leaves it unreviewed.
+| What you have | What to do |
+|---|---|
+| A folder on your computer | Use **Open dataset folder**. In **Direct folder mode**, edits are written back to that folder. To add more photos, copy them into `images/`, save any class edits and click **Refresh Dataset**. |
+| Individual photos | Use **Start with my photos**, or drop the photos together onto the opening screen. In setup, use **Add photos** to add another batch. |
+| A ZIP of photos, a dataset or a saved draft | Use **Open a ZIP**, or drop one ZIP onto the opening screen. Existing classes and matching labels are restored when present. Drop photos and ZIPs separately. |
+| A browser that only imports folders | You can import an existing dataset with files. For an empty folder, choose **Start with my photos**. In **Compatibility mode**, download a ZIP to keep your edits. |
 
-## Save and resume
+Open **File formats & folder access** on the opening screen for device-specific guidance. Supported photos are JPG/JPEG, PNG, WebP and BMP. Convert HEIC/HEIF photos to JPEG or PNG first. For ZIP imports, use UTF-8 or ASCII filenames and an unencrypted archive. Limits are 1 GiB per ZIP, 50,000 entries, 512 MiB per file and 2 GiB total extracted.
 
-- **Working in a writable folder:** Look for **Saved to folder** before closing. Open the same folder to resume. If you see **Save failed**, stay on the image, check write access and retry.
-- **Working with photos, a ZIP or a read-only folder:** Click **Download draft ZIP** before closing the tab. Next time, choose **Open a ZIP** to resume.
+## Set up classes and combine datasets
 
-## Export and train
+A class is an object type. Use a distinct, non-empty name for each one. The number beside each name is its ID in the label files. If `bolt` comes first and `nut` second, their IDs are 0 and 1. **Save Classes** writes this order to `classes.txt`.
 
-1. Open **Dataset summary** and finish reviewing any remaining images. Click **Download Labeled_data.zip**. The ZIP contains your photos in `images/`, a matching text file for each photo in `labels/`, and your class names in order in `classes.txt`.
-2. Find the ZIP in your downloads, then click **I have the ZIP** and **Continue to Training in Colab**.
-3. In Colab, open the notebook supplied in Part 5D. In the **Files** panel, upload your `Labeled_data.zip` and leave it zipped. Run the dataset check and confirm the class names match yours before starting training.
+- Before labeling, use **↑** to move a class up or **Delete** to remove it. Once images have labels, the order and delete controls lock so existing IDs keep their meaning. You can still append another class.
+- To combine a teammate’s work with yours, save your classes, then choose **Merge labeled ZIP** in **Dataset summary**. Both lists must have identical names in identical order. The labeler imports image–label pairs, keeps reviewed backgrounds and reports any images skipped for missing labels. If a pair’s filename is already in use, both incoming files get a matching new name.
+
+## Use the annotation workbench
+
+| Task | How to do it |
+|---|---|
+| Draw overlapping objects | In **Draw**, drag from one edge of an object to the opposite corner. You can start inside an existing box. Give each visible target its own box. A box must measure at least 3 original-image pixels in both width and height. |
+| Change a box | In **Edit**, click the box or select its row under **Bounding boxes**. Drag inside to move it, drag a corner to resize it, or use **Change selected box class**. The list is useful when boxes overlap. Each row also has a **Delete** button. |
+| Choose the next object type | Use **New box class**. This switches to **Draw** and sets the class for the next box. Existing boxes keep their assigned classes. |
+| Check a small detail | Use **+** or **−** to zoom, then **Pan** to drag the enlarged image. **Fit** restores the whole image. **Hide boxes** lets you inspect the photo underneath. Click **Show boxes** to resume working with boxes. |
+| Reverse a mistake | **Undo** and **Redo** apply to the current image. You can undo a box change or an accidental background decision. |
+| Find another image | Use **Previous**, **Next** or a thumbnail. Type part of a filename in **Find image…** or filter by review status. Previous and Next follow the filtered list. On narrow screens, tap **Images** to open the list. |
+
+## Review, save and resume
+
+**Dataset summary** shows image counts, completion and issues. Use **Show Only Unlabeled** to finish a set, or **Show Invalid Files** to inspect errors. When review is complete, **Labeling finished** shows total boxes and counts per class.
+
+| Status or message | What it means and what to do |
+|---|---|
+| **Labeled** | The photo has boxes. Check that every visible target has the right class. |
+| **No Object** | You reviewed the photo and selected **Confirm no object**. Its label file is empty. If it already has boxes, the app asks before replacing them. |
+| **Unlabeled** | The photo still needs review. Clicking **Next** on an untouched photo leaves it in this state. |
+| **Invalid** | Inspect the filename and line error. Review the boxes shown, correct or redraw them, then use **Save repaired label** when offered. Confirming replaces the invalid label with the boxes on screen. |
+| **Orphan labels** or ambiguous filenames | Match each label to one image by filename stem, for example `bolt-01.jpg` and `bolt-01.txt`. Correct the source files, then refresh a writable folder or re-import the corrected dataset. |
+
+**Folder sessions.** Look for **Saved to folder**. Reopen the same folder to resume. If **Save failed** appears, stay on the image, restore write access and try **Next** again.
+
+**Photo, ZIP and read-only folder sessions.** **In this tab · download ZIP to keep** means your edits are held in this tab. Choose **Download draft ZIP**, check that `Labeler-draft.zip` is in Downloads and use **Open a ZIP** next time. Unreviewed photos stay unreviewed. Use **Close dataset** to return to the opening screen after saving.
+
+## Export your training ZIP
+
+You can export once every image has boxes or a confirmed background and you have resolved the dataset issues. If export is blocked, check the filenames in **Dataset summary**. For a one-photo dataset, the ZIP contains these files.
+
+```text
+Labeled_data.zip
+├── classes.txt
+├── images/
+│   └── bolt-01.jpg
+└── labels/
+    └── bolt-01.txt
+```
+
+Each box is one line in its image’s label file. The fields are `class_id x_center y_center width height`, with coordinates and dimensions expressed as fractions of the image size. The Part 5D notebook reads your class names from `classes.txt` in the saved order.
+
+After the final download, **I have the ZIP** reveals the image, box and background counts and the Colab link. **Return to dataset** takes you back to your work.
+
+## Help and keyboard shortcuts
+
+Click **Help** in the top bar for a reminder about drawing, editing, marking backgrounds, minimum box size, shortcuts and saving. While labeling, expand **Box guide & shortcuts** below the bounding-box list to see a loose box and a tight box around the same hex nut.
+
+These shortcuts work in the annotation workbench. Finish typing in a text field before using the single-key commands. Use **Ctrl** on Windows or Linux and **⌘** on macOS.
+
+| Key | Action |
+|---|---|
+| `B` / `V` | Switch to Draw / Edit. |
+| `1`–`9` | Choose the first through ninth class for the next box and switch to Draw. For example, `1` selects class ID 0. Use the dropdown for later classes. |
+| `A` or `←` / `D` or `→` | Go to the previous / next image. |
+| `Delete` or `Backspace` | Remove the selected box. |
+| `Ctrl/⌘ + Z` | Undo the last change on this image. |
+| `Ctrl/⌘ + Shift + Z` | Redo it. |
+| `Ctrl/⌘ + S` | Download a draft ZIP. |
+| `Esc` | Cancel a drag or deselect the current box. |
 
 [MIT License](LICENSE)
