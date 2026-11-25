@@ -26,6 +26,7 @@ def check(browser):
         for (const name of ['a.png', 'b.png']) await write(imgs, name, new Uint8Array(bytes));
         window.showDirectoryPicker = async () => root;
     }""", list(solid_png(320, 240)))
+    page.get_by_text('Folders & supported formats', exact=True).click()
     page.locator('#openBtn').click()
     page.get_by_role('button', name='Start Labeling', exact=True).click()
     page.evaluate("""() => {
