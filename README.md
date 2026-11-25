@@ -83,9 +83,11 @@ The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1*
 
 ### Get suggestions for a photo
 
-1. Save your classes and open an unlabeled photo in the hosted labeler. For the best starting point, try desktop Chrome or Edge and familiar, descriptive class names such as `bolt` and `hex_nut`.
+Open the optional preview if you want the labeler to propose boxes for you. [Try Suggest boxes](https://active-learning-kyle.github.io/yolo-dataset-labeler/?suggest=1)
+
+1. Save your classes and open an unlabeled photo. To start, use desktop Chrome or Edge and descriptive class names such as `bolt` and `hex_nut`.
 2. Click **Suggest boxes**. First use downloads about 155 MB of model weights. The browser processes your photos on your device. Use **Cancel** if you want to carry on by hand.
-3. Check the suggested class and position of each dashed box. Use **Edit** to move, resize, reclassify or delete a box. Use **Draw** to add any missed objects. The number marked **AI** is the model's score for its original suggestion.
+3. Check each dashed box. Choose its class in the menu beside that box under **Bounding boxes**. Use **Edit** to move or resize a box, **Delete** to remove one, and **Draw** to add any missed objects. The number marked **AI** is the model's score for its original suggestion.
 4. Click **Save reviewed boxes** when the whole photo is ready. To start over, click **Discard suggestions**. If the model suggests nothing, check the photo yourself, then draw boxes or use **Confirm no object** as appropriate.
 
 The model is [OWL-ViT](https://huggingface.co/google/owlvit-base-patch32), using [quantized ONNX weights](https://huggingface.co/Xenova/owlvit-base-patch32). Fine distinctions, small parts and partly hidden objects may need more hand correction.

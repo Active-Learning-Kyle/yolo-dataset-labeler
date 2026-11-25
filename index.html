@@ -515,6 +515,9 @@ figcaption { margin-top:5px; line-height:1.25; }
 .suggest-tools p:empty { display:none; }
 .suggest-actions { display:flex; flex-wrap:wrap; gap:6px; }
 .suggest-actions button { min-height:36px; }
+.box-row.suggestion-row { grid-template-columns:auto minmax(0,1fr) auto; align-items:stretch; }
+.suggestion-row select { width:100%; min-width:0; padding:6px 4px; }
+.suggestion-row small { display:block; font-size:.72em; }
 .examples { gap:6px; }
 .sample { background:#dce9e6; height:70px; overflow:hidden; }
 .sample i { display:block; width:84px; height:66px; border-radius:0; position:relative; background:var(--kit-photo) -170px -110px/325px 244px; }
@@ -613,7 +616,7 @@ figcaption { margin-top:5px; line-height:1.25; }
           </div>
         </div>
         <p id="folderFeedback" class="folder-feedback" role="status"></p>
-        <p class="drop-hint">You can also drop photos or one ZIP here.<br><a href="https://github.com/Active-Learning-Kyle/yolo-dataset-labeler#try-the-sample-photos" target="_blank" rel="noopener noreferrer">Download practice files ↗</a></p>
+        <p class="drop-hint">You can also drop photos or one ZIP here.<br><a href="https://github.com/Active-Learning-Kyle/yolo-dataset-labeler#try-the-sample-photos" target="_blank" rel="noopener noreferrer">Download practice files ↗</a><span id="suggestPreviewLink" class="hidden"> · <a href="?suggest=1">Try Suggest boxes (preview)</a></span></p>
         <details class="format-notes"><summary>File formats &amp; folder access</summary>
           <p>Choose JPG, JPEG, PNG, WebP or BMP. Convert HEIC or HEIF photos to JPEG or PNG first.</p>
           <p id="modeNote"></p>
@@ -725,7 +728,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       <aside class="panel right-panel">
         <div class="right-body">
-          <div class="suggest-tools">
+          <div id="suggestTools" class="suggest-tools hidden">
             <div class="suggest-actions">
               <button id="suggestBoxes" class="ghost" type="button">Suggest boxes</button>
               <button id="cancelSuggestions" class="ghost hidden" type="button">Cancel</button>
@@ -780,7 +783,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       <li>Choose <b>Edit</b>, then tap a box or its row. Drag inside to move it, drag a corner to resize it, or use <b>Change selected box class</b>.</li>
       <li>To mark an image as a background image with no target object, choose <b>Confirm no object</b>. This creates an empty label file.</li>
       <li>Boxes smaller than 3 original-image pixels are rejected.</li>
-      <li>On an unlabeled photo, <b>Suggest boxes</b> can propose boxes and classes. Check the results and missing objects, then choose <b>Save reviewed boxes</b>.</li>
+      <li id="suggestHelp" class="hidden">On an unlabeled photo, <b>Suggest boxes</b> can propose boxes and classes. You can change the class beside each box. Check for missing objects, then choose <b>Save reviewed boxes</b>.</li>
     </ol>
     <p>
       <b>Shortcuts:</b>
@@ -1967,7 +1970,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.app.renderSuggestionControls();
       $('undoBtn').disabled = !this.undo.length;
       $('redoBtn').disabled = !this.redo.length;
-      const editing = this.tool === 'edit' && this.selected >= 0;
+      const editing = this.tool === 'edit' && this.selected >= 0 && !this.suggestionReview;
       $('editClassField').classList.toggle('hidden', !editing);
       if (editing) $('editClass').value = this.boxes[this.selected].classId;
       const host = $('boxList');
@@ -1975,9 +1978,10 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       this.boxes.forEach((b, i) => {
         const r = el('div', undefined, 'box-row' + (i === this.selected ? ' selected' : ''));
-        const btn = el('button', `#${i + 1} · ${b.classId}: ${this.app.model.classes[b.classId] || 'Unknown'}`, 'ghost');
+        const name = this.app.model.classes[b.classId] || 'Unknown';
+        const btn = el('button', this.suggestionReview ? `#${i + 1}` : `#${i + 1} · ${b.classId}: ${name}`, 'ghost');
         if (b.score !== undefined) {
-          btn.append(el('small', ` · AI ${b.score.toFixed(2)}`));
+          btn.append(el('small', `AI ${b.score.toFixed(2)}`));
           btn.title = 'Model score for this suggestion';
         }
         btn.style.borderLeft = '5px solid ' + this.color(b.classId);
@@ -1994,7 +1998,21 @@ figcaption { margin-top:5px; line-height:1.25; }
           this.deleteSelected();
         };
 
-        r.append(btn, del);
+        r.append(btn);
+        if (this.suggestionReview) {
+          r.classList.add('suggestion-row');
+          const picker = $('editClass').cloneNode(true);
+          picker.removeAttribute('id');
+          picker.setAttribute('aria-label', `Class for box ${i + 1}`);
+          picker.value = b.classId;
+          picker.onchange = () => {
+            this.selected = i;
+            this.changeClass(Number(picker.value));
+            host.children[i]?.querySelector('select')?.focus({ preventScroll: true });
+          };
+          r.append(picker);
+        }
+        r.append(del);
         host.append(r);
       });
 
@@ -2132,8 +2150,12 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.suggestionJob = null;
       this.suggestionMessage = '';
       this.suggestionModelReady = false;
-      this.canSuggest = location.protocol !== 'file:' && typeof Worker === 'function'
+      this.suggestionPreview = new URLSearchParams(location.search).get('suggest') === '1';
+      this.canSuggest = this.suggestionPreview && location.protocol !== 'file:' && typeof Worker === 'function'
         && typeof OffscreenCanvas === 'function' && typeof createImageBitmap === 'function';
+      $('suggestPreviewLink').classList.toggle('hidden', this.suggestionPreview || location.protocol === 'file:');
+      $('suggestTools').classList.toggle('hidden', !this.suggestionPreview);
+      $('suggestHelp').classList.toggle('hidden', !this.suggestionPreview);
       this.current = -1;
       this.filter = 'all';
       this.imageButtons = new WeakMap();
@@ -2862,6 +2884,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     renderSuggestionControls() {
+      if (!this.suggestionPreview) return;
       const review = this.ann.suggestionReview;
       const busy = Boolean(this.suggestionJob);
       const eligible = this.canSuggestCurrentPhoto();
@@ -2876,7 +2899,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     suggestionHint(review, eligible) {
       if (review) return this.ann.boxes.length
-        ? 'Check every class and box, and draw any missing boxes before saving.'
+        ? 'Check the boxes, choose their classes and draw any missing boxes before saving.'
         : 'Discard suggestions to leave this photo unreviewed, or draw any missing boxes.';
       if (!this.canSuggest) return 'Try the hosted labeler in a recent desktop browser for suggestions.';
       if (!eligible) return 'Available on unlabeled photos.';
