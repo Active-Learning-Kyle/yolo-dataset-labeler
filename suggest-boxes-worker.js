@@ -62,7 +62,7 @@ self.onmessage = async ({ data: { photo, classes, width, height } }) => {
     } finally {
       bitmap.close();
     }
-    const prompts = classes.map(name => 'a photo of a ' + name.toLowerCase().replace(/[_-]/g, ' ').replace(/\s+/g, ' ').trim());
+    const prompts = classes.map(name => 'a close-up photo of a ' + name.toLowerCase().replace(/[_-]/g, ' ').replace(/\s+/g, ' ').trim());
     if (new Set(prompts).size !== prompts.length) {
       postMessage({ type: 'error', message: 'Use more distinct class names before requesting suggestions.' });
       return;
