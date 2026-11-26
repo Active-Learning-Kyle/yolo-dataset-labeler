@@ -379,7 +379,6 @@ figcaption { margin-top:5px; line-height:1.25; }
 }
 @media (pointer:coarse) { .toolbar button,.zoom-tools button,.image-item,summary { min-height:42px; } }
 /* Keep the active tool and next class beside the canvas at every size. */
-.mobile-only { display:none; }
 .draw-tools, .mode-switch, .history-tools { display:flex; align-items:center; gap:4px; }
 .draw-tools { flex-wrap:wrap; padding:7px 10px; gap:8px; background:#f5f7fa; border-block:1px solid var(--line); }
 .draw-tools button { padding:7px 10px; }
@@ -395,9 +394,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 @media (max-width:760px), (max-height:520px) and (pointer:coarse) {
   #labeler { padding:6px !important; }
   .annotation { display:flex; flex-direction:column; height:auto; min-height:0; }
-  .mobile-only { display:block; margin:0 0 5px; width:100%; text-align:left; }
-  .left-panel { display:none; height:auto; }
-  .left-panel.open { display:flex; max-height:45dvh; margin-bottom:6px; }
+  .left-panel { height:auto; margin-bottom:6px; }
   .left-panel .panel-head { grid-template-columns:1fr 1fr; align-items:center; }
   .left-panel .search { grid-column:1/-1; }
   .canvas-panel { height:auto; min-height:0; }
@@ -409,7 +406,7 @@ figcaption { margin-top:5px; line-height:1.25; }
   .next-class { flex:1 1 145px; flex-wrap:wrap; }
   .next-class select { max-width:100%; flex:1; }
   .history-tools { flex-wrap:nowrap; }
-  .toolbar button,.draw-tools button,.zoom-tools button, #browseImages, .box-row button { min-height:44px; }
+  .toolbar button,.draw-tools button,.zoom-tools button,.box-row button { min-height:44px; }
   .class-row { grid-template-columns:24px minmax(0,1fr) auto auto; gap:4px; }
   .class-row button { padding:8px; }
   .class-row input { min-width:0; }
@@ -569,7 +566,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 @media (max-width:760px), (max-height:520px) and (pointer:coarse) {
   html { overscroll-behavior-y:none; }
   #labeler .annotation { height:auto; min-height:0; }
-  #labeler .left-panel.open, #labeler .right-body { height:auto; }
+  #labeler .right-body { height:auto; }
   #labeler .right-body { overflow:visible; }
   .canvas-panel .toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
   .workshop-name { display:none; }
@@ -583,13 +580,12 @@ figcaption { margin-top:5px; line-height:1.25; }
   .kit-example { width:100%; max-width:540px; justify-self:center; }
   .kit-photo { border-radius:8px; }
   .landing-foot { font-size:.73rem; }
-  .left-panel.open { flex:none; max-height:none; border-radius:7px; }
+  .left-panel { flex:none; border-radius:7px; }
   .left-panel .panel-head { grid-template-columns:auto 1fr 1fr; gap:4px; padding:6px; }
   #undoRemovePhoto { grid-column:1 / -1; grid-row:2; justify-self:start; }
   .left-panel .search { grid-column:auto; min-width:0; }
   .left-panel .panel-head select,.left-panel .search { padding:6px 2px; }
   .left-panel .image-list { flex:none; }
-  #browseImages { background:#e7eef9; color:#1e4487; }
   .draw-tools button { padding-inline:8px; }
   .draw-tools { display:grid; grid-template-columns:auto minmax(0,1fr) auto; }
   .history-tools { justify-self:center; }
@@ -723,7 +719,6 @@ figcaption { margin-top:5px; line-height:1.25; }
 
   <!-- ---------------------------------------------------------------- Labeler -->
   <section id="labeler" class="screen hidden" style="max-width:none;padding:10px">
-    <button id="browseImages" class="mobile-only" aria-expanded="false" aria-controls="imageBrowser">Browse images</button>
     <div class="annotation">
 
       <aside id="imageBrowser" class="panel left-panel">
@@ -2405,7 +2400,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       const snapshot = {
         id, current, view: $('labeler').classList.contains('hidden') ? 'setup' : 'workbench',
         name: this.store.name, root: this.store.root, mode: this.store.mode, filter: this.filter,
-        search: $('imageSearch').value, imagesOpen: $('imageBrowser').classList.contains('open'),
+        search: $('imageSearch').value,
         needsDownload: Boolean(this.needsDownload), drafts: new Map(this.drafts),
         classes: this.classEdits ? this.collectClasses() : null,
         excluded: Array.from(this.model.excludedPhotos.keys()), added: new Map(this.model.addedPhotos),
@@ -2470,7 +2465,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         }
         const index = this.model.images.findIndex(item => item.name === session.current);
         if (session.view === 'workbench' && index >= 0 && !this.classEdits && this.model.classes.length) {
-          await this.showWorkbench(session.filter, index, session.imagesOpen, session.search);
+          await this.showWorkbench(session.filter, index, session.search);
         }
         this.checkpoint();
       } catch (error) {
@@ -2552,10 +2547,6 @@ figcaption { margin-top:5px; line-height:1.25; }
         $('zipInput').click();
       };
       $('repairBtn').onclick = () => this.savePhoto();
-      $('browseImages').onclick = () => {
-        this.showImageBrowser(!$('imageBrowser').classList.contains('open'));
-        this.checkpoint();
-      };
       $('photosBtn').onclick = () => $('photosInput').click();
       $('addPhotosBtn').onclick = () => {
         if (this.classEdits) return this.toast('Save Classes before adding photos.', true);
@@ -2581,7 +2572,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       };
       // Chromium can suppress a compatibility click immediately after a touch drag.
       // Handle a completed tap once, while retaining native mouse and keyboard clicks.
-      for (const group of document.querySelectorAll('.zoom-tools, .draw-tools, .toolbar, .right-body, #browseImages, #imageBrowser')) {
+      for (const group of document.querySelectorAll('.zoom-tools, .draw-tools, .toolbar, .right-body, #imageBrowser')) {
         let tap;
         group.addEventListener('pointerdown', event => {
           const button = event.target.closest('button');
@@ -2667,18 +2658,6 @@ figcaption { margin-top:5px; line-height:1.25; }
           this.toast('Drop one dataset ZIP, or choose JPG, JPEG, PNG, WebP or BMP photos together. Convert HEIC to JPEG or PNG first.', true);
         }
       });
-    }
-
-    showImageBrowser(open) {
-      $('imageBrowser').classList.toggle('open', open);
-      $('browseImages').setAttribute('aria-expanded', String(open));
-      this.renderImageBrowserToggle();
-      if (open) this.scrollToCurrentImage();
-    }
-
-    renderImageBrowserToggle() {
-      const open = $('imageBrowser').classList.contains('open');
-      $('browseImages').textContent = (open ? 'Hide images' : 'Images') + ' · ' + (this.current + 1) + ' / ' + this.model.images.length;
     }
 
     async importPhotos(files) {
@@ -3174,14 +3153,13 @@ figcaption { margin-top:5px; line-height:1.25; }
       await this.showWorkbench(filter, idx);
     }
 
-    async showWorkbench(filter, index, imagesOpen = true, search = '') {
+    async showWorkbench(filter, index, search = '') {
       this.lastToast?.remove();
       this.filter = $('statusFilter').value = filter;
       $('imageSearch').value = search;
       $('setup').classList.add('hidden');
       $('labeler').classList.remove('hidden');
       $('topProgress').classList.remove('hidden');
-      this.showImageBrowser(imagesOpen);
       this.renderAll();
       window.scrollTo(0, 0);
       await this.openIndex(index);
@@ -3309,7 +3287,6 @@ figcaption { margin-top:5px; line-height:1.25; }
       undo.classList.toggle('hidden', !lastRemoved);
       undo.title = lastRemoved ? 'Restore ' + lastRemoved.name : '';
       $('imageCount').textContent = String(visible.length);
-      this.renderImageBrowserToggle();
       this.renderPhotoActions(visible);
     }
 
@@ -3370,7 +3347,6 @@ figcaption { margin-top:5px; line-height:1.25; }
           this.ann.item = this.ann.img = this.ann.url = this.ann.suggestionReview = null;
           this.ann.dirty = false;
           this.saveState('');
-          this.showImageBrowser(true);
         }
         this.renderAll();
         this.checkpoint();

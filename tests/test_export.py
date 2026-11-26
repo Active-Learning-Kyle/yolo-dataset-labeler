@@ -91,7 +91,7 @@ def run(browser, output):
                 page.screenshot(path=output/"tablet.png")
             else:
                 page.set_viewport_size({"width":390, "height":844})
-                expect(page.locator("#browseImages")).to_be_visible()
+                expect(page.locator("#imageBrowser")).to_be_visible()
                 page.screenshot(path=output/"phone-portrait.png")
             page.set_viewport_size({"width":1440, "height":900})
         if i < 24:

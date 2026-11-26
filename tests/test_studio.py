@@ -106,10 +106,8 @@ def run(browser):
     }""")
     page.set_viewport_size({'width': 390, 'height': 844})
     expect(page.locator('#imageBrowser')).to_be_visible()
-    expect(page.locator('#browseImages')).to_contain_text('19 / 20')
-    page.locator('#browseImages').click()
-    expect(page.locator('#imageBrowser')).to_be_hidden()
-    page.locator('#browseImages').click()
+    expect(page.locator('#imageCount')).to_have_text('20')
+    expect(page.locator('#progressText')).to_contain_text('Image 19 of 20')
     expect(page.locator('#imageList .current')).to_be_in_viewport()
     assert not errors, errors
     page.close()

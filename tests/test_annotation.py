@@ -64,8 +64,7 @@ def check_session(browser, site, width, height, touch):
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     if width < 761:
         expect(page.locator('#imageBrowser')).to_be_visible()
-        click('#browseImages')
-        expect(page.locator('#imageBrowser')).to_be_hidden()
+        expect(page.locator('#imageCount')).to_have_text('2')
         assert canvas.bounding_box()['width'] > width * .83
 
     drag((.10,.10),(.80,.80))
