@@ -6,7 +6,9 @@
 
 **Make a YOLO dataset from your own photos.** Choose the object types you want to detect, draw a box around each one, then download a ZIP containing your photos, labels and class names. Labeling runs on your device and requires no account.
 
-[Start with your own photos](#your-first-dataset) · [Try the sample photos](#try-the-sample-photos) · [Continue training in Colab](#continue-training-in-colab)
+[Try the sample photos](#try-the-sample-photos) · [Label your own photos](#your-first-dataset) · [Continue training in Colab](#continue-training-in-colab)
+
+For a quick first try, download the [nearly finished dataset ZIP](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-labeled-dataset.zip) and select it with **Open a ZIP**. One photo is left to review.
 
 ![The annotation workbench with a boxed bolt and hex nut, the Suggest boxes toolbar button, and five distinct hardware photos](docs/guide/04-label-objects.png)
 
@@ -14,14 +16,16 @@ The example uses photos of loose fasteners, an assembled bolt, a bolted plate, r
 
 ## Your first dataset
 
+**On a phone?** Choose **Start with my photos**, select your images, then begin at step 3.
+
 1. **Start with a folder.** On your computer, create an empty folder called `My Dataset`. Open the labeler in desktop Chrome or Edge, click **Open dataset folder**, select it and allow write access if prompted.
 2. **Add your photos.** Click **Create Missing Items**. The labeler creates `images/`, `labels/` and `classes.txt`. Copy your training photos into `images/`, then click **Refresh Dataset**. Keep a few fresh photos aside for testing.
 3. **Choose your classes.** Click **Add Class** for each object type, enter names such as `bolt` and `hex_nut`, then click **Save Classes** and **Start Labeling**.
-4. **Label each photo.** In **Draw**, choose a **New box class** and drag a tight box around each matching object. On an unlabeled photo, you can also use [**Suggest boxes**](#get-suggestions-for-a-photo), check the results and draw any missing boxes. Use **Edit** to adjust a box, then click **Next** to move on.
-5. **Download your work.** Click **Save & exit** to open **Review & export**. Finish any remaining images and click **Download Labeled_data.zip**. The ZIP contains your photos, matching labels and class list.
-6. **Continue to training.** Find the ZIP in Downloads, click **I have the ZIP**, then **Continue to Training in Colab**. Open your training notebook and upload the ZIP as-is through **Files**. See [Continue training in Colab](#continue-training-in-colab).
+4. **Label each photo.** In **Draw**, choose a **New box class** and drag a tight box around each target. Use **Edit** to adjust the box. If you use [**Suggest boxes**](#get-suggestions-for-a-photo), check each suggestion, draw any missing boxes and click **Save reviewed boxes**. Then click **Next** to move on.
+5. **Download your work.** Remove photos you want to leave out. To keep one with no targets, choose **Photo options → Confirm no object**. Click **Save & exit**, finish any remaining images and select **Download Labeled_data.zip** in **Review & export**.
+6. **If you’re training in Colab.** Find the file in Downloads, click **I have the ZIP**, then **Continue to Training in Colab**. Upload the ZIP as-is through **Files** in your training notebook. See [Continue training in Colab](#continue-training-in-colab).
 
-**On a phone?** Start at **Start with my photos**, pick your pictures and continue from step 3. Download a draft ZIP before closing if you want to finish later.
+If you pause before finishing a photo or ZIP session, save a [draft ZIP](#review-save-and-resume).
 
 [Import photos or ZIPs](#open-or-add-images) · [Classes and merging](#set-up-classes-and-combine-datasets) · [Drawing tools](#use-the-annotation-workbench) · [Phone controls](#use-the-workbench-on-a-phone) · [Saving and repairs](#review-save-and-resume) · [Export](#export-your-training-zip) · [Colab](#continue-training-in-colab) · [Help and shortcuts](#help-and-keyboard-shortcuts)
 
@@ -29,12 +33,12 @@ The example uses photos of loose fasteners, an assembled bolt, a bolted plate, r
 
 Use these five photos to practice labeling `bolt` and `hex_nut`. Choose the workflow you want to try.
 
-**Open dataset folder.** On your computer, create an empty folder called `My Dataset`. In desktop Chrome or Edge, choose **Open dataset folder**, select it and click **Create Missing Items**. To practice with the example photos, unzip the **Unlabeled photos** download below, copy the five JPGs into `My Dataset/images/`, then click **Refresh Dataset**. Follow steps 3–6 in the [walkthrough](#your-first-dataset).
-
 | Labeler button | Download | What to do |
 |---|---|---|
-| **Open a ZIP** | [Nearly finished dataset ZIP](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-labeled-dataset.zip) | Select the downloaded ZIP as-is. Four photos already have boxes. Click **Label remaining photos (1)** to open the washer-only photo. Remove it with **×**, or use **Photo options → Confirm no object** to include it as a background. |
+| **Open a ZIP** | [Nearly finished dataset ZIP](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-labeled-dataset.zip) | Select the downloaded ZIP as-is. Click **Label remaining photos (1)** to open the washer-only photo. To include it as a background, use **Photo options → Confirm no object**. To remove it, use **×** on its thumbnail. On desktop, hover over the thumbnail to reveal the button. |
 | **Start with my photos** | [Unlabeled photos](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-photos.zip) | Unzip the download. Select the five JPGs inside **Fastener-Photos**, using your photo library or file picker. Add `bolt` first and `hex_nut` second, click **Save Classes**, then **Start Labeling**. |
+
+**Open dataset folder.** Create an empty folder called `My Dataset` and open it in the labeler in desktop Chrome or Edge. Select **Create Missing Items**, unzip the **Unlabeled photos** download above and copy the five JPGs into `My Dataset/images/`. Click **Refresh Dataset** and continue from step 3 of the [walkthrough](#your-first-dataset).
 
 The washers photo contains neither target class. You can remove it from the training dataset and keep it aside to test for false detections. When every included photo has been reviewed, click **Save & exit** and download **Labeled_data.zip**. Keep the photo credits from the pack with any copy you share. [Photo sources and licenses](docs/guide/photo-credits.md)
 
@@ -151,7 +155,9 @@ Labeled_data.zip
 
 Each box is one line in its image’s label file. The fields are `class_id x_center y_center width height`, with coordinates and dimensions expressed as fractions of the image size. The Part 5D notebook reads your class names from `classes.txt` in the saved order.
 
-After the final download, **I have the ZIP** reveals the image, box and background counts and the Colab link. **Return to dataset** takes you back to your work.
+After you find `Labeled_data.zip` in Downloads, click **I have the ZIP**. This shows the image, box and background counts and the Colab link. **Return to dataset** takes you back to your work.
+
+![Check your download dialog showing the I have the ZIP button](docs/guide/11-confirm-download.png)
 
 ![Ready for training dialog showing the example dataset totals and the Continue to Training in Colab link outlined in red](docs/guide/06-open-colab.png)
 
