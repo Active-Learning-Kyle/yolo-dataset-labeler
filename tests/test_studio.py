@@ -73,7 +73,7 @@ def run(browser):
     expect(page.locator('#summaryStats .stat').first).to_have_text('2Images')
     page.reload()
     drop(page, [dataset])
-    page.get_by_role('button', name='Start Labeling', exact=True).click()
+    page.get_by_role('button', name='Review all photos', exact=True).click()
     first = page.locator('#imageList button').first
     expect(first.locator('img')).to_have_js_property('complete', True)
     page.wait_for_function('document.querySelector("#imageList img").naturalWidth > 0')
