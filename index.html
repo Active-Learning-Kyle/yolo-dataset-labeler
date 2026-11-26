@@ -2390,6 +2390,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         }
         this.loadThumbnails();
       }, {root: $('imageList'), rootMargin: '0px 100px'});
+      new ResizeObserver(() => this.scrollToCurrentImage()).observe($('imageList'));
       this.bind();
       this.modeMessage();
       this.offerResume();
@@ -2606,7 +2607,19 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.checkpoint();
       };
       // Chromium can suppress a compatibility click immediately after a touch drag.
-      // Handle a completed tap once, while retaining native mouse and keyboard clicks.
+      // A handled tap may open a dialog under the finger. Suppress its later native click
+      // at the document so it cannot press a dialog button or repeat the original action.
+      let handledTouchTap;
+      document.addEventListener('pointerdown', () => { handledTouchTap = null; }, true);
+      document.addEventListener('click', event => {
+        if (!handledTouchTap || !event.isTrusted || event.timeStamp - handledTouchTap.time > 700) return;
+        const nearby = Math.hypot(event.clientX - handledTouchTap.x, event.clientY - handledTouchTap.y) <= 15;
+        if (event.pointerType === 'touch' || event.sourceCapabilities?.firesTouchEvents || (event.detail && nearby)) {
+          handledTouchTap = null;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }, true);
       for (const group of document.querySelectorAll('.zoom-tools, .draw-tools, .toolbar, .right-body, #imageBrowser')) {
         let tap;
         group.addEventListener('pointerdown', event => {
@@ -2622,14 +2635,10 @@ figcaption { margin-top:5px; line-height:1.25; }
           tap = null;
           if (Math.hypot(event.clientX - x, event.clientY - y) <= 10
               && !button.disabled && button.contains(document.elementFromPoint(event.clientX, event.clientY))) {
+            handledTouchTap = {x: event.clientX, y: event.clientY, time: event.timeStamp};
             button.click();
           }
         });
-        group.addEventListener('click', event => {
-          if (event.target.closest('button') && (event.pointerType === 'touch' || event.sourceCapabilities?.firesTouchEvents)) {
-            event.stopImmediatePropagation();
-          }
-        }, true);
       }
       $('panTool').onclick = () => this.ann.setPan(!this.ann.panning);
       for (const [id, delta] of [['zoomIn', 0.5], ['zoomOut', -0.5], ['zoomFit', 0]]) {
