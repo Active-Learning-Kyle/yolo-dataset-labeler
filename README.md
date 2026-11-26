@@ -1,5 +1,7 @@
 # YOLO Dataset Labeler
 
+**HKU Global Engineering Alliance Training**
+
 [Open YOLO Dataset Labeler](https://active-learning-kyle.github.io/yolo-dataset-labeler/)
 
 **Make a YOLO dataset from your own photos.** Choose the object types you want to detect, draw a box around each one, then download a ZIP containing your photos, labels and class names. Labeling runs on your device and requires no account.
