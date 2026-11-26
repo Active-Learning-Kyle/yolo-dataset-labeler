@@ -6,7 +6,7 @@ import zipfile
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from test_review import solid_png
+from test_review import dismiss_box_guide, solid_png
 
 
 def drop(page, files):
@@ -65,6 +65,7 @@ def run(browser):
         for i in range(20):
             archive.writestr(f'images/kit-{i:02}.png', photo)
         archive.writestr('labels/kit-00.txt', '1 0.5 0.5 0.4 0.3\n')
+        archive.writestr('labels/kit-17.txt', '')
     dataset = ('kit.zip', frames.getvalue())
     drop(page, [dataset, ('loose.png', photo)])
     expect(page.get_by_role('alert')).to_contain_text('Drop one dataset ZIP')
@@ -74,6 +75,7 @@ def run(browser):
     page.reload()
     drop(page, [dataset])
     page.get_by_role('button', name='Review all photos', exact=True).click()
+    dismiss_box_guide(page)
     first = page.locator('#imageList .image-item').first
     expect(first.locator('img')).to_have_js_property('complete', True)
     page.wait_for_function('document.querySelector("#imageList img").naturalWidth > 0')
@@ -104,9 +106,9 @@ def run(browser):
             && current.getBoundingClientRect().right <= list.getBoundingClientRect().right + 1;
     }""")
     page.set_viewport_size({'width': 390, 'height': 844})
-    expect(page.locator('#imageBrowser')).to_be_hidden()
-    expect(page.locator('#browseImages')).to_contain_text('19 / 20')
-    page.locator('#browseImages').click()
+    expect(page.locator('#imageBrowser')).to_be_visible()
+    expect(page.locator('#imageCount')).to_have_text('20')
+    expect(page.locator('#progressText')).to_contain_text('Image 19 of 20')
     expect(page.locator('#imageList .current')).to_be_in_viewport()
     assert not errors, errors
     page.close()

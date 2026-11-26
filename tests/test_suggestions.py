@@ -5,7 +5,7 @@ import zipfile
 
 from playwright.sync_api import expect, sync_playwright
 
-from test_review import confirm_no_object, solid_png
+from test_review import confirm_no_object, dismiss_box_guide, solid_png
 
 
 def stub_suggestions(page):
@@ -40,6 +40,7 @@ def run(browser):
         page.locator('#classList input').nth(index).fill(name)
     page.locator('#saveClassesBtn').click()
     page.get_by_role('button', name='Start Labeling', exact=True).click()
+    dismiss_box_guide(page)
 
     suggest = page.locator('.draw-tools').get_by_role('button', name='Suggest boxes', exact=True)
     review = page.locator('#suggestReview')
@@ -56,10 +57,13 @@ def run(browser):
     expect(review).to_be_visible()
     expect(row).to_contain_text('AI 0.62')
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
-    page.locator('#nextBtn').click()
+    expect(page.locator('#nextBtn')).to_be_disabled()
     expect(page.locator('#frameName')).to_have_text('a.png')
-    page.keyboard.press('Control+s')
-    expect(page.locator('#downloadDialog')).to_be_hidden()
+    with page.expect_download() as draft:
+        page.keyboard.press('Control+s')
+    with zipfile.ZipFile(draft.value.path()) as dataset:
+        assert 'labels/a.txt' not in dataset.namelist()
+    page.locator('#dismissDownload').click()
     page.get_by_role('button', name='Draw', exact=True).click()
     canvas = page.locator('#canvas')
     canvas.scroll_into_view_if_needed()
@@ -85,11 +89,11 @@ def run(browser):
     expect(page.locator('#editClassField')).to_be_hidden()
     expect(row).not_to_contain_text('AI')
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
-    page.locator('#saveSuggestions').click()
+    page.get_by_role('button', name='Save reviewed boxes').click()
     expect(page.locator('#imageList .current')).to_contain_text('Labeled')
     expect(suggest).to_be_disabled()
     page.locator('#undoBtn').click()
-    expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
+    expect(page.locator('#nextBtn')).to_be_disabled()
     expect(row).to_have_count(0)
     page.locator('#redoBtn').click()
     expect(page.locator('#imageList .current')).to_contain_text('Labeled')
@@ -125,13 +129,16 @@ def touch_review(browser):
     page.locator('#classList input').fill('bolt')
     page.locator('#saveClassesBtn').tap()
     page.get_by_role('button', name='Start Labeling').tap()
+    dismiss_box_guide(page, touch=True)
     expect(page.locator('.suggest-actions button:visible')).to_have_count(1)
     page.get_by_role('button', name='Suggest boxes', exact=True).tap()
     expect(page.locator('#boxList .box-row')).to_have_count(1)
-    page.get_by_role('button', name='Save & exit').tap()
+    page.get_by_role('button', name='Finish & exit').tap()
+    expect(page.locator('#finishDialog')).to_be_visible()
+    page.get_by_role('button', name='Keep labeling').tap()
     expect(page.locator('#labeler')).to_be_visible()
     page.get_by_role('button', name='Save reviewed boxes').tap()
-    page.get_by_role('button', name='Save & exit').tap()
+    page.get_by_role('button', name='Finish & exit').tap()
     with page.expect_download() as exported:
         page.get_by_role('button', name='Download Labeled_data.zip', exact=True).tap()
     with zipfile.ZipFile(exported.value.path()) as dataset:

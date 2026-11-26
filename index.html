@@ -379,7 +379,6 @@ figcaption { margin-top:5px; line-height:1.25; }
 }
 @media (pointer:coarse) { .toolbar button,.zoom-tools button,.image-item,summary { min-height:42px; } }
 /* Keep the active tool and next class beside the canvas at every size. */
-.mobile-only { display:none; }
 .draw-tools, .mode-switch, .history-tools { display:flex; align-items:center; gap:4px; }
 .draw-tools { flex-wrap:wrap; padding:7px 10px; gap:8px; background:#f5f7fa; border-block:1px solid var(--line); }
 .draw-tools button { padding:7px 10px; }
@@ -395,9 +394,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 @media (max-width:760px), (max-height:520px) and (pointer:coarse) {
   #labeler { padding:6px !important; }
   .annotation { display:flex; flex-direction:column; height:auto; min-height:0; }
-  .mobile-only { display:block; margin:0 0 5px; width:100%; text-align:left; }
-  .left-panel { display:none; height:auto; }
-  .left-panel.open { display:flex; max-height:45dvh; margin-bottom:6px; }
+  .left-panel { height:auto; margin-bottom:6px; }
   .left-panel .panel-head { grid-template-columns:1fr 1fr; align-items:center; }
   .left-panel .search { grid-column:1/-1; }
   .canvas-panel { height:auto; min-height:0; }
@@ -409,7 +406,7 @@ figcaption { margin-top:5px; line-height:1.25; }
   .next-class { flex:1 1 145px; flex-wrap:wrap; }
   .next-class select { max-width:100%; flex:1; }
   .history-tools { flex-wrap:nowrap; }
-  .toolbar button,.draw-tools button,.zoom-tools button, #browseImages, .box-row button { min-height:44px; }
+  .toolbar button,.draw-tools button,.zoom-tools button,.box-row button { min-height:44px; }
   .class-row { grid-template-columns:24px minmax(0,1fr) auto auto; gap:4px; }
   .class-row button { padding:8px; }
   .class-row input { min-width:0; }
@@ -467,6 +464,10 @@ figcaption { margin-top:5px; line-height:1.25; }
 .entry-action span { font-size:1rem; }
 .entry-action small { font-size:.78rem; font-weight:450; }
 .entry-action.primary small { color:#e4edff; }
+#resumeBtn { width:100%; }
+#forgetResumeBtn { justify-self:start; padding:5px 2px; border:0; color:var(--muted); font-size:.78rem; }
+#forgetResumeBtn:hover { text-decoration:underline; }
+#openBtn.ghost { transition:none; }
 .drop-hint { color:#52647a; font-size:.82rem; margin:10px 0 16px; }
 .kit-example { margin:0; align-self:center; min-width:0; container-type:inline-size; }
 .kit-photo { aspect-ratio:4/3; background:#285759 var(--screw-photo) center/100% 100%; border-radius:12px; position:relative; isolation:isolate; counter-reset:part; }
@@ -550,6 +551,22 @@ figcaption { margin-top:5px; line-height:1.25; }
 .export-stats dd { margin:0; font-size:1.5rem; font-weight:700; }
 #trainingStep a { color:white; background:var(--primary); text-decoration:none; display:inline-block; padding:10px 14px; border-radius:6px; }
 #trainingStep a:focus-visible { outline:3px solid #84b6ff; outline-offset:2px; }
+#finishDialog { max-width:430px; color:var(--ink); }
+#finishDialog h2 { margin-top:0; }
+#finishDialog .dialog-foot { flex-wrap:wrap; }
+#boxGuideDialog { max-width:470px; max-height:calc(100dvh - 24px); color:var(--ink); }
+#boxGuideDialog[open] { display:flex; flex-direction:column; }
+#boxGuideDialog .dialog-body { min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+#boxGuideDialog .dialog-foot { flex-shrink:0; }
+.box-guide-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.box-guide-heading h2 { margin:0; }
+#boxGuideClose { display:grid; flex:none; place-items:center; width:44px; height:44px; padding:0; font-size:1.5rem; }
+#boxGuideIntro { margin:8px 0 12px; }
+#boxGuideDialog .examples { gap:10px; }
+#boxGuideDialog .sample { border-radius:6px; }
+#boxGuideDialog figure:last-child figcaption { font-weight:650; }
+#boxGuideDialog .small { margin:16px 0 0; }
+#boxGuideBtn { margin-top:8px; }
 @media (min-width:761px) {
   .annotation { grid-template:"canvas inspector" minmax(355px,1fr) "images images" auto / minmax(0,1fr) clamp(210px,22vw,326px);
     gap:8px; height:calc(100dvh - 136px); min-height:515px; }
@@ -560,6 +577,11 @@ figcaption { margin-top:5px; line-height:1.25; }
   .left-panel { min-height:126px; }
 }
 @media (max-width:760px), (max-height:520px) and (pointer:coarse) {
+  html { overscroll-behavior-y:none; }
+  #labeler .annotation { height:auto; min-height:0; }
+  #labeler .right-body { height:auto; }
+  #labeler .right-body { overflow:visible; }
+  .canvas-panel .toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
   .workshop-name { display:none; }
   .hero { padding:16px 12px; }
   .hero-card { grid-template-columns:1fr; gap:24px; padding:24px; }
@@ -571,13 +593,12 @@ figcaption { margin-top:5px; line-height:1.25; }
   .kit-example { width:100%; max-width:540px; justify-self:center; }
   .kit-photo { border-radius:8px; }
   .landing-foot { font-size:.73rem; }
-  .left-panel.open { flex:none; max-height:none; border-radius:7px; }
+  .left-panel { flex:none; border-radius:7px; }
   .left-panel .panel-head { grid-template-columns:auto 1fr 1fr; gap:4px; padding:6px; }
   #undoRemovePhoto { grid-column:1 / -1; grid-row:2; justify-self:start; }
   .left-panel .search { grid-column:auto; min-width:0; }
   .left-panel .panel-head select,.left-panel .search { padding:6px 2px; }
   .left-panel .image-list { flex:none; }
-  #browseImages { background:#e7eef9; color:#1e4487; }
   .draw-tools button { padding-inline:8px; }
   .draw-tools { display:grid; grid-template-columns:auto minmax(0,1fr) auto; }
   .history-tools { justify-self:center; }
@@ -623,6 +644,8 @@ figcaption { margin-top:5px; line-height:1.25; }
         <h1>Open a<br><span>dataset.</span></h1>
         <p id="entryIntro" class="intro">For class, create an empty folder on your computer, then open it here.</p>
         <div class="entry-actions">
+          <button id="resumeBtn" class="primary entry-action hidden" aria-labelledby="resumeTitle" aria-describedby="resumeHint"><span id="resumeTitle">Resume last dataset</span><small id="resumeHint"></small></button>
+          <button id="forgetResumeBtn" class="ghost hidden" type="button">Forget last dataset</button>
           <button id="openBtn" class="primary entry-action" aria-labelledby="folderTitle" aria-describedby="folderHint"><span id="folderTitle">Open dataset folder</span><small id="folderHint">Save labels directly to your folder</small></button>
           <div class="entry-alternatives">
             <button id="openZipBtn" class="ghost" title="Open a workshop pack or saved draft">Open a ZIP</button>
@@ -709,7 +732,6 @@ figcaption { margin-top:5px; line-height:1.25; }
 
   <!-- ---------------------------------------------------------------- Labeler -->
   <section id="labeler" class="screen hidden" style="max-width:none;padding:10px">
-    <button id="browseImages" class="mobile-only" aria-expanded="false" aria-controls="imageBrowser">Browse images</button>
     <div class="annotation">
 
       <aside id="imageBrowser" class="panel left-panel">
@@ -741,7 +763,6 @@ figcaption { margin-top:5px; line-height:1.25; }
             <button id="suggestBoxes" class="ghost" type="button" aria-describedby="suggestHint" disabled>Suggest boxes</button>
             <button id="cancelSuggestions" class="ghost hidden" type="button">Cancel</button>
             <div id="suggestReview" class="suggest-actions hidden">
-              <button id="saveSuggestions" class="primary" type="button">Save reviewed boxes</button>
               <button id="discardSuggestions" class="ghost" type="button">Discard suggestions</button>
             </div>
           </div>
@@ -755,8 +776,9 @@ figcaption { margin-top:5px; line-height:1.25; }
         </div>
         <div class="toolbar">
           <button id="prevBtn">← Previous</button>
-          <button id="nextBtn" class="primary">Next →</button>
-          <button id="backSetupBtn" class="ghost" title="Save your labels and return to Review &amp; export">Save &amp; exit</button>
+          <button id="nextBtn" class="ghost">Next →</button>
+          <button id="savePhotoBtn" class="primary">Save</button>
+          <button id="backSetupBtn" class="ghost" title="Return to Review &amp; export">Finish &amp; exit</button>
         </div>
       </section>
 
@@ -771,12 +793,9 @@ figcaption { margin-top:5px; line-height:1.25; }
           <details id="photoOptions" class="field-guide">
             <summary>Photo options</summary>
             <button id="noObjectBtn" class="ghost" title="Keep this photo as a training example with no target objects">Confirm no object</button>
+            <button id="discardPhotoBtn" class="ghost hidden" type="button">Discard unsaved edits</button>
           </details>
-          <details class="field-guide"><summary>Box guide &amp; shortcuts</summary>
-            <div class="examples"><figure><div class="sample loose"><i></i></div><figcaption>Too much background</figcaption></figure><figure><div class="sample tight"><i></i></div><figcaption>Tight to the hex nut</figcaption></figure></div>
-            <p>For a parts count, draw one box per visible bolt or hex nut. Fit each box to the outside edges of that part, even where two parts overlap.</p>
-            <p><kbd>B</kbd> draw · <kbd>V</kbd> edit · <kbd>A</kbd> / <kbd>D</kbd> move between images · <kbd>1–9</kbd> choose class · <kbd>Delete</kbd> remove box · <kbd>Ctrl/⌘ Z</kbd> undo.</p>
-          </details>
+          <button id="boxGuideBtn" class="ghost" type="button" aria-haspopup="dialog">Box guide &amp; shortcuts</button>
         </div>
       </aside>
 
@@ -787,6 +806,33 @@ figcaption { margin-top:5px; line-height:1.25; }
   </section>
 
 </main>
+
+<dialog id="boxGuideDialog" aria-labelledby="boxGuideTitle" aria-describedby="boxGuideIntro">
+  <div class="dialog-body">
+    <div class="box-guide-heading">
+      <h2 id="boxGuideTitle">Draw a tight box</h2>
+      <button id="boxGuideClose" class="ghost" type="button" aria-label="Close box guide">×</button>
+    </div>
+    <p id="boxGuideIntro">Draw one box per object. Fit it to the outer edges, even when objects overlap.</p>
+    <div class="examples">
+      <figure><div class="sample loose" aria-hidden="true"><i></i></div><figcaption>Too much background</figcaption></figure>
+      <figure><div class="sample tight" aria-hidden="true"><i></i></div><figcaption>Tight to the hex nut</figcaption></figure>
+    </div>
+    <p class="small"><b>Keyboard shortcuts</b><br><kbd>B</kbd> Draw · <kbd>V</kbd> Edit · <kbd>A</kbd> / <kbd>D</kbd> Previous / Next · <kbd>1–9</kbd> Choose class · <kbd>Delete</kbd> Remove box · <kbd>Ctrl/⌘ Z</kbd> Undo</p>
+  </div>
+  <div class="dialog-foot"><button id="boxGuideDone" class="primary" type="button" autofocus>Got it</button></div>
+</dialog>
+
+<dialog id="finishDialog" aria-labelledby="finishTitle" aria-describedby="finishMessage">
+  <div class="dialog-body">
+    <h2 id="finishTitle">Leave labeling for now?</h2>
+    <p id="finishMessage"></p>
+  </div>
+  <form method="dialog" class="dialog-foot">
+    <button value="continue" type="submit" class="primary" autofocus>Keep labeling</button>
+    <button value="exit" type="submit" class="ghost">Exit to review</button>
+  </form>
+</dialog>
 
 <dialog id="downloadDialog" aria-labelledby="downloadTitle">
   <div class="download-layout">
@@ -818,9 +864,10 @@ figcaption { margin-top:5px; line-height:1.25; }
       <li>Choose <b>Draw</b> and a <b>New box class</b>. Drag anywhere on the image, including inside an existing box.</li>
       <li>Choose <b>Edit</b>, then tap a box or its row. Drag inside to move it, drag a corner to resize it, or use <b>Change selected box class</b>.</li>
       <li>To leave out a blurry, duplicate or wrong photo, select <b>×</b> on its thumbnail. The original file stays on your device.</li>
-      <li>Background photos are optional. To include one in the training ZIP, open <b>Photo options</b> and choose <b>Confirm no object</b>. This saves an empty label file for the photo.</li>
+      <li>Background photos are optional. To include one in the training ZIP, open <b>Photo options</b>, choose <b>Confirm no object</b>, then choose <b>Save</b>.</li>
       <li>Boxes smaller than 3 original-image pixels are rejected.</li>
       <li>On an unlabeled photo, <b>Suggest boxes</b> in the toolbar can propose boxes and classes. Change a class beside its box, check for missing objects, then choose <b>Save reviewed boxes</b>.</li>
+      <li>Choose <b>Save</b> before moving to the next photo. <b>Finish &amp; exit</b> returns to review. Unsaved boxes stay in your workspace as a draft.</li>
     </ol>
     <p>
       <b>Shortcuts:</b>
@@ -833,8 +880,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       <span class="kbd">Esc</span> cancel/deselect.
     </p>
     <p class="small">
-      All work remains local. For ZIP and photo sessions, use <b>Download draft ZIP</b> before closing. Reopen the draft with <b>Open a ZIP</b>. In compatibility mode
-      the original folder cannot be updated directly.
+      <b>Resume last dataset</b> restores the latest workspace in this browser when local storage is available. <b>Download draft ZIP</b> keeps a portable copy of saved labels for <b>Open a ZIP</b>.
     </p>
   </div>
   <p class="credit">HKU Global Engineering Alliance Training · MIT License</p>
@@ -865,12 +911,14 @@ figcaption { margin-top:5px; line-height:1.25; }
 <script>
 (() => {
   'use strict';
+  history.scrollRestoration = 'manual';
 
   /* ========================================================================
      0. SHARED HELPERS
      ======================================================================== */
 
   const $ = id => document.getElementById(id);
+  const BOX_GUIDE_KEY = 'yolo-labeler-box-guide-v1';
   const enc = new TextEncoder();
   const dec = new TextDecoder('utf-8');
 
@@ -979,6 +1027,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.mode = 'memory';
       this.root = null;
       this.files = new Map();
+      this.fileChanges = new Map();
       this.name = 'Imported dataset';
     }
 
@@ -1101,7 +1150,9 @@ figcaption { margin-top:5px; line-height:1.25; }
           }
         }
       } else {
-        this.files.delete(this.memoryKey('labels/' + name));
+        const path = this.memoryKey('labels/' + name);
+        this.files.delete(path);
+        this.fileChanges.set(path, null);
       }
     }
 
@@ -1109,14 +1160,29 @@ figcaption { margin-top:5px; line-height:1.25; }
       const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
       if (this.mode === 'direct') {
         const [d, n] = path.split(/\/(.+)/);
-        let h;
-        if (n) h = await (await this.childDir(d, true)).getFileHandle(n, { create: true });
-        else h = await this.root.getFileHandle(d, { create: true });
-        const w = await h.createWritable();
-        await w.write(blob);
-        await w.close();
+        const directory = n ? await this.childDir(d, true) : this.root;
+        const name = n || d;
+        let existed = true;
+        let writable;
+        let handle;
+        try {
+          try {
+            handle = await directory.getFileHandle(name);
+          } catch (error) {
+            if (error.name !== 'NotFoundError') throw error;
+            existed = false;
+            handle = await directory.getFileHandle(name, {create: true});
+          }
+          writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+        } catch (error) {
+          if (writable) await writable.abort().catch(() => {});
+          if (handle && !existed) await directory.removeEntry(name).catch(() => {});
+          throw error;
+        }
       } else {
-        this.files.set(this.memoryKey(path), blob);
+        await this.putMemory(this.memoryKey(path), blob);
       }
     }
 
@@ -1129,12 +1195,13 @@ figcaption { margin-top:5px; line-height:1.25; }
         await writable.write(blob);
         await writable.close();
       } else {
-        this.files.set(path, blob);
+        await this.putMemory(path, blob);
       }
     }
 
     async putMemory(path, blob) {
       this.files.set(path, blob);
+      this.fileChanges.set(path, blob);
     }
 
     async addPhoto(name, file) {
@@ -1157,6 +1224,67 @@ figcaption { margin-top:5px; line-height:1.25; }
         await directory.removeEntry(name).catch(() => {});
         throw error;
       }
+    }
+  }
+
+  /** Store one recent workspace and its local files in the same transaction. */
+  class WorkspaceRecovery {
+    newId() {
+      return Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
+    }
+
+    database() {
+      return this.connection ??= new Promise((resolve, reject) => {
+        const request = indexedDB.open('yolo-labeler-workspace', 1);
+        request.onupgradeneeded = () => {
+          request.result.createObjectStore('session');
+          request.result.createObjectStore('files', {keyPath: 'path'});
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+        request.onblocked = () => reject(new Error('Browser storage is busy.'));
+      });
+    }
+
+    async read(withFiles = false) {
+      const db = await this.database();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(['session', 'files']);
+        const session = tx.objectStore('session').get('recent');
+        const files = withFiles ? tx.objectStore('files').getAll() : null;
+        tx.oncomplete = () => resolve({session: session.result, files: files?.result});
+        tx.onabort = () => reject(tx.error);
+      });
+    }
+
+    async write(id, session, changes, replace = false) {
+      const db = await this.database();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(['session', 'files'], 'readwrite');
+        const sessions = tx.objectStore('session');
+        const files = tx.objectStore('files');
+        const recent = sessions.get('recent');
+        let updated = false;
+        let failure;
+        recent.onsuccess = () => {
+          if (!replace && recent.result?.id !== id) return;
+          try {
+            if (replace || !session) files.clear();
+            if (session) sessions.put(session, 'recent');
+            else sessions.delete('recent');
+            for (const [path, blob] of changes) {
+              if (blob) files.put({path, blob});
+              else files.delete(path);
+            }
+            updated = true;
+          } catch (error) {
+            failure = error;
+            tx.abort();
+          }
+        };
+        tx.oncomplete = () => resolve(updated);
+        tx.onabort = () => reject(failure || tx.error || new Error('Could not save the workspace.'));
+      });
     }
   }
 
@@ -1602,7 +1730,6 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.undo = [];
       this.redo = [];
       this.dirty = false;
-      this.timer = null;
       this.zoom = 1;
       this.tool = 'draw';
       this.writes = Promise.resolve();
@@ -1662,16 +1789,15 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     // --- Loading an image --------------------------------------------------
     async load(item) {
-      if (!await this.app.guardUnsaved()) return false;
       if (this.item) this.history.set(this.item, { undo: this.undo, redo: this.redo });
       this.img = null;
       this.action = null;
+      this.suggestionReview = null;
       this.zoom = 1;
       this.setTool('draw');
       $('canvasWrap').scrollTo(0, 0);
       $('frameName').textContent = item.name;
 
-      clearTimeout(this.timer);
       if (this.url) URL.revokeObjectURL(this.url);
 
       this.item = item;
@@ -1686,6 +1812,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       try {
         const f = await item.imageEntry.getFile();
+        this.photoVersion = `${f.size}:${f.lastModified ?? ''}`;
         this.url = URL.createObjectURL(f);
         this.img = await new Promise((res, rej) => {
           const x = new Image();
@@ -1695,6 +1822,23 @@ figcaption { margin-top:5px; line-height:1.25; }
         });
         item.width = this.img.naturalWidth;
         item.height = this.img.naturalHeight;
+        const draft = this.app.drafts.get(item.name);
+        if (draft?.photoVersion === this.photoVersion) {
+          const {boxes, background} = JSON.parse(draft.state);
+          this.boxes = boxes;
+          this.background = background;
+          this.dirty = !draft.suggestion;
+          if (draft.suggestion) {
+            this.suggestionReview = {snapshot: draft.suggestion, undo: this.undo, redo: this.redo};
+            this.undo = [];
+            this.redo = [];
+            this.setTool('edit');
+          }
+          this.app.saveState(draft.suggestion ? 'Suggestions · review before saving' : 'Unsaved draft · Save to review');
+        } else if (draft) {
+          this.app.drafts.delete(item.name);
+          this.app.toast('The photo file changed. Its old unsaved draft could not be restored.', true);
+        }
         $('canvasMessage').classList.add('hidden');
         this.draw();
         this.renderList();
@@ -1882,7 +2026,6 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.draw();
         return;
       }
-      clearTimeout(this.timer);
       this.canvas.setPointerCapture?.(e.pointerId);
 
       if (hit) {
@@ -1955,7 +2098,6 @@ figcaption { margin-top:5px; line-height:1.25; }
       }
       this.action = null;
       this.draw();
-      if (this.dirty) this.scheduleSave();
     }
 
     up() {
@@ -1985,30 +2127,37 @@ figcaption { margin-top:5px; line-height:1.25; }
         }
       }
 
-      if (this.dirty) this.scheduleSave();
       this.draw();
       this.renderList();
     }
 
     // --- Box list / edits --------------------------------------------------
-    /** Mark the image as modified and schedule a save in the active storage mode. */
+    /** Recover edits as a local draft until the user explicitly saves the photo. */
     changed() {
-      if (this.suggestionReview) return;
       if (this.app.suggestionJob) this.app.cancelSuggestionJob();
-      if (this.item?.status === 'unlabeled' && this.app.filter === 'unlabeled') {
-        this.app.unlabeledInReview.add(this.item.name);
-      }
       this.revision++;
-      this.dirty = true;
-      this.app.saveState('Unsaved changes');
-      this.scheduleSave();
+      const draft = this.snapshot();
+      this.dirty = !this.suggestionReview && draft !== JSON.stringify({
+        boxes: this.item.boxes, background: this.item.status === 'background',
+      });
+      if (this.dirty || this.suggestionReview) {
+        this.app.drafts.set(this.item.name, {state: draft, suggestion: this.suggestionReview?.snapshot, photoVersion: this.photoVersion});
+      } else {
+        this.app.drafts.delete(this.item.name);
+      }
+      this.app.saveState(this.suggestionReview ? 'Suggestions · review before saving' : this.dirty
+        ? 'Unsaved draft · Save to review' : this.item.status === 'unlabeled' ? 'Not reviewed' : this.app.savedMessage());
+      this.app.renderPhotoActions();
+      this.app.renderProgress();
+      this.app.checkpoint();
     }
 
-    scheduleSave() {
-      clearTimeout(this.timer);
-      if (this.item?.status !== 'invalid') {
-        this.timer = setTimeout(() => this.saveEdits(), 650);
-      }
+    discardEdits() {
+      if (!this.item || this.suggestionReview || !this.dirty || this.app.savingPhoto) return;
+      this.cancelDrag();
+      this.undo = [];
+      this.redo = [];
+      this.restore(JSON.stringify({boxes: this.item.boxes, background: this.item.status === 'background'}));
     }
 
     deleteSelected() {
@@ -2090,7 +2239,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.redo = [];
       this.boxes = boxes;
       this.selected = -1;
-      this.app.saveState('Suggestions · review before saving');
+      this.changed();
       this.setTool('edit');
     }
 
@@ -2105,11 +2254,10 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (keep) {
         this.pushUndo(previous.snapshot);
         this.boxes = this.boxes.map(({ classId, x, y, w, h }) => ({ classId, x, y, w, h }));
-        this.changed();
       } else {
         this.boxes = JSON.parse(previous.snapshot).boxes;
-        this.app.saveState('Not reviewed');
       }
+      this.changed();
       this.app.suggestionMessage = '';
       this.draw();
       this.renderList();
@@ -2138,7 +2286,6 @@ figcaption { margin-top:5px; line-height:1.25; }
     async save(empty = false, unreviewed = false) {
       if (!this.item || !this.img) return false;
 
-      clearTimeout(this.timer);
       const item = this.item;
       if (!empty && !unreviewed && !this.boxes.length && !this.background) {
         if (!confirm('Have you checked the whole image? Saving without boxes marks it as No Object.')) return false;
@@ -2168,9 +2315,11 @@ figcaption { margin-top:5px; line-height:1.25; }
           if (this.app.store.mode === 'memory') this.app.needsDownload = true;
           if (this.item === item && revision === this.revision) {
             this.dirty = false;
-            this.app.saveState(this.app.savedMessage());
+            this.app.drafts.delete(item.name);
+            this.app.saveState(unreviewed ? 'Not reviewed' : this.app.savedMessage());
           }
           this.app.renderAll();
+          await this.app.checkpoint();
           return true;
         } catch (e) {
           this.app.saveState('Save failed');
@@ -2182,8 +2331,8 @@ figcaption { margin-top:5px; line-height:1.25; }
       return this.writes;
     }
 
-    /** Explicitly mark the current image as "no object" (empty label file). */
-    async noObject() {
+    /** Stage an empty label only after the student has reviewed the photo. */
+    noObject() {
       if (!this.app.suggestionsResolved()) return;
       if (!this.img || (this.background && !this.boxes.length)) return;
       if (this.boxes.length && !confirm('This image has boxes. Marking it as No Object will replace them with an empty label file. Continue?')) return;
@@ -2192,7 +2341,6 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.background = true;
       this.selected = -1;
       this.changed();
-      await this.save(true);
       this.draw();
       this.renderList();
     }
@@ -2219,7 +2367,11 @@ figcaption { margin-top:5px; line-height:1.25; }
         && typeof OffscreenCanvas === 'function' && typeof createImageBitmap === 'function';
       this.current = -1;
       this.filter = 'all';
-      this.unlabeledInReview = new Set();
+      this.drafts = new Map();
+      this.recovery = new WorkspaceRecovery();
+      this.recoveryQueue = Promise.resolve();
+      this.pendingCheckpoints = 0;
+      try { this.boxGuideSeen = localStorage.getItem(BOX_GUIDE_KEY) === 'seen'; } catch {}
       this.savedClasses = [];
       this.photoCards = new WeakMap();
       this.addPhotosCard = el('button', undefined, 'add-photos-card');
@@ -2238,8 +2390,10 @@ figcaption { margin-top:5px; line-height:1.25; }
         }
         this.loadThumbnails();
       }, {root: $('imageList'), rootMargin: '0px 100px'});
+      new ResizeObserver(() => this.scrollToCurrentImage()).observe($('imageList'));
       this.bind();
       this.modeMessage();
+      this.offerResume();
       for (const box of document.querySelectorAll('.kit-photo .photo-box')) {
         const key = el('li', box.textContent);
         key.style.setProperty('--tag', box.style.getPropertyValue('--tag'));
@@ -2247,12 +2401,133 @@ figcaption { margin-top:5px; line-height:1.25; }
       }
     }
 
+    async offerResume() {
+      try {
+        const {session} = await this.recovery.read();
+        if ($('landing').classList.contains('hidden')) return;
+        this.resumeRecord = session;
+        $('resumeHint').textContent = session?.current ? `${session.name} · ${session.current}` : session?.name || '';
+        $('resumeBtn').classList.toggle('hidden', !session);
+        $('forgetResumeBtn').classList.toggle('hidden', !session);
+        $('openBtn').classList.toggle('primary', !session);
+        $('openBtn').classList.toggle('ghost', Boolean(session));
+      } catch {
+        // File and ZIP workflows also work without browser storage.
+      }
+    }
+
+    startRecovery() {
+      this.workspaceId = this.recovery.newId();
+      this.checkpoint(true);
+    }
+
+    checkpoint(replace = false) {
+      const id = this.workspaceId;
+      if (!id) return this.recoveryQueue;
+      const current = !$('labeler').classList.contains('hidden') ? this.model.images[this.current]?.name : null;
+      const snapshot = {
+        id, current, view: $('labeler').classList.contains('hidden') ? 'setup' : 'workbench',
+        name: this.store.name, root: this.store.root, mode: this.store.mode, filter: this.filter,
+        search: $('imageSearch').value,
+        needsDownload: Boolean(this.needsDownload), drafts: new Map(this.drafts),
+        classes: this.classEdits ? this.collectClasses() : null,
+        excluded: Array.from(this.model.excludedPhotos.keys()), added: new Map(this.model.addedPhotos),
+      };
+      const changes = new Map(replace ? this.store.files : this.store.fileChanges);
+      this.pendingCheckpoints++;
+      this.recoveryQueue = this.recoveryQueue.then(async () => {
+        try {
+          const updated = await this.recovery.write(id, snapshot, changes, replace);
+          if (!updated) throw new Error('A different dataset is now the most recent one.');
+          for (const [path, blob] of changes) {
+            if (this.store.fileChanges.get(path) === blob) this.store.fileChanges.delete(path);
+          }
+          this.recoveryFailed = false;
+        } catch {
+          if (!this.recoveryFailed) {
+            this.toast('Browser recovery could not save this workspace. Download a ZIP to keep your saved labels.', true);
+          }
+          this.recoveryFailed = true;
+        } finally {
+          this.pendingCheckpoints--;
+        }
+      });
+      return this.recoveryQueue;
+    }
+
+    async resume() {
+      const record = this.resumeRecord;
+      const main = document.querySelector('main');
+      if (!record || main.inert) return;
+      main.inert = true;
+      try {
+        if (record.mode === 'direct' && record.root?.requestPermission &&
+            await record.root.requestPermission({mode: 'readwrite'}) !== 'granted') {
+          throw new Error('Allow write access to the dataset folder and try again.');
+        }
+        const {session, files} = await this.recovery.read(true);
+        const id = this.recovery.newId();
+        if (session?.id !== record.id || !await this.recovery.write(record.id, {...session, id}, [])) {
+          throw new Error('The most recent dataset changed. Select Resume last dataset again.');
+        }
+        this.store.mode = session.mode;
+        this.store.root = session.root;
+        this.store.name = session.name;
+        this.store.files = new Map(files.map(({path, blob}) => [path, blob]));
+        this.model.addedPhotos = session.added;
+        await this.model.scan();
+        this.savedClasses = [...this.model.classes];
+        const excluded = new Set(session.excluded);
+        for (const item of this.model.images) {
+          if (excluded.has(item.name)) this.model.excludedPhotos.set(item.name, item);
+        }
+        this.model.images = this.model.images.filter(item => !excluded.has(item.name));
+        this.drafts = session.drafts;
+        this.needsDownload = session.needsDownload;
+        this.workspaceId = id;
+        this.showSetup();
+        if (session.classes) {
+          this.model.classes = session.classes;
+          this.classEdits = true;
+          this.renderClasses();
+        }
+        const index = this.model.images.findIndex(item => item.name === session.current);
+        if (session.view === 'workbench' && index >= 0 && !this.classEdits && this.model.classes.length) {
+          await this.showWorkbench(session.filter, index, session.search);
+        }
+        this.checkpoint();
+      } catch (error) {
+        if ($('landing').classList.contains('hidden')) this.showSetup();
+        else {
+          this.store = new StorageAdapter();
+          this.model = new DatasetModel(this.store);
+          await this.offerResume();
+        }
+        this.toast('Could not resume: ' + error.message, true);
+      } finally {
+        main.inert = false;
+      }
+    }
+
+    async forgetResume() {
+      if (!this.resumeRecord || !confirm('Remove this dataset’s recovery copy from this browser?')) return;
+      try {
+        await this.recovery.write(this.resumeRecord.id, null, []);
+        await this.offerResume();
+      } catch {
+        this.toast('Could not remove the recovery copy. Try again.', true);
+      }
+    }
+
     // --- Wiring ------------------------------------------------------------
     bind() {
       $('openBtn').onclick = () => this.open();
+      $('resumeBtn').onclick = () => this.resume();
+      $('forgetResumeBtn').onclick = () => this.forgetResume();
       $('dismissDownload').onclick = () => $('downloadDialog').close();
       $('confirmDownload').onclick = () => {
         this.needsDownload = false;
+        this.checkpoint();
         if (this.draftDownload) {
           $('downloadDialog').close();
           if (!$('setup').classList.contains('hidden')) this.renderSummary();
@@ -2273,6 +2548,14 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('saveClassesBtn').onclick = () => this.saveClasses();
       $('helpBtn').onclick = () => $('helpDialog').showModal();
       $('closeHelp').onclick = () => $('helpDialog').close();
+      $('boxGuideBtn').onclick = () => this.showBoxGuide();
+      $('boxGuideClose').onclick = $('boxGuideDone').onclick = () => $('boxGuideDialog').close();
+      $('boxGuideDialog').onclose = () => {
+        this.boxGuideSeen = true;
+        try { localStorage.setItem(BOX_GUIDE_KEY, 'seen'); } catch {}
+        const focusTarget = this.boxGuideAutomatic ? $('drawTool') : $('boxGuideBtn');
+        focusTarget.focus({preventScroll: true});
+      };
       $('resetBtn').onclick = () => this.reset();
       $('prevBtn').onclick = () => this.navigate(-1);
       $('nextBtn').onclick = () => this.navigate(1);
@@ -2288,7 +2571,6 @@ figcaption { margin-top:5px; line-height:1.25; }
       };
       $('suggestBoxes').onclick = () => this.suggestBoxes();
       $('cancelSuggestions').onclick = () => this.cancelSuggestionJob('Suggestions canceled. You can keep labeling by hand.');
-      $('saveSuggestions').onclick = () => this.ann.finishSuggestionReview(true);
       $('discardSuggestions').onclick = () => this.ann.finishSuggestionReview(false);
       $('draftBtn').onclick = () => this.exportZip(true);
       $('summaryDraftBtn').onclick = () => this.exportZip(true);
@@ -2300,8 +2582,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         if (this.classEdits) return this.toast('Save Classes before importing a labeled ZIP.', true);
         $('zipInput').click();
       };
-      $('repairBtn').onclick = () => this.ann.saveEdits();
-      $('browseImages').onclick = () => this.showImageBrowser(!$('imageBrowser').classList.contains('open'));
+      $('repairBtn').onclick = () => this.savePhoto();
       $('photosBtn').onclick = () => $('photosInput').click();
       $('addPhotosBtn').onclick = () => {
         if (this.classEdits) return this.toast('Save Classes before adding photos.', true);
@@ -2312,8 +2593,10 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('photosInput').onchange = e => this.importPhotos(Array.from(e.target.files));
       $('undoBtn').onclick = () => this.ann.undoDo();
       $('redoBtn').onclick = () => this.ann.redoDo();
+      $('savePhotoBtn').onclick = () => this.savePhoto();
       $('backSetupBtn').onclick = () => this.exitLabeling();
       $('emptyBackBtn').onclick = () => this.exitLabeling();
+      $('discardPhotoBtn').onclick = () => this.ann.discardEdits();
       $('classSelect').onchange = () => this.ann.setTool('draw');
       $('editClass').onchange = e => this.ann.changeClass(Number(e.target.value));
       $('noObjectBtn').onclick = () => this.ann.noObject();
@@ -2321,10 +2604,23 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.filter = e.target.value;
         this.renderImageList();
         this.scrollToCurrentImage();
+        this.checkpoint();
       };
       // Chromium can suppress a compatibility click immediately after a touch drag.
-      // Handle a completed tap once, while retaining native mouse and keyboard clicks.
-      for (const group of document.querySelectorAll('.zoom-tools, .draw-tools, .toolbar, .right-body')) {
+      // A handled tap may open a dialog under the finger. Suppress its later native click
+      // at the document so it cannot press a dialog button or repeat the original action.
+      let handledTouchTap;
+      document.addEventListener('pointerdown', () => { handledTouchTap = null; }, true);
+      document.addEventListener('click', event => {
+        if (!handledTouchTap || !event.isTrusted || event.timeStamp - handledTouchTap.time > 700) return;
+        const nearby = Math.hypot(event.clientX - handledTouchTap.x, event.clientY - handledTouchTap.y) <= 15;
+        if (event.pointerType === 'touch' || event.sourceCapabilities?.firesTouchEvents || (event.detail && nearby)) {
+          handledTouchTap = null;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }, true);
+      for (const group of document.querySelectorAll('.zoom-tools, .draw-tools, .toolbar, .right-body, #imageBrowser')) {
         let tap;
         group.addEventListener('pointerdown', event => {
           const button = event.target.closest('button');
@@ -2339,14 +2635,10 @@ figcaption { margin-top:5px; line-height:1.25; }
           tap = null;
           if (Math.hypot(event.clientX - x, event.clientY - y) <= 10
               && !button.disabled && button.contains(document.elementFromPoint(event.clientX, event.clientY))) {
+            handledTouchTap = {x: event.clientX, y: event.clientY, time: event.timeStamp};
             button.click();
           }
         });
-        group.addEventListener('click', event => {
-          if (event.target.closest('button') && (event.pointerType === 'touch' || event.sourceCapabilities?.firesTouchEvents)) {
-            event.stopImmediatePropagation();
-          }
-        }, true);
       }
       $('panTool').onclick = () => this.ann.setPan(!this.ann.panning);
       for (const [id, delta] of [['zoomIn', 0.5], ['zoomOut', -0.5], ['zoomFit', 0]]) {
@@ -2359,6 +2651,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('imageSearch').oninput = () => {
         this.renderImageList();
         this.scrollToCurrentImage();
+        this.checkpoint();
       };
       $('folderInput').onchange = e => this.importFolder(e.target.files);
       $('folderInput').oncancel = () => this.emptyFolderFeedback();
@@ -2368,12 +2661,19 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.bindDropZone();
 
       window.addEventListener('beforeunload', e => {
-        if (this.ann.dirty || this.ann.suggestionReview || this.needsDownload || this.classEdits) {
+        if (!this.leavingWorkspace && (this.pendingCheckpoints || this.recoveryFailed) &&
+            (this.drafts.size || this.needsDownload || this.classEdits)) {
           e.preventDefault();
           e.returnValue = '';
         }
       });
       document.addEventListener('keydown', e => this.keys(e));
+    }
+
+    showBoxGuide(automatic = false) {
+      if (document.querySelector('dialog[open]')) return;
+      this.boxGuideAutomatic = automatic;
+      $('boxGuideDialog').showModal();
     }
 
     bindDropZone() {
@@ -2408,18 +2708,6 @@ figcaption { margin-top:5px; line-height:1.25; }
           this.toast('Drop one dataset ZIP, or choose JPG, JPEG, PNG, WebP or BMP photos together. Convert HEIC to JPEG or PNG first.', true);
         }
       });
-    }
-
-    showImageBrowser(open) {
-      $('imageBrowser').classList.toggle('open', open);
-      $('browseImages').setAttribute('aria-expanded', String(open));
-      this.renderImageBrowserToggle();
-      if (open) this.scrollToCurrentImage();
-    }
-
-    renderImageBrowserToggle() {
-      const open = $('imageBrowser').classList.contains('open');
-      $('browseImages').textContent = (open ? 'Hide images' : 'Images') + ' · ' + (this.current + 1) + ' / ' + this.model.images.length;
     }
 
     async importPhotos(files) {
@@ -2475,7 +2763,9 @@ figcaption { margin-top:5px; line-height:1.25; }
           } else {
             if (!await this.refresh()) return;
             this.showSetup();
+            if (fresh) this.startRecovery();
           }
+          if (!fresh) await this.checkpoint();
         }
         const message = added + ' photo(s) added.' + (renamed ? ' ' + renamed + ' renamed to keep both copies.' : '');
         this.toast(failure ? (added ? message + ' ' : '') + 'Could not add photos: ' + failure.message : message, Boolean(failure));
@@ -2505,6 +2795,9 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     async open() {
       const feedback = $('folderFeedback');
+      const main = document.querySelector('main');
+      if (main.inert) return;
+      main.inert = true;
       try {
         if (this.canWriteFolder()) {
           feedback.textContent = 'Select your dataset folder and allow access. You can also start with photos.';
@@ -2519,11 +2812,16 @@ figcaption { margin-top:5px; line-height:1.25; }
           input.value = '';
           return input.click();
         }
-        if (await this.refresh()) this.showSetup();
+        if (await this.refresh()) {
+          this.showSetup();
+          this.startRecovery();
+        }
       } catch (e) {
         feedback.textContent = e.name === 'AbortError'
           ? 'Folder selection was closed. Choose the folder again or start with your photos.'
           : 'Could not open the folder. Try again and allow access, or choose Start with my photos.';
+      } finally {
+        main.inert = false;
       }
     }
 
@@ -2535,7 +2833,10 @@ figcaption { margin-top:5px; line-height:1.25; }
       }
       try {
         await this.store.openMemory(files);
-        if (await this.refresh()) this.showSetup();
+        if (await this.refresh()) {
+          this.showSetup();
+          this.startRecovery();
+        }
       } catch (e) {
         $('folderFeedback').textContent = 'Could not read the folder. Choose it again or use Start with my photos.';
       }
@@ -2546,6 +2847,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         await this.model.scan();
         this.savedClasses = [...this.model.classes];
         this.renderAll();
+        this.checkpoint();
         return true;
       } catch (e) {
         this.toast(`Dataset scan failed: ${e.message}`, true);
@@ -2554,7 +2856,6 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     showSetup() {
-      this.unlabeledInReview.clear();
       $('landing').classList.add('hidden');
       $('resetBtn').classList.remove('hidden');
       $('labeler').classList.add('hidden');
@@ -2563,22 +2864,37 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.renderAll();
     }
 
-    async exitLabeling() {
-      if (this.switching || this.exporting) return;
-      const labeler = $('labeler');
-      this.switching = true;
-      labeler.inert = true;
-      try {
-        this.ann.cancelDrag();
-        if (await this.guardUnsaved()) {
-          this.showSetup();
-          $('reviewExportTitle').focus();
-        }
-      } finally {
-        this.switching = false;
-        labeler.inert = false;
-        if (!labeler.classList.contains('hidden')) $('backSetupBtn').focus({preventScroll: true});
+    exitLabeling() {
+      if (this.switching || this.exporting || this.savingPhoto) return;
+      this.ann.cancelDrag();
+      const remaining = this.model.images.filter(item => !this.photoReviewed(item)).length;
+      if (!remaining) return this.returnToReview();
+      const dialog = $('finishDialog');
+      const subject = remaining === 1 ? '1 photo still needs review.' : `${remaining} photos still need review.`;
+      const hasDraft = this.model.images.some(item => this.drafts.has(item.name));
+      $('finishMessage').textContent = subject + (hasDraft ? ' Unsaved edits will stay as drafts in this workspace.' : ' You can come back to them later.');
+      dialog.returnValue = '';
+      dialog.onclose = () => {
+        if (dialog.returnValue === 'exit') this.returnToReview();
+      };
+      dialog.showModal();
+    }
+
+    returnToReview() {
+      this.cancelSuggestionJob();
+      this.ann.item = null;
+      this.ann.img = null;
+      this.ann.boxes = [];
+      this.ann.dirty = false;
+      this.ann.suggestionReview = null;
+      this.current = -1;
+      if (this.ann.url) {
+        URL.revokeObjectURL(this.ann.url);
+        this.ann.url = null;
       }
+      this.showSetup();
+      this.checkpoint();
+      $('reviewExportTitle').focus();
     }
 
     renderAll() {
@@ -2673,7 +2989,10 @@ figcaption { margin-top:5px; line-height:1.25; }
       const id = el('div', String(i), 'class-id');
       const inp = el('input');
       inp.value = name;
-      inp.oninput = () => { this.classEdits = true; };
+      inp.oninput = () => {
+        this.classEdits = true;
+        this.checkpoint();
+      };
       inp.setAttribute('aria-label', `Class ${i} name`);
 
       const up = el('button', '↑', 'ghost');
@@ -2700,6 +3019,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       names.push('');
       this.model.classes = names;
       this.renderClasses();
+      this.checkpoint();
       const inputs = $('classList').querySelectorAll('input');
       inputs[inputs.length - 1]?.focus();
     }
@@ -2712,6 +3032,9 @@ figcaption { margin-top:5px; line-height:1.25; }
       }
       const used = new Set();
       for (const photo of photos) for (const box of photo.boxes) used.add(box.classId);
+      for (const draft of this.drafts.values()) {
+        for (const box of JSON.parse(draft.state).boxes) used.add(box.classId);
+      }
       return used;
     }
 
@@ -2725,6 +3048,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       [a[i], a[j]] = [a[j], a[i]];
       this.model.classes = a;
       this.renderClasses();
+      this.checkpoint();
     }
 
     deleteClass(i) {
@@ -2737,6 +3061,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.model.classes = a;
       $('classError').replaceChildren();
       this.renderClasses();
+      this.checkpoint();
     }
 
     async saveClasses() {
@@ -2805,6 +3130,8 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       const issues = $('summaryIssues');
       issues.replaceChildren();
+      const pending = this.model.images.filter(item => this.drafts.has(item.name)).length;
+      if (pending) issues.append(el('p', `${pending} ${pending === 1 ? 'photo has an unsaved draft' : 'photos have unsaved drafts'}. Open the photos to save or discard those edits.`, 'notice'));
       const errs = this.model.images.filter(i => i.status === 'invalid');
       if (errs.length || this.model.orphans.length) {
         let t = '';
@@ -2816,7 +3143,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       const classes = this.model.classes;
       const canArchive = s.total > 0 && classes.length > 0 && new Set(classes).size === classes.length
         && !s.orphans && !this.model.duplicates.length;
-      const ready = canArchive && !s.unlabeled && !s.invalid;
+      const ready = canArchive && !s.unlabeled && !s.invalid && !pending;
       const started = s.total > s.unlabeled;
       $('trainingZipBtn').classList.toggle('hidden', !ready);
       $('remainingBtn').classList.toggle('hidden', !started || !s.unlabeled);
@@ -2867,27 +3194,29 @@ figcaption { margin-top:5px; line-height:1.25; }
         return;
       }
 
-      this.lastToast?.remove();
-      this.filter = filter;
-      $('statusFilter').value = filter;
-      $('imageSearch').value = '';
-      $('setup').classList.add('hidden');
-      $('labeler').classList.remove('hidden');
-      $('topProgress').classList.remove('hidden');
-      this.renderAll();
-
       const idx = filter === 'unlabeled'
         ? this.model.images.findIndex(item => item.status === 'unlabeled')
         : filter === 'invalid'
           ? this.model.images.findIndex(item => item.status === 'invalid')
           : 0;
 
-      await this.openIndex(idx);
+      await this.showWorkbench(filter, idx);
     }
 
-    // Keep photos from the unlabeled review visible until Save & exit.
-    workbenchStatus(item) {
-      return item.status !== 'invalid' && this.unlabeledInReview.has(item.name) ? 'unlabeled' : item.status;
+    async showWorkbench(filter, index, search = '') {
+      this.lastToast?.remove();
+      this.filter = $('statusFilter').value = filter;
+      $('imageSearch').value = search;
+      $('setup').classList.add('hidden');
+      $('labeler').classList.remove('hidden');
+      $('topProgress').classList.remove('hidden');
+      this.renderAll();
+      window.scrollTo(0, 0);
+      await this.openIndex(index);
+    }
+
+    photoReviewed(item) {
+      return Boolean(item && ['labeled', 'background'].includes(item.status) && !this.drafts.has(item.name));
     }
 
     /** Images matching the current search text and status filter. */
@@ -2897,7 +3226,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         .map((x, i) => ({ x, i }))
         .filter(({ x }) => {
           const matchesText = !q || x.name.toLocaleLowerCase().includes(q);
-          const status = this.workbenchStatus(x);
+          const status = x.status;
           const matchesFilter =
             this.filter === 'all' ||
             (this.filter === 'remaining' && (status === 'unlabeled' || status === 'invalid')) ||
@@ -2953,7 +3282,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.thumbnailItems.set(thumb, item);
         button.append(thumb, el('div', item.name, 'image-name'), el('span', '', 'status-pill'));
         button.title = item.name;
-        button.onclick = () => this.openIndex(this.model.images.indexOf(item));
+        button.onclick = () => this.selectIndex(this.model.images.indexOf(item));
         const remove = el('button', undefined, 'photo-remove');
         remove.setAttribute('aria-label', 'Remove ' + item.name + ' from dataset');
         remove.title = 'Remove from dataset';
@@ -2968,10 +3297,9 @@ figcaption { margin-top:5px; line-height:1.25; }
       const current = index === this.current;
       button.classList.toggle('current', current);
       button.setAttribute('aria-current', String(current));
-      const status = this.workbenchStatus(item);
+      const status = item.status;
       button.dataset.status = status;
       button.lastChild.textContent = statusLabel(status);
-      button.lastChild.title = status !== item.status ? 'Review status updates after Save & exit' : '';
       return card;
     }
 
@@ -3009,9 +3337,40 @@ figcaption { margin-top:5px; line-height:1.25; }
       undo.classList.toggle('hidden', !lastRemoved);
       undo.title = lastRemoved ? 'Restore ' + lastRemoved.name : '';
       $('imageCount').textContent = String(visible.length);
-      this.renderImageBrowserToggle();
-      $('prevBtn').disabled = !visible.some(row => row.i < this.current);
-      $('nextBtn').disabled = !visible.some(row => row.i > this.current);
+      this.renderPhotoActions(visible);
+    }
+
+    renderPhotoActions(visible = this.visibleImages()) {
+      const ann = this.ann;
+      const item = this.model.images[this.current];
+      const pending = this.drafts.has(item?.name);
+      const save = $('savePhotoBtn');
+      save.textContent = ann.suggestionReview ? 'Save reviewed boxes' : 'Save';
+      save.disabled = this.savingPhoto || !ann.img || (ann.suggestionReview ? !ann.boxes.length : !ann.dirty && item?.status !== 'invalid');
+      $('discardPhotoBtn').classList.toggle('hidden', !ann.dirty || Boolean(ann.suggestionReview));
+      $('prevBtn').disabled = this.savingPhoto || pending || !visible.some(row => row.i < this.current);
+      $('nextBtn').disabled = this.savingPhoto || !this.photoReviewed(item) || !visible.some(row => row.i > this.current);
+      $('nextBtn').title = this.photoReviewed(item) ? 'Go to the next photo' : 'Save this photo before moving on';
+    }
+
+    async savePhoto() {
+      if ($('savePhotoBtn').disabled || this.switching || this.exporting) return;
+      const labeler = $('labeler');
+      this.savingPhoto = true;
+      labeler.inert = true;
+      this.ann.cancelDrag();
+      this.renderPhotoActions();
+      try {
+        if (this.ann.suggestionReview) await this.ann.finishSuggestionReview(true);
+        else await this.ann.saveEdits();
+      } finally {
+        this.savingPhoto = false;
+        labeler.inert = false;
+        this.renderPhotoActions();
+        const next = $('nextBtn');
+        const target = !next.disabled ? next : !$('savePhotoBtn').disabled ? $('savePhotoBtn') : $('backSetupBtn');
+        target.focus({preventScroll: true});
+      }
     }
 
     async removePhoto(item) {
@@ -3020,9 +3379,11 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (main.inert || this.switching || index < 0) return;
       main.inert = true;
       try {
-        const browserWasOpen = $('imageBrowser').classList.contains('open');
         const active = item === this.ann.item;
-        if (active && !await this.guardUnsaved()) return;
+        if (active) {
+          this.ann.cancelDrag();
+          this.cancelSuggestionJob();
+        }
         this.model.excludedPhotos.set(item.name, item);
         this.model.images.splice(index, 1);
         this.needsDownload = true;
@@ -3031,14 +3392,14 @@ figcaption { margin-top:5px; line-height:1.25; }
           const visible = this.visibleImages();
           const next = visible.find(row => row.i >= index) || visible.at(-1);
           await this.openIndex(next?.i ?? Math.min(index, this.model.images.length - 1));
-          if (browserWasOpen) this.showImageBrowser(true);
         } else if (!this.model.images.length) {
           if (this.ann.url) URL.revokeObjectURL(this.ann.url);
-          this.ann.item = this.ann.img = this.ann.url = null;
+          this.ann.item = this.ann.img = this.ann.url = this.ann.suggestionReview = null;
+          this.ann.dirty = false;
           this.saveState('');
-          this.showImageBrowser(true);
         }
         this.renderAll();
+        this.checkpoint();
         this.toast(item.name + ' removed from this dataset and future ZIP exports. Original file kept.');
       } finally {
         main.inert = false;
@@ -3060,29 +3421,39 @@ figcaption { margin-top:5px; line-height:1.25; }
         await this.openIndex(this.model.images.indexOf(item));
       }
       this.renderAll();
+      this.checkpoint();
       this.toast(item.name + ' restored.');
     }
 
     async openIndex(i) {
       if (this.switching || i < 0 || i >= this.model.images.length) return;
-      if (i === this.current && this.model.images[i] === this.ann.item) {
-        this.showImageBrowser(false);
-        return;
-      }
+      if (i === this.current && this.model.images[i] === this.ann.item) return;
       this.switching = true;
       $('labeler').inert = true;
       try {
         this.ann.cancelDrag();
+        this.cancelSuggestionJob();
         if (await this.ann.load(this.model.images[i])) {
           this.current = i;
-          this.showImageBrowser(false);
           this.renderAll();
           this.scrollToCurrentImage();
+          this.checkpoint();
         }
       } finally {
         this.switching = false;
         $('labeler').inert = false;
       }
+      if (this.ann.img && !this.boxGuideSeen) this.showBoxGuide(true);
+    }
+
+    selectIndex(i) {
+      if (i === this.current || this.savingPhoto || i < 0) return;
+      const current = this.model.images[this.current];
+      if (current && (this.drafts.has(current.name) || (i > this.current && !this.photoReviewed(current)))) {
+        this.toast('Save the current photo before moving on.');
+        return;
+      }
+      return this.openIndex(i);
     }
 
     async navigate(d) {
@@ -3090,13 +3461,13 @@ figcaption { margin-top:5px; line-height:1.25; }
       const visible = this.visibleImages();
       const target = d > 0 ? visible.find(row => row.i > this.current)
                            : visible.reverse().find(row => row.i < this.current);
-      if (target) await this.openIndex(target.i);
+      if (target) await this.selectIndex(target.i);
     }
 
     renderProgress() {
       const {images} = this.model;
       const total = images.length;
-      const reviewed = images.filter(item => ['labeled', 'background'].includes(this.workbenchStatus(item))).length;
+      const reviewed = images.filter(item => this.photoReviewed(item)).length;
       const complete = total ? Math.round(reviewed * 100 / total) : 0;
       $('progressText').textContent = total
         ? `Image ${this.current + 1} of ${total} · Reviewed ${reviewed} · Remaining ${total - reviewed} · ${complete}%`
@@ -3133,7 +3504,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('suggestBoxes').title = eligible ? 'Suggest boxes for this photo' : 'Available on unlabeled photos';
       $('cancelSuggestions').classList.toggle('hidden', !busy);
       $('suggestReview').classList.toggle('hidden', !review);
-      $('saveSuggestions').disabled = !this.ann.boxes.length;
+      this.renderPhotoActions();
       $('suggestHint').textContent = this.suggestionHint(review, eligible);
       $('suggestStatus').textContent = this.suggestionMessage;
     }
@@ -3221,17 +3592,11 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Small helpers -----------------------------------------------------
     saveState(t) {
       $('saveState').textContent = t;
-      $('saveState').style.color = t === 'Save failed' ? 'var(--bad)' : t === 'Unsaved changes' ? 'var(--warn)' : 'var(--muted)';
+      $('saveState').style.color = t === 'Save failed' ? 'var(--bad)' : t.startsWith('Unsaved') ? 'var(--warn)' : 'var(--muted)';
     }
 
     savedMessage() {
-      return this.store.mode === 'direct' ? 'Saved to folder' : 'In this tab · download ZIP to keep';
-    }
-
-    async guardUnsaved() {
-      if (!this.suggestionsResolved()) return false;
-      await this.ann.writes;
-      return !this.ann.dirty || await this.ann.saveEdits();
+      return this.store.mode === 'direct' ? 'Saved to folder' : 'Saved · download ZIP for a copy';
     }
 
     normalizeClasses(text) {
@@ -3263,7 +3628,6 @@ figcaption { margin-top:5px; line-height:1.25; }
     async importImagesZip(file) {
       $('zipImagesInput').value = '';
       if (!file) return;if(file.size>MAX_ZIP_INPUT_BYTES)return this.toast('ZIP exceeds 1 GiB.',true);
-      if (this.ann.dirty && !confirm('You have unsaved changes. Importing a ZIP will discard them. Continue?')) return;
 
       document.querySelector('main').inert = true;
       try {
@@ -3290,6 +3654,8 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.store.mode = 'memory';
         this.store.name = file.name.replace(/\.zip$/i, '') || 'Imported dataset';
         this.store.files.clear();
+        this.store.fileChanges.clear();
+        this.drafts.clear();
 
         this.ann.dirty = false;
         this.ann.item = null;
@@ -3341,8 +3707,9 @@ figcaption { margin-top:5px; line-height:1.25; }
           restored++;
         }
 
-        await this.refresh();
+        if (!await this.refresh()) return;
         this.showSetup();
+        this.startRecovery();
 
         let msg = `ZIP imported: ${count} image(s) ready.`;
         if (restored) msg += `\n• ${restored} existing label file(s) restored`;
@@ -3439,11 +3806,8 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     async downloadDataset(draft) {
       if (this.classEdits) return this.toast('Save Classes before downloading.', true);
-      if (!await this.guardUnsaved()) return;
-      if (!await this.refresh()) return;
-      if (!$('labeler').classList.contains('hidden')) {
-        this.ann.item = this.model.images[this.current];
-      }
+      if (this.savingPhoto) return;
+      if (!$('setup').classList.contains('hidden') && !await this.refresh()) return;
 
       const s = this.model.summary();
       const problems = [];
@@ -3453,6 +3817,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (this.model.duplicates.length) problems.push('Image or label filenames are ambiguous.');
       for (const i of this.model.images) {
         if (!draft && (i.status === 'unlabeled' || i.status === 'invalid')) problems.push(`${i.name}: ${statusLabel(i.status)}`);
+        else if (!draft && this.drafts.has(i.name)) problems.push(`${i.name}: Unsaved edits`);
       }
       if (this.model.orphans.length) problems.push(...this.model.orphans.map(x => `${x}: orphan label file`));
       if (!s.total) problems.push('No supported images found.');
@@ -3482,7 +3847,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.draftDownload = draft;
         $('downloadTitle').textContent = 'Check your download';
         $('downloadInstructions').textContent = draft
-          ? 'Find Labeler-draft.zip in your downloads. Reopen it with Open a ZIP to resume.'
+          ? 'Find Labeler-draft.zip in your downloads. It contains your saved labels. Reopen it with Open a ZIP.'
           : 'Find Labeled_data.zip in your downloads before you continue to training.';
         $('confirmDownload').classList.remove('hidden');
         $('trainingStep').classList.add('hidden');
@@ -3549,11 +3914,17 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     // --- Reset & toast -----------------------------------------------------
-    reset() {
-      if (this.exporting || this.switching) return;
-      if ((this.ann.dirty || this.ann.suggestionReview || this.needsDownload || this.classEdits) &&
-          !confirm('Close and discard changes you have not downloaded or saved to your folder?')) return;
-      this.ann.dirty = this.needsDownload = this.classEdits = false;
+    async reset() {
+      const main = document.querySelector('main');
+      if (main.inert || this.exporting || this.switching || this.savingPhoto) return;
+      main.inert = true;
+      await this.recoveryQueue;
+      if (this.recoveryFailed && (this.drafts.size || this.needsDownload || this.classEdits) &&
+          !confirm('Browser recovery is unavailable. Close this dataset anyway?')) {
+        main.inert = false;
+        return;
+      }
+      this.leavingWorkspace = true;
       location.reload();
     }
 

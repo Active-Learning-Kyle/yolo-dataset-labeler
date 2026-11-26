@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from test_review import confirm_no_object, solid_png
+from test_review import confirm_no_object, dismiss_box_guide, solid_png
 
 
 HTML = Path(__file__).resolve().parents[1] / 'index.html'
@@ -68,8 +68,9 @@ def memory_workbench(browser):
     spare.tap()
     page.locator('#saveClassesBtn').tap()
     page.locator('#labelAllBtn').click()
+    dismiss_box_guide(page, touch=True)
     expect(page.locator('#boxList .box-row')).to_have_count(1)
-    page.locator('#browseImages').tap()
+    expect(page.locator('#imageBrowser')).to_be_visible()
     remove(page, 'kit.png', touch=True)
     expect(page.locator('#progressText')).to_contain_text('No photos')
     expect(page.locator('#imageList button').last).to_have_text('+Add photos')
@@ -90,13 +91,12 @@ def memory_workbench(browser):
     mouse.move(frame['x'] + frame['width'] * .65, frame['y'] + frame['height'] * .65, steps=4)
     mouse.up()
     expect(page.locator('#boxList .box-row')).to_have_count(2)
-    page.locator('#browseImages').tap()
     upload(page, ['a.png', 'kit.png'])
     expect(page.locator('#imageList .image-name')).to_have_text(['kit.png', 'a.png', 'kit_imported_2.png'])
     expect(page.locator('#imageList button').last).to_have_text('+Add photos')
     expect(page.locator('#frameName')).to_have_text('kit.png')
     expect(page.locator('#boxList .box-row')).to_have_count(2)
-    expect(page.locator('#progressText')).to_contain_text('Reviewed 1 · Remaining 2')
+    expect(page.locator('#progressText')).to_contain_text('Reviewed 0 · Remaining 3')
     remove(page, 'kit.png', touch=True)
     expect(page.locator('#frameName')).to_have_text('a.png')
     expect(page.locator('#undoRemovePhoto')).to_be_visible()
@@ -105,8 +105,6 @@ def memory_workbench(browser):
     for name in ('a.png', 'kit_imported_2.png'):
         page.get_by_role('button', name=f'{name} Unlabeled').click()
         confirm_no_object(page)
-        if name == 'a.png':
-            page.locator('#browseImages').tap()
     page.locator('#backSetupBtn').click()
     training = export(page, '#trainingZipBtn')
     assert set(training) == {*draft, 'labels/a.txt', 'labels/kit_imported_2.txt'}
@@ -140,6 +138,7 @@ def writable_workbench(browser):
     page.locator('#saveClassesBtn').click()
     expect(page.locator('#classList button').filter(has_text='Delete').first).to_be_enabled()
     page.locator('#labelAllBtn').click()
+    dismiss_box_guide(page)
     expect(page.locator('#frameName')).to_have_text('m.png')
     page.evaluate("""() => {
         const original = FileSystemFileHandle.prototype.createWritable;

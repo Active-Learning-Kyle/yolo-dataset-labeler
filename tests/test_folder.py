@@ -5,7 +5,8 @@ import zipfile
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from test_review import confirm_no_object, solid_png
+from test_review import confirm_no_object, dismiss_box_guide, solid_png
+from test_resume import read_recovery
 
 
 def check_read_only_folder(browser):
@@ -32,6 +33,7 @@ def check_read_only_folder(browser):
         page.locator('#classList input').fill('bolt')
         page.locator('#saveClassesBtn').click()
         page.get_by_role('button', name='Start Labeling', exact=True).click()
+        dismiss_box_guide(page, touch=True)
         confirm_no_object(page)
         page.locator('#backSetupBtn').click()
         with page.expect_download() as archive:
@@ -67,8 +69,8 @@ def check(browser):
     page.goto('http://localhost/index.html')
     page.evaluate('window.showDirectoryPicker = () => navigator.storage.getDirectory()')
     folder = page.get_by_role('button', name='Open dataset folder', exact=True)
-    expect(page.locator('.entry-actions button').first).to_have_id('openBtn')
-    expect(page.locator('.entry-actions .primary')).to_have_count(1)
+    expect(page.locator('.entry-actions button:visible').first).to_have_id('openBtn')
+    expect(page.locator('.entry-actions .primary:visible')).to_have_count(1)
     folder.click()
     expect(page.locator('#checklist .missing')).to_have_count(3)
     expect(page.locator('#importLabelsBtn')).to_be_hidden()
@@ -92,6 +94,7 @@ def check(browser):
     expect(page.locator('#importLabelsBtn')).to_be_visible()
     expect(page.locator('#summaryDraftBtn')).to_be_hidden()
     page.get_by_role('button', name='Start Labeling', exact=True).click()
+    dismiss_box_guide(page)
     page.evaluate("""() => {
         const proto = FileSystemFileHandle.prototype;
         const create = proto.createWritable;
@@ -108,17 +111,31 @@ def check(browser):
     page.mouse.down()
     page.mouse.move(rect['x'] + 130, rect['y'] + 160)
     page.mouse.up()
-    page.locator('#nextBtn').click()
+    page.locator('#savePhotoBtn').click()
     expect(page.locator('#saveState')).to_have_text('Save failed')
     expect(page.locator('#frameName')).to_have_text('a.png')
-    save_exit = page.get_by_role('button', name='Save & exit', exact=True)
-    save_exit.click()
+    save = page.get_by_role('button', name='Save', exact=True)
+    save.click()
     expect(page.locator('#saveState')).to_have_text('Save failed')
     expect(page.locator('#labeler')).to_be_visible()
-    expect(save_exit).to_be_focused()
+    expect(save).to_be_focused()
     expect(page.locator('#boxList .box-row')).to_have_count(1)
-    page.evaluate('window.rejectWrites = false')
-    save_exit.click()
+    expect(page.locator('#nextBtn')).to_be_disabled()
+    assert page.evaluate("""async () => {
+        const root = await navigator.storage.getDirectory();
+        const labels = await root.getDirectoryHandle('labels');
+        for await (const name of labels.keys()) if (name === 'a.txt') return false;
+        return true;
+    }""")
+    read_recovery(page, current='a.png', mode='direct', drafts=1)
+    page.reload()
+    page.get_by_role('button', name='Resume last dataset').click()
+    expect(page.locator('#frameName')).to_have_text('a.png')
+    expect(page.locator('#boxList .box-row')).to_have_count(1)
+    save.click()
+    expect(page.locator('#saveState')).to_have_text('Saved to folder')
+    page.get_by_role('button', name='Finish & exit').click()
+    page.get_by_role('button', name='Exit to review').click()
     expect(page.locator('#labeler')).to_be_hidden()
     expect(page.get_by_role('heading', name='3. Review & export')).to_be_focused()
     page.get_by_role('button', name='Label remaining photos (1)').click()
@@ -134,7 +151,7 @@ def check(browser):
     assert labels['b.txt'] == '' and labels['a.txt'].split()[0] == '0'
     assert len(labels['a.txt'].split()) == 5
     page.close()
-    print('PASS empty-folder setup, class save, write denial, Save & exit, resume and background label')
+    print('PASS empty-folder setup, class save, write denial without a partial label, resume and background label')
 
 
 if __name__ == '__main__':

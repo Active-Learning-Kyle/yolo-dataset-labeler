@@ -12,7 +12,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 from playwright.sync_api import expect, sync_playwright
 
-from test_review import confirm_no_object
+from test_review import confirm_no_object, dismiss_box_guide
 
 
 def tabletop(index):
@@ -68,6 +68,7 @@ def run(browser, output):
     page.locator("#classList input").fill("blue_disc")
     page.locator("#saveClassesBtn").click()
     page.get_by_role("button", name="Start Labeling", exact=True).click()
+    dismiss_box_guide(page)
     canvas = page.locator("#canvas")
     for i, (_, boxes) in enumerate(frames, 1):
         expect(page.locator("#frameName")).to_have_text(f"table-{i:02}.jpg")
@@ -81,15 +82,17 @@ def run(browser, output):
             page.mouse.up()
         if not boxes:
             confirm_no_object(page)
+        else:
+            page.locator('#savePhotoBtn').click()
         if i in (1,2):
-            expect(page.locator("#saveState")).to_contain_text("In this tab")
+            expect(page.locator("#saveState")).to_contain_text("Saved")
             if i == 1:
                 page.screenshot(path=output/"desktop.png")
                 page.set_viewport_size({"width":820, "height":1024})
                 page.screenshot(path=output/"tablet.png")
             else:
                 page.set_viewport_size({"width":390, "height":844})
-                expect(page.locator("#browseImages")).to_be_visible()
+                expect(page.locator("#imageBrowser")).to_be_visible()
                 page.screenshot(path=output/"phone-portrait.png")
             page.set_viewport_size({"width":1440, "height":900})
         if i < 24:

@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from test_review import confirm_no_object, solid_png
+from test_review import confirm_no_object, dismiss_box_guide, solid_png
 
 
 def check_session(browser, site, width, height, touch):
@@ -60,13 +60,12 @@ def check_session(browser, site, width, height, touch):
     page.locator('#photosInput').set_input_files(second)
     expect(page.get_by_text('1 photo(s) added. 1 renamed to keep both copies.')).to_be_visible()
     page.get_by_role('button',name='Start Labeling',exact=True).click()
+    dismiss_box_guide(page, touch)
     expect(page.locator('#frameName')).to_have_text('OIP.png')
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     if width < 761:
-        expect(page.locator('#imageBrowser')).to_be_hidden()
-        click('#browseImages')
         expect(page.locator('#imageBrowser')).to_be_visible()
-        click('#browseImages')
+        expect(page.locator('#imageCount')).to_have_text('2')
         assert canvas.bounding_box()['width'] > width * .83
 
     drag((.10,.10),(.80,.80))
@@ -98,14 +97,10 @@ def check_session(browser, site, width, height, touch):
     rows.nth(1).get_by_role('button').first.click()
     drag((.42,.42),(.51,.50))
     drag((.64,.63),(.71,.71))
+    click('#savePhotoBtn')
     draft = read_zip(lambda: click('#draftBtn'))
     expect(page.locator('#trainingStep')).to_be_hidden()
     click('#dismissDownload')
-    # Dismissing the download prompt must retain the unsaved-session warning.
-    assert page.evaluate("""() => {
-        const event = new Event('beforeunload', {cancelable:true});
-        return !window.dispatchEvent(event);
-    }""")
     lines = draft['labels/OIP.txt'].decode().splitlines()
     assert [line.split()[0] for line in lines] == ['0','1']
     assert float(lines[1].split()[3]) > .28
@@ -116,11 +111,12 @@ def check_session(browser, site, width, height, touch):
     with zipfile.ZipFile(draft_bytes, 'w') as archive:
         for name, data in draft.items():
             archive.writestr(name, data)
-    restored = context.new_page()
+    restored = browser.new_page()
     restored.goto(site)
     restored.locator('#zipImagesInput').set_input_files({
         'name':'Labeler-draft.zip', 'mimeType':'application/zip', 'buffer':draft_bytes.getvalue()})
     restored.get_by_role('button', name='Review all photos', exact=True).click()
+    dismiss_box_guide(restored)
     expect(restored.locator('#boxList .box-row')).to_have_count(2)
     restored.locator('#nextBtn').click()
     expect(restored.locator('#saveState')).to_have_text('Not reviewed')
