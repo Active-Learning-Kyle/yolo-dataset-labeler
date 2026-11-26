@@ -285,6 +285,9 @@ dialog {
   padding: 0;
 }
 dialog::backdrop { background: rgba(15, 23, 42, .55); }
+#helpDialog[open] { display:flex; flex-direction:column; }
+#helpDialog .dialog-body { overflow-y:auto; overscroll-behavior:contain; }
+#helpDialog .dialog-foot { flex-shrink:0; }
 .dialog-body { padding: 22px; }
 .dialog-foot {
   padding: 14px 22px;
@@ -463,11 +466,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 .entry-action span { font-size:1rem; }
 .entry-action small { font-size:.78rem; font-weight:450; }
 .entry-action.primary small { color:#e4edff; }
-.drop-hint,.format-notes { color:#52647a; }
-.drop-hint,.format-notes { font-size:.82rem; }
-.drop-hint { margin:10px 0 16px; }
-.format-notes summary { width:fit-content; font-weight:600; }
-.format-notes p { max-width:48ch; }
+.drop-hint { color:#52647a; font-size:.82rem; margin:10px 0 16px; }
 .kit-example { margin:0; align-self:center; min-width:0; container-type:inline-size; }
 .kit-photo { aspect-ratio:4/3; background:#285759 var(--screw-photo) center/100% 100%; border-radius:12px; position:relative; isolation:isolate; counter-reset:part; }
 .photo-box { position:absolute; counter-increment:part; border:1.5px solid var(--tag); left:var(--x); top:var(--y); width:var(--w); height:var(--h); }
@@ -612,11 +611,6 @@ figcaption { margin-top:5px; line-height:1.25; }
         </div>
         <p id="folderFeedback" class="folder-feedback" role="status"></p>
         <p class="drop-hint">You can also drop photos or one ZIP here.<br><a href="https://github.com/Active-Learning-Kyle/yolo-dataset-labeler#try-the-sample-photos" target="_blank" rel="noopener noreferrer">Download practice files ↗</a></p>
-        <details class="format-notes"><summary>File formats &amp; folder access</summary>
-          <p>Choose JPG, JPEG, PNG, WebP or BMP. Convert HEIC or HEIF photos to JPEG or PNG first.</p>
-          <p id="modeNote"></p>
-          <p>ZIP limits: UTF-8 or ASCII filenames, 50,000 entries, 1 GiB input, 512 MiB per file and 2 GiB extracted.</p>
-        </details>
       </div>
       <figure class="kit-example">
         <div class="kit-photo" role="img" aria-label="Twelve screws scattered beside a parts tray. The boxes identify a hex head, socket cap, thumb screw, wing screw, eye screw, set screw, self-drilling screw, slotted flat head, wood screw, shoulder screw, pan head and round head.">
@@ -768,9 +762,16 @@ figcaption { margin-top:5px; line-height:1.25; }
   </div>
   <div class="dialog-foot"><button id="dismissDownload">Return to dataset</button></div>
 </dialog>
-<dialog id="helpDialog">
+<dialog id="helpDialog" aria-labelledby="helpTitle">
   <div class="dialog-body">
-    <h2>Quick help</h2>
+    <h2 id="helpTitle" tabindex="-1" autofocus>Quick help</h2>
+    <h3>File formats &amp; folder access</h3>
+    <ul>
+      <li><b>Photos.</b> Choose JPG, JPEG, PNG, WebP or BMP. Convert HEIC or HEIF photos to JPEG or PNG first.</li>
+      <li><b>Folders.</b> <span id="modeNote"></span></li>
+      <li><b>ZIP files.</b> Use UTF-8 or ASCII filenames. Limits are 50,000 entries, 1 GiB per archive, 512 MiB per file and 2 GiB total when extracted.</li>
+    </ul>
+    <h3>Labeling tools</h3>
     <ol>
       <li>Choose <b>Draw</b> and a <b>New box class</b>. Drag anywhere on the image, including inside an existing box.</li>
       <li>Choose <b>Edit</b>, then tap a box or its row. Drag inside to move it, drag a corner to resize it, or use <b>Change selected box class</b>.</li>
