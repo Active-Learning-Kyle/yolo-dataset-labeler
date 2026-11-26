@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from test_review import confirm_no_object, solid_png
+from test_review import confirm_no_object, dismiss_box_guide, solid_png
 from test_resume import read_recovery
 
 
@@ -33,6 +33,7 @@ def check_read_only_folder(browser):
         page.locator('#classList input').fill('bolt')
         page.locator('#saveClassesBtn').click()
         page.get_by_role('button', name='Start Labeling', exact=True).click()
+        dismiss_box_guide(page, touch=True)
         confirm_no_object(page)
         page.locator('#backSetupBtn').click()
         with page.expect_download() as archive:
@@ -93,6 +94,7 @@ def check(browser):
     expect(page.locator('#importLabelsBtn')).to_be_visible()
     expect(page.locator('#summaryDraftBtn')).to_be_hidden()
     page.get_by_role('button', name='Start Labeling', exact=True).click()
+    dismiss_box_guide(page)
     page.evaluate("""() => {
         const proto = FileSystemFileHandle.prototype;
         const create = proto.createWritable;

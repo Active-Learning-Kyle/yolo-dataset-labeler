@@ -16,6 +16,11 @@ def solid_png(width, height):
             + chunk(b'IDAT', zlib.compress(pixels)) + chunk(b'IEND', b''))
 
 
+def dismiss_box_guide(page, touch=False):
+    button = page.get_by_role('button', name='Got it', exact=True)
+    button.tap() if touch else button.click()
+
+
 def confirm_no_object(page):
     options = page.locator('#photoOptions')
     if not options.evaluate('details => details.open'):
@@ -36,6 +41,7 @@ def check_unlabeled_review(browser, site):
     page.locator('#zipImagesInput').set_input_files(
         {'name': 'review.zip', 'mimeType': 'application/zip', 'buffer': data.getvalue()})
     page.get_by_role('button', name='Label remaining photos (2)').click()
+    dismiss_box_guide(page)
     expect(page.locator('#frameName')).to_have_text('a.png')
     canvas = page.locator('#canvas')
     expect(canvas).to_be_visible()
@@ -102,6 +108,7 @@ def validate_review(browser, site):
     expect(page.locator('#summaryIssues')).to_contain_text('a.png')
     expect(page.locator('#trainingZipBtn')).to_be_hidden()
     page.get_by_role('button', name='Review invalid files').click()
+    dismiss_box_guide(page)
     expect(page.locator('#statusFilter')).to_have_value('invalid')
     reset()
     upload({**img,'images/b.png':sample,'labels/b.txt':''})

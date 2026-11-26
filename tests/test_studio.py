@@ -6,7 +6,7 @@ import zipfile
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from test_review import solid_png
+from test_review import dismiss_box_guide, solid_png
 
 
 def drop(page, files):
@@ -75,6 +75,7 @@ def run(browser):
     page.reload()
     drop(page, [dataset])
     page.get_by_role('button', name='Review all photos', exact=True).click()
+    dismiss_box_guide(page)
     first = page.locator('#imageList .image-item').first
     expect(first.locator('img')).to_have_js_property('complete', True)
     page.wait_for_function('document.querySelector("#imageList img").naturalWidth > 0')

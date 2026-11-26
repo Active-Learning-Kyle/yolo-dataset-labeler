@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from test_review import confirm_no_object, solid_png
+from test_review import confirm_no_object, dismiss_box_guide, solid_png
 
 
 HTML = Path(__file__).resolve().parents[1] / 'index.html'
@@ -68,6 +68,7 @@ def memory_workbench(browser):
     spare.tap()
     page.locator('#saveClassesBtn').tap()
     page.locator('#labelAllBtn').click()
+    dismiss_box_guide(page, touch=True)
     expect(page.locator('#boxList .box-row')).to_have_count(1)
     expect(page.locator('#imageBrowser')).to_be_visible()
     remove(page, 'kit.png', touch=True)
@@ -137,6 +138,7 @@ def writable_workbench(browser):
     page.locator('#saveClassesBtn').click()
     expect(page.locator('#classList button').filter(has_text='Delete').first).to_be_enabled()
     page.locator('#labelAllBtn').click()
+    dismiss_box_guide(page)
     expect(page.locator('#frameName')).to_have_text('m.png')
     page.evaluate("""() => {
         const original = FileSystemFileHandle.prototype.createWritable;

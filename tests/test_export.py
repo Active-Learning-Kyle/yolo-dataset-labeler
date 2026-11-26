@@ -12,7 +12,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 from playwright.sync_api import expect, sync_playwright
 
-from test_review import confirm_no_object
+from test_review import confirm_no_object, dismiss_box_guide
 
 
 def tabletop(index):
@@ -68,6 +68,7 @@ def run(browser, output):
     page.locator("#classList input").fill("blue_disc")
     page.locator("#saveClassesBtn").click()
     page.get_by_role("button", name="Start Labeling", exact=True).click()
+    dismiss_box_guide(page)
     canvas = page.locator("#canvas")
     for i, (_, boxes) in enumerate(frames, 1):
         expect(page.locator("#frameName")).to_have_text(f"table-{i:02}.jpg")

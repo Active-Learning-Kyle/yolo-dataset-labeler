@@ -5,7 +5,7 @@ import zipfile
 
 from playwright.sync_api import expect, sync_playwright
 
-from test_review import confirm_no_object, solid_png
+from test_review import confirm_no_object, dismiss_box_guide, solid_png
 
 
 def stub_suggestions(page):
@@ -40,6 +40,7 @@ def run(browser):
         page.locator('#classList input').nth(index).fill(name)
     page.locator('#saveClassesBtn').click()
     page.get_by_role('button', name='Start Labeling', exact=True).click()
+    dismiss_box_guide(page)
 
     suggest = page.locator('.draw-tools').get_by_role('button', name='Suggest boxes', exact=True)
     review = page.locator('#suggestReview')
@@ -128,6 +129,7 @@ def touch_review(browser):
     page.locator('#classList input').fill('bolt')
     page.locator('#saveClassesBtn').tap()
     page.get_by_role('button', name='Start Labeling').tap()
+    dismiss_box_guide(page, touch=True)
     expect(page.locator('.suggest-actions button:visible')).to_have_count(1)
     page.get_by_role('button', name='Suggest boxes', exact=True).tap()
     expect(page.locator('#boxList .box-row')).to_have_count(1)

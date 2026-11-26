@@ -554,6 +554,19 @@ figcaption { margin-top:5px; line-height:1.25; }
 #finishDialog { max-width:430px; color:var(--ink); }
 #finishDialog h2 { margin-top:0; }
 #finishDialog .dialog-foot { flex-wrap:wrap; }
+#boxGuideDialog { max-width:470px; max-height:calc(100dvh - 24px); color:var(--ink); }
+#boxGuideDialog[open] { display:flex; flex-direction:column; }
+#boxGuideDialog .dialog-body { min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+#boxGuideDialog .dialog-foot { flex-shrink:0; }
+.box-guide-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.box-guide-heading h2 { margin:0; }
+#boxGuideClose { display:grid; flex:none; place-items:center; width:44px; height:44px; padding:0; font-size:1.5rem; }
+#boxGuideIntro { margin:8px 0 12px; }
+#boxGuideDialog .examples { gap:10px; }
+#boxGuideDialog .sample { border-radius:6px; }
+#boxGuideDialog figure:last-child figcaption { font-weight:650; }
+#boxGuideDialog .small { margin:16px 0 0; }
+#boxGuideBtn { margin-top:8px; }
 @media (min-width:761px) {
   .annotation { grid-template:"canvas inspector" minmax(355px,1fr) "images images" auto / minmax(0,1fr) clamp(210px,22vw,326px);
     gap:8px; height:calc(100dvh - 136px); min-height:515px; }
@@ -782,11 +795,7 @@ figcaption { margin-top:5px; line-height:1.25; }
             <button id="noObjectBtn" class="ghost" title="Keep this photo as a training example with no target objects">Confirm no object</button>
             <button id="discardPhotoBtn" class="ghost hidden" type="button">Discard unsaved edits</button>
           </details>
-          <details class="field-guide"><summary>Box guide &amp; shortcuts</summary>
-            <div class="examples"><figure><div class="sample loose"><i></i></div><figcaption>Too much background</figcaption></figure><figure><div class="sample tight"><i></i></div><figcaption>Tight to the hex nut</figcaption></figure></div>
-            <p>For a parts count, draw one box per visible bolt or hex nut. Fit each box to the outside edges of that part, even where two parts overlap.</p>
-            <p><kbd>B</kbd> draw · <kbd>V</kbd> edit · <kbd>A</kbd> / <kbd>D</kbd> move between images · <kbd>1–9</kbd> choose class · <kbd>Delete</kbd> remove box · <kbd>Ctrl/⌘ Z</kbd> undo.</p>
-          </details>
+          <button id="boxGuideBtn" class="ghost" type="button" aria-haspopup="dialog">Box guide &amp; shortcuts</button>
         </div>
       </aside>
 
@@ -797,6 +806,22 @@ figcaption { margin-top:5px; line-height:1.25; }
   </section>
 
 </main>
+
+<dialog id="boxGuideDialog" aria-labelledby="boxGuideTitle" aria-describedby="boxGuideIntro">
+  <div class="dialog-body">
+    <div class="box-guide-heading">
+      <h2 id="boxGuideTitle">Draw a tight box</h2>
+      <button id="boxGuideClose" class="ghost" type="button" aria-label="Close box guide">×</button>
+    </div>
+    <p id="boxGuideIntro">Draw one box per object. Fit it to the outer edges, even when objects overlap.</p>
+    <div class="examples">
+      <figure><div class="sample loose" aria-hidden="true"><i></i></div><figcaption>Too much background</figcaption></figure>
+      <figure><div class="sample tight" aria-hidden="true"><i></i></div><figcaption>Tight to the hex nut</figcaption></figure>
+    </div>
+    <p class="small"><b>Keyboard shortcuts</b><br><kbd>B</kbd> Draw · <kbd>V</kbd> Edit · <kbd>A</kbd> / <kbd>D</kbd> Previous / Next · <kbd>1–9</kbd> Choose class · <kbd>Delete</kbd> Remove box · <kbd>Ctrl/⌘ Z</kbd> Undo</p>
+  </div>
+  <div class="dialog-foot"><button id="boxGuideDone" class="primary" type="button" autofocus>Got it</button></div>
+</dialog>
 
 <dialog id="finishDialog" aria-labelledby="finishTitle" aria-describedby="finishMessage">
   <div class="dialog-body">
@@ -893,6 +918,7 @@ figcaption { margin-top:5px; line-height:1.25; }
      ======================================================================== */
 
   const $ = id => document.getElementById(id);
+  const BOX_GUIDE_KEY = 'yolo-labeler-box-guide-v1';
   const enc = new TextEncoder();
   const dec = new TextDecoder('utf-8');
 
@@ -2345,6 +2371,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.recovery = new WorkspaceRecovery();
       this.recoveryQueue = Promise.resolve();
       this.pendingCheckpoints = 0;
+      try { this.boxGuideSeen = localStorage.getItem(BOX_GUIDE_KEY) === 'seen'; } catch {}
       this.savedClasses = [];
       this.photoCards = new WeakMap();
       this.addPhotosCard = el('button', undefined, 'add-photos-card');
@@ -2520,6 +2547,14 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('saveClassesBtn').onclick = () => this.saveClasses();
       $('helpBtn').onclick = () => $('helpDialog').showModal();
       $('closeHelp').onclick = () => $('helpDialog').close();
+      $('boxGuideBtn').onclick = () => this.showBoxGuide();
+      $('boxGuideClose').onclick = $('boxGuideDone').onclick = () => $('boxGuideDialog').close();
+      $('boxGuideDialog').onclose = () => {
+        this.boxGuideSeen = true;
+        try { localStorage.setItem(BOX_GUIDE_KEY, 'seen'); } catch {}
+        const focusTarget = this.boxGuideAutomatic ? $('drawTool') : $('boxGuideBtn');
+        focusTarget.focus({preventScroll: true});
+      };
       $('resetBtn').onclick = () => this.reset();
       $('prevBtn').onclick = () => this.navigate(-1);
       $('nextBtn').onclick = () => this.navigate(1);
@@ -2624,6 +2659,12 @@ figcaption { margin-top:5px; line-height:1.25; }
         }
       });
       document.addEventListener('keydown', e => this.keys(e));
+    }
+
+    showBoxGuide(automatic = false) {
+      if (document.querySelector('dialog[open]')) return;
+      this.boxGuideAutomatic = automatic;
+      $('boxGuideDialog').showModal();
     }
 
     bindDropZone() {
@@ -3393,6 +3434,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.switching = false;
         $('labeler').inert = false;
       }
+      if (this.ann.img && !this.boxGuideSeen) this.showBoxGuide(true);
     }
 
     selectIndex(i) {
