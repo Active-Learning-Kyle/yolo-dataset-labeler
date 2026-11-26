@@ -12,6 +12,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 from playwright.sync_api import expect, sync_playwright
 
+from test_review import confirm_no_object
+
 
 def tabletop(index):
     width, height = (540, 720) if index == 2 else (720, 540)
@@ -78,7 +80,7 @@ def run(browser, output):
             page.mouse.move(rect["x"]+rect["width"]*right, rect["y"]+rect["height"]*bottom, steps=3)
             page.mouse.up()
         if not boxes:
-            page.locator("#noObjectBtn").click()
+            confirm_no_object(page)
         if i in (1,2):
             expect(page.locator("#saveState")).to_contain_text("In this tab")
             if i == 1:

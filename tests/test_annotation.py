@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from test_review import solid_png
+from test_review import confirm_no_object, solid_png
 
 
 def check_session(browser, site, width, height, touch):
@@ -134,8 +134,9 @@ def check_session(browser, site, width, height, touch):
     click('#undoBtn')
     click('#redoBtn')
     click('#nextBtn')
-    click('#noObjectBtn')
+    confirm_no_object(page)
     click('#backSetupBtn')
+    expect(page.get_by_role('heading', name='3. Review & export')).to_be_in_viewport()
     complete = read_zip(lambda: page.get_by_role('button',name='Download Labeled_data.zip',exact=True).click())
     expect(page.locator('#trainingStep')).to_be_hidden()
     click('#confirmDownload')

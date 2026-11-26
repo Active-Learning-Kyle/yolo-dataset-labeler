@@ -74,7 +74,7 @@ def run(browser):
     page.reload()
     drop(page, [dataset])
     page.get_by_role('button', name='Review all photos', exact=True).click()
-    first = page.locator('#imageList button').first
+    first = page.locator('#imageList .image-item').first
     expect(first.locator('img')).to_have_js_property('complete', True)
     page.wait_for_function('document.querySelector("#imageList img").naturalWidth > 0')
     canvas = page.locator('#canvas')
@@ -92,7 +92,7 @@ def run(browser):
     expect(page.locator('#boxList .box-row')).to_have_count(1)
     # Select by search, then navigate through a longer strip with the keyboard.
     page.locator('#imageSearch').fill('kit-17')
-    page.locator('#imageList button').click()
+    page.locator('#imageList .image-item').click()
     page.locator('#imageSearch').fill('')
     page.locator('#nextBtn').focus()
     page.keyboard.press('d')

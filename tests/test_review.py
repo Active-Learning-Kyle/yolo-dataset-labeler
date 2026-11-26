@@ -16,6 +16,62 @@ def solid_png(width, height):
             + chunk(b'IDAT', zlib.compress(pixels)) + chunk(b'IEND', b''))
 
 
+def confirm_no_object(page):
+    options = page.locator('#photoOptions')
+    if not options.evaluate('details => details.open'):
+        options.locator('summary').click()
+    options.get_by_role('button', name='Confirm no object').click()
+
+
+def check_unlabeled_review(browser, site):
+    page = browser.new_page(viewport={'width': 1280, 'height': 900})
+    page.goto(site)
+    data = io.BytesIO()
+    with zipfile.ZipFile(data, 'w') as archive:
+        archive.writestr('classes.txt', 'bolt\n')
+        for name in ('a.png', 'b.png', 'c.png'):
+            archive.writestr('images/' + name, solid_png(400, 300))
+        archive.writestr('labels/c.txt', '')
+    page.locator('#zipImagesInput').set_input_files(
+        {'name': 'review.zip', 'mimeType': 'application/zip', 'buffer': data.getvalue()})
+    page.get_by_role('button', name='Label remaining photos (2)').click()
+    expect(page.locator('#frameName')).to_have_text('a.png')
+    canvas = page.locator('#canvas')
+    expect(canvas).to_be_visible()
+    rect = canvas.bounding_box()
+    page.mouse.move(rect['x'] + 30, rect['y'] + 30)
+    page.mouse.down()
+    page.mouse.move(rect['x'] + 130, rect['y'] + 140)
+    page.mouse.up()
+    expect(page.locator('#saveState')).to_contain_text('download ZIP to keep')
+    expect(page.locator('#imageList .current')).to_have_text('a.pngUnlabeled')
+    expect(page.locator('#imageCount')).to_have_text('2')
+    expect(page.locator('#progressText')).to_contain_text('Reviewed 1 · Remaining 2')
+
+    page.locator('#nextBtn').click()
+    expect(page.locator('#frameName')).to_have_text('b.png')
+    expect(page.locator('.toolbar').get_by_role('button', name='Confirm no object')).to_have_count(0)
+    expect(page.locator('#noObjectBtn')).to_be_hidden()
+    confirm_no_object(page)
+    expect(page.locator('#saveState')).to_contain_text('download ZIP to keep')
+    expect(page.locator('#imageList .current')).to_have_text('b.pngUnlabeled')
+    page.locator('#prevBtn').click()
+    expect(page.locator('#frameName')).to_have_text('a.png')
+    expect(page.locator('#boxList .box-row')).to_have_count(1)
+
+    page.get_by_role('button', name='Save & exit', exact=True).click()
+    expect(page.locator('#reviewExportTitle')).to_be_focused()
+    expect(page.locator('#completionCard')).to_contain_text('No-object images: 2')
+    expect(page.locator('#remainingBtn')).to_be_hidden()
+    with page.expect_download() as pending:
+        page.locator('#trainingZipBtn').click()
+    with zipfile.ZipFile(pending.value.path()) as archive:
+        assert len(archive.read('labels/a.txt').split()) == 5
+        assert archive.read('labels/b.txt') == b''
+    page.close()
+    print('PASS unlabeled thumbnails stay through autosave and navigation, with updates on Save & exit')
+
+
 def validate_review(browser, site):
     page = browser.new_page(viewport={'width':820, 'height':1024}, has_touch=True)
     page.goto(site)
@@ -66,7 +122,7 @@ def validate_review(browser, site):
     expect(page.locator('#summaryDraftBtn')).to_be_hidden()
     page.get_by_role('button',name='Label remaining photos (1)',exact=True).click()
     expect(page.locator('#statusFilter')).to_have_value('unlabeled')
-    expect(page.locator('#imageList button')).to_have_count(1)
+    expect(page.locator('#imageList .image-item')).to_have_count(1)
     page.locator('#backSetupBtn').click()
     page.get_by_role('button',name='Review all photos',exact=True).click()
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
@@ -74,7 +130,7 @@ def validate_review(browser, site):
     expect(page.locator('#imageList .current')).to_contain_text('No Object')
     page.locator('#prevBtn').click()
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
-    page.locator('#noObjectBtn').click()
+    confirm_no_object(page)
     expect(page.locator('#imageList .current')).to_contain_text('No Object')
     page.locator('#undoBtn').click()
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
@@ -83,7 +139,7 @@ def validate_review(browser, site):
     page.locator('#undoBtn').click()
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
     page.locator('#statusFilter').select_option('background')
-    expect(page.locator('#imageList button')).to_have_count(1)
+    expect(page.locator('#imageList .image-item')).to_have_count(1)
     expect(page.locator('#imageList')).to_contain_text('b.png')
     page.locator('#statusFilter').select_option('all')
     page.locator('#canvas').scroll_into_view_if_needed()
@@ -121,4 +177,5 @@ if __name__ == '__main__':
         launch = {'executable_path': args.executable} if args.executable else {'channel': args.channel}
         browser = pw.chromium.launch(**launch)
         validate_review(browser, site)
+        check_unlabeled_review(browser, site)
         browser.close()

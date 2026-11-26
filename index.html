@@ -357,7 +357,6 @@ summary { cursor:pointer; }
 .sample.loose:after { width:78%; height:47px; border-color:#a84639; }
 figcaption { margin-top:5px; line-height:1.25; }
 .credit { padding:10px 22px; font-size:.8rem; color:var(--muted); }
-#noObjectBtn { width:100%; margin-top:10px; }
 @media (max-width:1000px) {
   .annotation { grid-template-columns:155px minmax(230px,1fr) 184px; }
   .right-body, .panel-head { padding:10px; }
@@ -392,7 +391,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 .canvas-wrap.pan-mode canvas { cursor:grab; }
 .right-body h3 { margin-top:0; }
 #draftBtn, #repairBtn { margin-top:12px; }
-#noObjectBtn { width:auto; margin:0; }
+#noObjectBtn { min-height:44px; margin-top:8px; }
 @media (max-width:760px), (max-height:520px) and (pointer:coarse) {
   #labeler { padding:6px !important; }
   .annotation { display:flex; flex-direction:column; height:auto; min-height:0; }
@@ -507,10 +506,28 @@ figcaption { margin-top:5px; line-height:1.25; }
 .image-item img { display:block; width:100%; height:40px; object-fit:contain; background:#e4e9ef; border-radius:3px; color:transparent; }
 .image-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.75rem; line-height:1.35; margin-top:3px; }
 .image-item .status-pill { margin:2px 0 0; line-height:1.2; font-size:.65rem; }
+.photo-card { position:relative; flex:0 0 112px; }
+.photo-remove { position:absolute; top:1px; right:1px; padding:0; width:28px; height:28px; display:grid; place-items:center; background:transparent; opacity:0; }
+.photo-remove span { position:relative; width:22px; height:22px; border-radius:50%; background:#22344b; }
+.photo-remove span::before,.photo-remove span::after { content:""; position:absolute; inset:0; margin:auto; width:10px; height:2px; border-radius:1px; background:white; transform:rotate(45deg); }
+.photo-remove span::after { transform:rotate(-45deg); }
+.photo-card:hover .photo-remove,.photo-card:focus-within .photo-remove { opacity:1; }
+.photo-remove:hover span { background:var(--bad); }
+@media (hover:none), (any-pointer:coarse) {
+  .photo-remove { width:44px; height:44px; align-items:start; justify-items:end; padding:4px; opacity:1; }
+}
+.add-photos-card { flex:0 0 112px; min-height:81px; display:grid; place-content:center; gap:2px; padding:4px; border:1px dashed #a8b8ce; border-radius:7px; background:#f5f8fc; color:var(--primary); font-size:.78rem; }
+.add-photos-card span { font-size:1.32rem; line-height:1; }
+.image-list > .small { align-self:center; }
+.annotation.no-photos { display:block; height:auto; min-height:0; }
+.annotation.no-photos .image-list { min-height:94px; }
+#emptyDatasetActions { margin-top:8px; padding:0; }
+#undoRemovePhoto { color:var(--primary); font-size:.75rem; padding:5px 8px; }
 .image-list > p { padding:0 8px; }
 .canvas-wrap.boxes-hidden canvas { cursor:default; }
 .right-body .box-list { margin-bottom:14px; }
 .suggest-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.suggest-actions [aria-pressed="true"] { background:var(--primary); color:white; }
 .suggest-feedback:empty { display:none; }
 .box-row.suggestion-row { grid-template-columns:auto minmax(0,1fr) auto; align-items:stretch; }
 .suggestion-row select { width:100%; min-width:0; padding:6px 4px; }
@@ -556,6 +573,7 @@ figcaption { margin-top:5px; line-height:1.25; }
   .landing-foot { font-size:.73rem; }
   .left-panel.open { flex:none; max-height:none; border-radius:7px; }
   .left-panel .panel-head { grid-template-columns:auto 1fr 1fr; gap:4px; padding:6px; }
+  #undoRemovePhoto { grid-column:1 / -1; grid-row:2; justify-self:start; }
   .left-panel .search { grid-column:auto; min-width:0; }
   .left-panel .panel-head select,.left-panel .search { padding:6px 2px; }
   .left-panel .image-list { flex:none; }
@@ -660,6 +678,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         <h2>2. Classes</h2>
         <p class="small">Choose the object types you want to detect. The first class has ID 0. Save Classes before drawing.</p>
         <div id="classList" class="class-list"></div>
+        <p id="classLockNote" class="small hidden">IDs used by existing labels stay fixed, including labels on photos you can restore.</p>
         <div class="actions">
           <button id="addClassBtn">Add Class</button>
           <button id="saveClassesBtn" class="primary">Save Classes</button>
@@ -668,7 +687,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       </div>
 
       <div class="card">
-        <h2>3. Dataset summary</h2>
+        <h2 id="reviewExportTitle" tabindex="-1">3. Review &amp; export</h2>
         <div id="summaryStats" class="stats"></div>
         <div id="summaryIssues"></div>
         <div id="summaryActions" class="actions">
@@ -676,6 +695,7 @@ figcaption { margin-top:5px; line-height:1.25; }
           <button id="remainingBtn" class="primary hidden">Label remaining photos</button>
           <button id="invalidBtn" class="danger hidden">Review invalid files</button>
           <button id="labelAllBtn" class="primary">Start Labeling</button>
+          <button id="setupUndoRemove" class="ghost hidden" type="button">Undo remove</button>
         </div>
         <div id="resumeLater" class="resume-later hidden">
           <p class="small"><b>Pausing here?</b> Download a draft and reopen it later with <b>Open a ZIP</b>.</p>
@@ -695,6 +715,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       <aside id="imageBrowser" class="panel left-panel">
         <div class="panel-head">
           <label class="field-title" for="imageSearch">Images <span id="imageCount"></span></label>
+          <button id="undoRemovePhoto" class="ghost hidden" type="button">Undo remove</button>
           <select id="statusFilter" aria-label="Filter by review status">
             <option value="all">All statuses</option><option value="unlabeled">Unlabeled</option>
             <option value="labeled">Labeled</option><option value="background">No Object</option><option value="invalid">Invalid</option>
@@ -718,16 +739,24 @@ figcaption { margin-top:5px; line-height:1.25; }
           <button id="toggleBoxes" class="ghost" type="button">Hide boxes</button>
           <div class="suggest-actions">
             <button id="suggestBoxes" class="ghost" type="button" aria-describedby="suggestHint" disabled>Suggest boxes</button>
+            <button id="pointTool" class="ghost" type="button" aria-pressed="false" disabled>Click to box</button>
             <button id="cancelSuggestions" class="ghost hidden" type="button">Cancel</button>
             <div id="suggestReview" class="suggest-actions hidden">
               <button id="saveSuggestions" class="primary" type="button">Save reviewed boxes</button>
               <button id="discardSuggestions" class="ghost" type="button">Discard suggestions</button>
             </div>
+            <div id="pointReview" class="suggest-actions hidden">
+              <button id="applyPointBox" class="primary" type="button">Apply box</button>
+              <button id="nextPointBox" class="ghost hidden" type="button">Try another preview</button>
+              <button id="discardPointBox" class="ghost" type="button">Discard preview</button>
+            </div>
+            <button id="cancelPointBox" class="ghost hidden" type="button">Cancel box preview</button>
           </div>
         </div>
         <p id="toolHint" class="tool-hint"></p>
         <p id="suggestHint" class="tool-hint suggest-feedback"></p>
         <p id="suggestStatus" class="tool-hint suggest-feedback" role="status"></p>
+        <p id="pointStatus" class="tool-hint suggest-feedback" role="status"></p>
         <div id="canvasWrap" class="canvas-wrap">
           <canvas id="canvas"></canvas>
           <div id="canvasMessage" class="canvas-message">Choose an image.</div>
@@ -735,8 +764,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         <div class="toolbar">
           <button id="prevBtn">← Previous</button>
           <button id="nextBtn" class="primary">Next →</button>
-          <button id="noObjectBtn">Confirm no object</button>
-          <button id="backSetupBtn" class="ghost">Dataset summary</button>
+          <button id="backSetupBtn" class="ghost" title="Save your labels and return to Review &amp; export">Save &amp; exit</button>
         </div>
       </section>
 
@@ -745,9 +773,14 @@ figcaption { margin-top:5px; line-height:1.25; }
           <h3>Bounding boxes</h3>
           <div id="boxList" class="box-list"></div>
           <label id="editClassField" class="edit-class hidden" for="editClass">Change selected box class<select id="editClass"></select></label>
+          <button id="tightenPointBox" class="ghost hidden" type="button">Tighten selected box</button>
           <button id="repairBtn" class="hidden">Save repaired label</button>
           <button id="draftBtn" class="ghost">Download draft ZIP</button>
           <div id="invalidDetails"></div>
+          <details id="photoOptions" class="field-guide">
+            <summary>Photo options</summary>
+            <button id="noObjectBtn" class="ghost" title="Keep this photo as a training example with no target objects">Confirm no object</button>
+          </details>
           <details class="field-guide"><summary>Box guide &amp; shortcuts</summary>
             <div class="examples"><figure><div class="sample loose"><i></i></div><figcaption>Too much background</figcaption></figure><figure><div class="sample tight"><i></i></div><figcaption>Tight to the hex nut</figcaption></figure></div>
             <p>For a parts count, draw one box per visible bolt or hex nut. Fit each box to the outside edges of that part, even where two parts overlap.</p>
@@ -756,6 +789,9 @@ figcaption { margin-top:5px; line-height:1.25; }
         </div>
       </aside>
 
+    </div>
+    <div id="emptyDatasetActions" class="actions hidden">
+      <button id="emptyBackBtn" class="ghost" type="button">Back to dataset</button>
     </div>
   </section>
 
@@ -790,9 +826,11 @@ figcaption { margin-top:5px; line-height:1.25; }
     <ol>
       <li>Choose <b>Draw</b> and a <b>New box class</b>. Drag anywhere on the image, including inside an existing box.</li>
       <li>Choose <b>Edit</b>, then tap a box or its row. Drag inside to move it, drag a corner to resize it, or use <b>Change selected box class</b>.</li>
-      <li>To mark an image as a background image with no target object, choose <b>Confirm no object</b>. This creates an empty label file.</li>
+      <li>To leave out a blurry, duplicate or wrong photo, select <b>×</b> on its thumbnail. The original file stays on your device.</li>
+      <li>Background photos are optional. To include one in the training ZIP, open <b>Photo options</b> and choose <b>Confirm no object</b>. This saves an empty label file for the photo.</li>
       <li>Boxes smaller than 3 original-image pixels are rejected.</li>
       <li>On an unlabeled photo, <b>Suggest boxes</b> in the toolbar can propose boxes and classes. Change a class beside its box, check for missing objects, then choose <b>Save reviewed boxes</b>.</li>
+      <li>For a missed object, choose its class, select <b>Click to box</b> and click inside it. To refine a loose box, select it and choose <b>Tighten selected box</b>. Check the preview before selecting <b>Apply box</b>.</li>
     </ol>
     <p>
       <b>Shortcuts:</b>
@@ -1108,6 +1146,28 @@ figcaption { margin-top:5px; line-height:1.25; }
     async putMemory(path, blob) {
       this.files.set(path, blob);
     }
+
+    async addPhoto(name, file) {
+      if (this.mode === 'memory') return this.putMemory('images/' + name, file);
+      const directory = await this.childDir('images', true);
+      try {
+        await directory.getFileHandle(name);
+        throw new Error('A photo named ' + name + ' already exists.');
+      } catch (error) {
+        if (error.name !== 'NotFoundError') throw error;
+      }
+      const handle = await directory.getFileHandle(name, { create: true });
+      let writable;
+      try {
+        writable = await handle.createWritable();
+        await writable.write(file);
+        await writable.close();
+      } catch (error) {
+        if (writable) await writable.abort().catch(() => {});
+        await directory.removeEntry(name).catch(() => {});
+        throw error;
+      }
+    }
   }
 
 
@@ -1125,6 +1185,20 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.orphans = [];
       this.structure = {};
       this.duplicates = [];
+      this.excludedPhotos = new Map();
+      this.addedPhotos = new Map();
+    }
+
+    photoItem(entry, labelEntry) {
+      return {
+        name: entry.name, stem: stem(entry.name), imageEntry: entry, labelEntry,
+        status: 'unlabeled', boxes: [], errors: [], width: 0, height: 0, totalBoxes: 0
+      };
+    }
+
+    comparePhotos(a, b) {
+      const relativeOrder = (this.addedPhotos.get(a.name) ?? -1) - (this.addedPhotos.get(b.name) ?? -1);
+      return relativeOrder || stem(a.name).localeCompare(stem(b.name), undefined, { numeric: true }) || a.name.localeCompare(b.name);
     }
 
     /** Full rescan of images/, labels/ and classes.txt. */
@@ -1139,9 +1213,10 @@ figcaption { margin-top:5px; line-height:1.25; }
         ? (await this.store.readText('classes.txt')).split(/\r?\n/).map(x => x.trim()).filter(Boolean)
         : [];
 
-      const imgs = this.structure.images
+      const allImages = this.structure.images
         ? (await this.store.listDir('images')).filter(x => EXT.test(x.name))
         : [];
+      const imgs = allImages.filter(image => !this.excludedPhotos.has(image.name));
       const labs = this.structure.labels
         ? (await this.store.listDir('labels')).filter(x => /\.txt$/i.test(x.name))
         : [];
@@ -1161,26 +1236,14 @@ figcaption { margin-top:5px; line-height:1.25; }
       // Pair images with their label files (case-insensitive stem match).
       const labMap = new Map(labs.map(x => [stem(x.name).toLocaleLowerCase(), x]));
       this.images = [];
-      for (const i of imgs.sort((a, b) => stem(a.name).localeCompare(stem(b.name), undefined, { numeric: true }) || a.name.localeCompare(b.name))) {
-        const k = stem(i.name).toLocaleLowerCase();
-        const le = labMap.get(k);
-        const item = {
-          name: i.name,
-          stem: stem(i.name),
-          imageEntry: i,
-          labelEntry: le,
-          status: 'unlabeled',
-          boxes: [],
-          errors: [],
-          width: 0,
-          height: 0,
-          totalBoxes: 0
-        };
+      for (const i of imgs.sort((a, b) => this.comparePhotos(a, b))) {
+        const le = labMap.get(stem(i.name).toLocaleLowerCase());
+        const item = this.photoItem(i, le);
         if (le) await this.validateItem(item);
         this.images.push(item);
       }
 
-      const imgKeys = new Set(imgs.map(i => stem(i.name).toLocaleLowerCase()));
+      const imgKeys = new Set(allImages.map(i => stem(i.name).toLocaleLowerCase()));
       this.orphans = labs
         .filter(l => !imgKeys.has(stem(l.name).toLocaleLowerCase()))
         .map(l => l.name);
@@ -1700,6 +1763,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       // Live preview while drawing a new box.
       if (this.action?.type === 'draw') this.drawBox(this.action.box, -2, t.scale);
+      if (this.app.pointBox) this.drawBox(this.app.pointBox.box, -2, t.scale, true);
     }
 
     /** Stable, well-separated colour per class id. */
@@ -1708,9 +1772,9 @@ figcaption { margin-top:5px; line-height:1.25; }
       return colors[id] || `hsl(${(id * 137.508) % 360} 74% 76%)`;
     }
 
-    drawBox(b, i, s) {
+    drawBox(b, i, s, preview = false) {
       const c = this.color(b.classId);
-      if (b.score !== undefined) this.ctx.setLineDash([6 / s, 4 / s]);
+      if (preview || b.score !== undefined) this.ctx.setLineDash([6 / s, 4 / s]);
       this.ctx.lineWidth = 4 / s;
       this.ctx.strokeStyle = '#172b42';
       this.ctx.strokeRect(b.x, b.y, b.w, b.h);
@@ -1722,7 +1786,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       // Class label chip above the box.
       const name = this.app.model.classes[b.classId] ?? 'Unknown';
-      const txt = i >= 0 ? `#${i + 1} · ${name}` : name;
+      const txt = preview ? 'Proposed · ' + name : i >= 0 ? `#${i + 1} · ${name}` : name;
       const m = this.ctx.measureText(txt).width + 8 / s;
       const h = 20 / s;
       const y = Math.max(0, b.y - h);
@@ -1784,12 +1848,14 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     setTool(tool) {
       this.cancelDrag();
+      if (this.tool === 'click' && tool !== 'click') this.app.clearPointBox();
       this.setBoxesHidden(false);
       this.tool = tool;
       this.setPan(false);
       if (tool === 'draw') this.selected = -1;
       $('drawTool').setAttribute('aria-pressed', String(tool === 'draw'));
       $('editTool').setAttribute('aria-pressed', String(tool === 'edit'));
+      $('pointTool').setAttribute('aria-pressed', String(tool === 'click'));
       $('canvasWrap').classList.toggle('edit-mode', tool === 'edit');
       this.renderList();
       this.draw();
@@ -1800,7 +1866,8 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('panTool').setAttribute('aria-pressed', String(active));
       $('toolHint').textContent = active ? 'Drag to pan the zoomed image.' : this.boxesHidden
         ? 'Viewing the original image. Show boxes to draw or edit on the canvas.' : this.tool === 'draw'
-        ? 'Drag to draw a new box. Boxes can overlap.'
+        ? 'Drag to draw a new box. Boxes can overlap.' : this.tool === 'click'
+        ? (this.app.pointTarget ? 'Click inside the object in the selected box.' : 'Choose a class, then click inside a missed object.')
         : 'Select a box here or in the list. Drag a corner to resize.';
       $('canvasWrap').classList.toggle('pan-mode', active);
     }
@@ -1822,6 +1889,10 @@ figcaption { margin-top:5px; line-height:1.25; }
         return;
       }
       if (this.boxesHidden) return;
+      if (this.tool === 'click') {
+        this.app.requestPointBox(p);
+        return;
+      }
       const hit = this.tool === 'edit' ? this.hit(p, e.pointerType === 'touch') : null;
       if (this.tool === 'edit' && !hit) {
         this.selected = -1;
@@ -1940,8 +2011,12 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Box list / edits --------------------------------------------------
     /** Mark the image as modified and schedule a save in the active storage mode. */
     changed() {
+      if (this.app.pointBox || this.app.pointJob) this.app.clearPointBox();
       if (this.suggestionReview) return;
       if (this.app.suggestionJob) this.app.cancelSuggestionJob();
+      if (this.item?.status === 'unlabeled' && this.app.filter === 'unlabeled') {
+        this.app.unlabeledInReview.add(this.item.name);
+      }
       this.revision++;
       this.dirty = true;
       this.app.saveState('Unsaved changes');
@@ -1977,6 +2052,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     renderList() {
       this.app.renderSuggestionControls();
+      this.app.renderPointControls();
       $('undoBtn').disabled = !this.undo.length;
       $('redoBtn').disabled = !this.redo.length;
       const editing = this.tool === 'edit' && this.selected >= 0 && !this.suggestionReview;
@@ -2159,11 +2235,24 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.suggestionJob = null;
       this.suggestionMessage = '';
       this.suggestionModelReady = false;
+      this.pointWorker = null;
+      this.pointWorkerItem = null;
+      this.pointJob = null;
+      this.pointTarget = null;
+      this.pointBox = null;
+      this.pointMessage = '';
       this.canSuggest = location.protocol !== 'file:' && typeof Worker === 'function'
         && typeof OffscreenCanvas === 'function' && typeof createImageBitmap === 'function';
       this.current = -1;
       this.filter = 'all';
-      this.imageButtons = new WeakMap();
+      this.unlabeledInReview = new Set();
+      this.savedClasses = [];
+      this.photoCards = new WeakMap();
+      this.addPhotosCard = el('button', undefined, 'add-photos-card');
+      const plus = el('span', '+');
+      plus.setAttribute('aria-hidden', 'true');
+      this.addPhotosCard.append(plus, document.createTextNode('Add photos'));
+      this.addPhotosCard.onclick = () => $('photosInput').click();
       this.thumbnailItems = new WeakMap();
       this.thumbnailQueue = new Set();
       this.loadingThumbnails = 0;
@@ -2217,6 +2306,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('editTool').onclick = () => this.ann.setTool('edit');
       $('toggleBoxes').onclick = () => {
         this.ann.cancelDrag();
+        this.clearPointBox();
         this.ann.selected = -1;
         this.ann.setBoxesHidden(!this.ann.boxesHidden);
         this.ann.setPan(this.ann.panning);
@@ -2224,6 +2314,23 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.ann.renderList();
       };
       $('suggestBoxes').onclick = () => this.suggestBoxes();
+      $('pointTool').onclick = () => this.beginPointBox();
+      $('tightenPointBox').onclick = () => this.beginPointBox(this.ann.boxes[this.ann.selected]);
+      $('applyPointBox').onclick = () => this.applyPointBox();
+      $('nextPointBox').onclick = () => {
+        const preview = this.pointBox;
+        if (!preview) return;
+        preview.index = (preview.index + 1) % preview.boxes.length;
+        preview.box = preview.boxes[preview.index];
+        this.pointMessage = `Preview ${preview.index + 1} of ${preview.boxes.length}. Check the dashed box before applying.`;
+        this.renderPointControls();
+        this.ann.draw();
+      };
+      $('discardPointBox').onclick = $('cancelPointBox').onclick = () => {
+        this.clearPointBox(true);
+        this.ann.renderList();
+        this.ann.draw();
+      };
       $('cancelSuggestions').onclick = () => this.cancelSuggestionJob('Suggestions canceled. You can keep labeling by hand.');
       $('saveSuggestions').onclick = () => this.ann.finishSuggestionReview(true);
       $('discardSuggestions').onclick = () => this.ann.finishSuggestionReview(false);
@@ -2244,11 +2351,16 @@ figcaption { margin-top:5px; line-height:1.25; }
         if (this.classEdits) return this.toast('Save Classes before adding photos.', true);
         $('photosInput').click();
       };
+      $('undoRemovePhoto').onclick = () => this.undoRemovePhoto();
+      $('setupUndoRemove').onclick = () => this.undoRemovePhoto();
       $('photosInput').onchange = e => this.importPhotos(Array.from(e.target.files));
       $('undoBtn').onclick = () => this.ann.undoDo();
       $('redoBtn').onclick = () => this.ann.redoDo();
-      $('backSetupBtn').onclick = async () => { if (await this.guardUnsaved()) this.showSetup(); };
-      $('classSelect').onchange = () => this.ann.setTool('draw');
+      $('backSetupBtn').onclick = () => this.exitLabeling();
+      $('emptyBackBtn').onclick = () => this.exitLabeling();
+      $('classSelect').onchange = () => {
+        if (this.ann.tool !== 'click') this.ann.setTool('draw');
+      };
       $('editClass').onchange = e => this.ann.changeClass(Number(e.target.value));
       $('noObjectBtn').onclick = () => this.ann.noObject();
       $('statusFilter').onchange = e => {
@@ -2302,7 +2414,10 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.bindDropZone();
 
       window.addEventListener('beforeunload', e => {
-        if (this.ann.dirty || this.ann.suggestionReview || this.needsDownload || this.classEdits) { e.preventDefault(); e.returnValue = ''; }
+        if (this.ann.dirty || this.ann.suggestionReview || this.pointBox || this.needsDownload || this.classEdits) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
       });
       document.addEventListener('keydown', e => this.keys(e));
     }
@@ -2344,8 +2459,13 @@ figcaption { margin-top:5px; line-height:1.25; }
     showImageBrowser(open) {
       $('imageBrowser').classList.toggle('open', open);
       $('browseImages').setAttribute('aria-expanded', String(open));
-      $('browseImages').textContent = (open ? 'Hide images' : 'Images') + ' · ' + (this.current + 1) + ' / ' + this.model.images.length;
+      this.renderImageBrowserToggle();
       if (open) this.scrollToCurrentImage();
+    }
+
+    renderImageBrowserToggle() {
+      const open = $('imageBrowser').classList.contains('open');
+      $('browseImages').textContent = (open ? 'Hide images' : 'Images') + ' · ' + (this.current + 1) + ' / ' + this.model.images.length;
     }
 
     async importPhotos(files) {
@@ -2353,10 +2473,14 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (!files.length) return;
       const unsupported = files.find(file => !EXT.test(file.name));
       if (unsupported) return this.toast('Unsupported photo: ' + unsupported.name + '. Choose JPG, PNG, WebP or BMP.', true);
+      const main = document.querySelector('main');
+      if (main.inert || this.switching) return;
       const fresh = !$('landing').classList.contains('hidden');
-      const occupied = new Set(fresh ? [] : this.model.images.map(item => item.stem.toLowerCase()));
+      const inWorkbench = !$('labeler').classList.contains('hidden');
       let renamed = 0;
-      document.querySelector('main').inert = true;
+      let added = 0;
+      let failure;
+      main.inert = true;
       try {
         if (fresh) {
           this.store.name = 'Selected photos';
@@ -2364,21 +2488,45 @@ figcaption { margin-top:5px; line-height:1.25; }
           await this.store.putMemory('classes.txt', new Blob(['']));
           await this.store.putMemory('labels/.keep', new Blob(['']));
         }
+        const occupied = await this.occupiedStems();
         for (const file of files) {
           const original = stem(file.name);
           const extension = file.name.slice(original.length).toLowerCase();
           const name = this.uniqueImportedStem(original, extension, occupied);
-          await this.store.putMemory('images/' + name + extension, file);
+          const filename = name + extension;
+          await this.store.addPhoto(filename, file);
+          if (inWorkbench) {
+            this.model.addedPhotos.set(filename, this.model.addedPhotos.size);
+            const entry = {name: filename, getFile: () => this.store.readFile('images/' + filename)};
+            this.model.images.push(this.model.photoItem(entry));
+          }
+          added++;
           if (name !== original) renamed++;
         }
-        this.needsDownload = true;
-        if (!await this.refresh()) return;
-        this.showSetup();
-        this.toast(files.length + ' photo(s) added.' + (renamed ? ' ' + renamed + ' renamed to keep both copies.' : ''));
       } catch (error) {
-        this.toast('Could not add photos: ' + error.message, true);
+        failure = error;
+      }
+
+      try {
+        if (added) {
+          if (this.store.mode === 'memory') this.needsDownload = true;
+          if (inWorkbench) {
+            $('imageSearch').value = '';
+            if (!['all', 'unlabeled', 'remaining'].includes(this.filter)) {
+              this.filter = $('statusFilter').value = 'all';
+            }
+            this.renderAll();
+            if (this.current < 0) await this.openIndex(0);
+            else $('imageList').scrollLeft = $('imageList').scrollWidth;
+          } else {
+            if (!await this.refresh()) return;
+            this.showSetup();
+          }
+        }
+        const message = added + ' photo(s) added.' + (renamed ? ' ' + renamed + ' renamed to keep both copies.' : '');
+        this.toast(failure ? (added ? message + ' ' : '') + 'Could not add photos: ' + failure.message : message, Boolean(failure));
       } finally {
-        document.querySelector('main').inert = false;
+        main.inert = false;
       }
     }
 
@@ -2442,6 +2590,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     async refresh() {
       try {
         await this.model.scan();
+        this.savedClasses = [...this.model.classes];
         this.renderAll();
         return true;
       } catch (e) {
@@ -2451,12 +2600,31 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     showSetup() {
+      this.unlabeledInReview.clear();
       $('landing').classList.add('hidden');
       $('resetBtn').classList.remove('hidden');
       $('labeler').classList.add('hidden');
       $('topProgress').classList.add('hidden');
       $('setup').classList.remove('hidden');
       this.renderAll();
+    }
+
+    async exitLabeling() {
+      if (this.switching || this.exporting) return;
+      const labeler = $('labeler');
+      this.switching = true;
+      labeler.inert = true;
+      try {
+        this.ann.cancelDrag();
+        if (await this.guardUnsaved()) {
+          this.showSetup();
+          $('reviewExportTitle').focus();
+        }
+      } finally {
+        this.switching = false;
+        labeler.inert = false;
+        if (!labeler.classList.contains('hidden')) $('backSetupBtn').focus({preventScroll: true});
+      }
     }
 
     renderAll() {
@@ -2466,6 +2634,12 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.renderSummary();
       }
       if (!$('labeler').classList.contains('hidden')) {
+        const empty = !this.model.images.length;
+        $('labeler').querySelector('.annotation').classList.toggle('no-photos', empty);
+        $('emptyDatasetActions').classList.toggle('hidden', !empty);
+        for (const panel of $('labeler').querySelectorAll('.canvas-panel, .right-panel')) {
+          panel.classList.toggle('hidden', empty);
+        }
         this.renderImageList();
         this.renderProgress();
         this.renderInvalid();
@@ -2531,14 +2705,16 @@ figcaption { margin-top:5px; line-height:1.25; }
     renderClasses() {
       const h = $('classList');
       h.replaceChildren();
-      this.model.classes.forEach((name, i) => this.classRow(h, name, i));
+      const protectedIds = this.protectedClassIds();
+      this.model.classes.forEach((name, i) => this.classRow(h, name, i, protectedIds));
+      $('classLockNote').classList.toggle('hidden', !protectedIds.size);
       if (!this.model.classes.length) {
         h.append(el('p', 'No classes yet. Add at least one class before labeling.', 'small'));
       }
       this.fillClassSelect();
     }
 
-    classRow(h, name, i) {
+    classRow(h, name, i, protectedIds) {
       const r = el('div', undefined, 'class-row');
       const id = el('div', String(i), 'class-id');
       const inp = el('input');
@@ -2548,7 +2724,10 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       const up = el('button', '↑', 'ghost');
       const del = el('button', 'Delete', 'danger');
-      const locked=this.labelsExist();up.disabled=i===0||locked;del.disabled=locked;if(locked)up.title=del.title='Locked because labels exist';
+      up.disabled = i === 0 || protectedIds.has(i) || protectedIds.has(i - 1);
+      del.disabled = [...protectedIds].some(id => id >= i);
+      if (up.disabled && i > 0) up.title = 'Moving this class would change an ID used by existing labels';
+      if (del.disabled) del.title = 'Deleting this class would change an ID used by existing labels';
       up.onclick = () => this.reorderClass(i, i - 1);
       del.onclick = () => this.deleteClass(i);
 
@@ -2571,13 +2750,22 @@ figcaption { margin-top:5px; line-height:1.25; }
       inputs[inputs.length - 1]?.focus();
     }
 
-    /** True when at least one image already has a label file. */
-    labelsExist() {
-      return this.model.images.some(i => i.status !== 'unlabeled');
+    protectedClassIds() {
+      const photos = [...this.model.images, ...this.model.excludedPhotos.values()];
+      // A broken or unmatched label may still refer to a saved ID. Preserve its interpretation.
+      if (this.model.orphans.length || photos.some(item => item.status === 'invalid' && item.labelEntry)) {
+        return new Set(this.savedClasses.map((_, id) => id));
+      }
+      const used = new Set();
+      for (const photo of photos) for (const box of photo.boxes) used.add(box.classId);
+      return used;
     }
 
     reorderClass(i, j) {
-      if(this.labelsExist())return this.toast('Class order is locked because labels exist.',true);
+      const protectedIds = this.protectedClassIds();
+      if (protectedIds.has(i) || protectedIds.has(j)) {
+        return this.toast('Moving this class would change an ID used by existing labels.', true);
+      }
       const a = this.collectClasses();
       this.classEdits = true;
       [a[i], a[j]] = [a[j], a[i]];
@@ -2586,11 +2774,14 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     deleteClass(i) {
-      if(this.labelsExist())return this.toast('Classes cannot be deleted because labels exist.',true);
+      if ([...this.protectedClassIds()].some(id => id >= i)) {
+        return this.toast('Deleting this class would change an ID used by existing labels.', true);
+      }
       const a = this.collectClasses();
-      this.classEdits = true;
       a.splice(i, 1);
+      this.classEdits = a.length !== this.savedClasses.length || a.some((name, index) => name !== this.savedClasses[index]);
       this.model.classes = a;
+      $('classError').replaceChildren();
       this.renderClasses();
     }
 
@@ -2608,15 +2799,20 @@ figcaption { margin-top:5px; line-height:1.25; }
         return;
       }
 
+      const editor = $('classList').closest('.card');
+      editor.inert = true;
       try {
         await this.store.writeText('classes.txt', a.join('\n') + (a.length ? '\n' : ''));
         this.model.classes = a;
+        this.savedClasses = [...a];
         this.classEdits = false;
         if (this.store.mode === 'memory') this.needsDownload = true;
         await this.refresh();
         this.toast('Classes saved.');
       } catch (e) {
         this.toast(`Could not save classes: ${e.message}`, true);
+      } finally {
+        editor.inert = false;
       }
     }
 
@@ -2674,6 +2870,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('invalidBtn').classList.toggle('hidden', !s.invalid);
       $('labelAllBtn').textContent = started ? 'Review all photos' : 'Start Labeling';
       $('labelAllBtn').className = started ? 'ghost' : 'primary';
+      $('setupUndoRemove').classList.toggle('hidden', !this.model.excludedPhotos.size);
       const offerDraft = this.store.mode === 'memory' && this.needsDownload && canArchive && !ready;
       $('resumeLater').classList.toggle('hidden', !offerDraft);
 
@@ -2734,6 +2931,11 @@ figcaption { margin-top:5px; line-height:1.25; }
       await this.openIndex(idx);
     }
 
+    // Keep photos from the unlabeled review visible until Save & exit.
+    workbenchStatus(item) {
+      return item.status !== 'invalid' && this.unlabeledInReview.has(item.name) ? 'unlabeled' : item.status;
+    }
+
     /** Images matching the current search text and status filter. */
     visibleImages() {
       const q = $('imageSearch').value.toLocaleLowerCase();
@@ -2741,10 +2943,11 @@ figcaption { margin-top:5px; line-height:1.25; }
         .map((x, i) => ({ x, i }))
         .filter(({ x }) => {
           const matchesText = !q || x.name.toLocaleLowerCase().includes(q);
+          const status = this.workbenchStatus(x);
           const matchesFilter =
             this.filter === 'all' ||
-            (this.filter === 'remaining' && (x.status === 'unlabeled' || x.status === 'invalid')) ||
-            x.status === this.filter;
+            (this.filter === 'remaining' && (status === 'unlabeled' || status === 'invalid')) ||
+            status === this.filter;
           return matchesText && matchesFilter;
         });
     }
@@ -2786,24 +2989,36 @@ figcaption { margin-top:5px; line-height:1.25; }
       }
     }
 
-    imageButton(item, index) {
-      let button = this.imageButtons.get(item);
-      if (!button) {
-        button = el('button', undefined, 'image-item');
+    photoCard(item, index) {
+      let card = this.photoCards.get(item);
+      if (!card) {
+        card = el('div', undefined, 'photo-card');
+        const button = el('button', undefined, 'image-item');
         const thumb = el('img');
         thumb.alt = '';
         this.thumbnailItems.set(thumb, item);
         button.append(thumb, el('div', item.name, 'image-name'), el('span', '', 'status-pill'));
         button.title = item.name;
-        button.onclick = () => this.openIndex(index);
-        this.imageButtons.set(item, button);
+        button.onclick = () => this.openIndex(this.model.images.indexOf(item));
+        const remove = el('button', undefined, 'photo-remove');
+        remove.setAttribute('aria-label', 'Remove ' + item.name + ' from dataset');
+        remove.title = 'Remove from dataset';
+        const cross = el('span');
+        cross.setAttribute('aria-hidden', 'true');
+        remove.append(cross);
+        remove.onclick = () => this.removePhoto(item);
+        card.append(button, remove);
+        this.photoCards.set(item, card);
       }
+      const button = card.firstChild;
       const current = index === this.current;
       button.classList.toggle('current', current);
       button.setAttribute('aria-current', String(current));
-      button.dataset.status = item.status;
-      button.lastChild.textContent = statusLabel(item.status);
-      return button;
+      const status = this.workbenchStatus(item);
+      button.dataset.status = status;
+      button.lastChild.textContent = statusLabel(status);
+      button.lastChild.title = status !== item.status ? 'Review status updates after Save & exit' : '';
+      return card;
     }
 
     scrollToCurrentImage() {
@@ -2819,19 +3034,79 @@ figcaption { margin-top:5px; line-height:1.25; }
     renderImageList() {
       const h = $('imageList');
       const visible = this.visibleImages();
-      const buttons = visible.map(({x, i}) => this.imageButton(x, i));
-      if (!buttons.length || buttons.length !== h.children.length || buttons.some((b, i) => b !== h.children[i])) {
+      const cards = visible.map(({x, i}) => this.photoCard(x, i));
+      const emptyMessage = this.model.images.length ? 'No images match this view.' : 'No photos in this dataset.';
+      const children = cards.length ? [...cards] : [h.querySelector('.small') || el('p', emptyMessage, 'small')];
+      if (!cards.length) children[0].textContent = emptyMessage;
+      children.push(this.addPhotosCard);
+      if (children.length !== h.children.length || children.some((card, i) => card !== h.children[i])) {
+        const focused = h.contains(document.activeElement) ? document.activeElement : null;
         this.thumbnailObserver.disconnect();
         this.thumbnailQueue.clear();
-        h.replaceChildren(...(buttons.length ? buttons : [el('p', 'No images match this view.', 'small')]));
-        for (const button of buttons) {
-          const thumb = button.firstChild;
+        h.replaceChildren(...children);
+        for (const card of cards) {
+          const thumb = card.querySelector('img');
           if (!thumb.dataset.started) this.thumbnailObserver.observe(thumb);
         }
+        if (focused?.isConnected) focused.focus({preventScroll: true});
       }
+      const undo = $('undoRemovePhoto');
+      const lastRemoved = Array.from(this.model.excludedPhotos.values()).at(-1);
+      undo.classList.toggle('hidden', !lastRemoved);
+      undo.title = lastRemoved ? 'Restore ' + lastRemoved.name : '';
       $('imageCount').textContent = String(visible.length);
+      this.renderImageBrowserToggle();
       $('prevBtn').disabled = !visible.some(row => row.i < this.current);
       $('nextBtn').disabled = !visible.some(row => row.i > this.current);
+    }
+
+    async removePhoto(item) {
+      const main = document.querySelector('main');
+      const index = this.model.images.indexOf(item);
+      if (main.inert || this.switching || index < 0) return;
+      main.inert = true;
+      try {
+        const browserWasOpen = $('imageBrowser').classList.contains('open');
+        const active = item === this.ann.item;
+        if (active && !await this.guardUnsaved()) return;
+        this.model.excludedPhotos.set(item.name, item);
+        this.model.images.splice(index, 1);
+        this.needsDownload = true;
+        this.current = this.model.images.indexOf(this.ann.item);
+        if (active && this.model.images.length) {
+          const visible = this.visibleImages();
+          const next = visible.find(row => row.i >= index) || visible.at(-1);
+          await this.openIndex(next?.i ?? Math.min(index, this.model.images.length - 1));
+          if (browserWasOpen) this.showImageBrowser(true);
+        } else if (!this.model.images.length) {
+          if (this.ann.url) URL.revokeObjectURL(this.ann.url);
+          this.ann.item = this.ann.img = this.ann.url = null;
+          this.saveState('');
+          this.showImageBrowser(true);
+        }
+        this.renderAll();
+        this.toast(item.name + ' removed from this dataset and future ZIP exports. Original file kept.');
+      } finally {
+        main.inert = false;
+      }
+      const undo = $('undoRemovePhoto');
+      if (undo.getClientRects().length) undo.focus({preventScroll: true});
+    }
+
+    async undoRemovePhoto() {
+      const item = Array.from(this.model.excludedPhotos.values()).at(-1);
+      if (!item || this.switching) return;
+      if (this.classEdits) return this.toast('Save Classes before restoring a photo.', true);
+      this.model.excludedPhotos.delete(item.name);
+      this.model.images.push(item);
+      this.model.images.sort((a, b) => this.model.comparePhotos(a, b));
+      this.needsDownload = true;
+      this.current = this.model.images.indexOf(this.ann.item);
+      if (this.current < 0 && !$('labeler').classList.contains('hidden')) {
+        await this.openIndex(this.model.images.indexOf(item));
+      }
+      this.renderAll();
+      this.toast(item.name + ' restored.');
     }
 
     async openIndex(i) {
@@ -2865,10 +3140,14 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     renderProgress() {
-      const s = this.model.summary();
-      const remaining = s.total - s.labeled - s.background;
-      $('progressText').textContent = `Image ${this.current + 1} of ${s.total} · Reviewed ${s.labeled + s.background} · Remaining ${remaining} · ${s.complete}%`;
-      $('progressFill').style.width = s.complete + '%';
+      const {images} = this.model;
+      const total = images.length;
+      const reviewed = images.filter(item => ['labeled', 'background'].includes(this.workbenchStatus(item))).length;
+      const complete = total ? Math.round(reviewed * 100 / total) : 0;
+      $('progressText').textContent = total
+        ? `Image ${this.current + 1} of ${total} · Reviewed ${reviewed} · Remaining ${total - reviewed} · ${complete}%`
+        : 'No photos · Add photos to continue';
+      $('progressFill').style.width = complete + '%';
     }
 
     renderInvalid() {
@@ -2882,6 +3161,112 @@ figcaption { margin-top:5px; line-height:1.25; }
           .join('\n');
         h.append(el('div', t, 'errorbox'));
       }
+    }
+
+    // --- Point-guided boxes ------------------------------------------------
+    renderPointControls() {
+      const ann = this.ann;
+      $('pointTool').disabled = !this.canSuggest || !ann.img || Boolean(this.pointJob);
+      $('pointTool').title = this.canSuggest ? 'Preview a box around the object you click' : 'Open the labeler from a web address to use Click to box';
+      $('tightenPointBox').classList.toggle('hidden', !this.canSuggest || ann.tool !== 'edit' || !ann.boxes[ann.selected]);
+      $('pointReview').classList.toggle('hidden', !this.pointBox);
+      $('nextPointBox').classList.toggle('hidden', !(this.pointBox?.boxes.length > 1));
+      $('cancelPointBox').classList.toggle('hidden', !this.pointJob);
+      $('pointStatus').textContent = this.pointMessage;
+    }
+
+    clearPointBox(keepTarget = false) {
+      if (this.pointJob) {
+        this.pointWorker?.terminate();
+        this.pointWorker = this.pointWorkerItem = this.pointJob = null;
+      }
+      this.pointBox = null;
+      this.pointMessage = '';
+      if (!keepTarget) this.pointTarget = null;
+    }
+
+    beginPointBox(target = null) {
+      if (!this.canSuggest || !this.ann.img) return;
+      this.cancelSuggestionJob();
+      this.clearPointBox();
+      this.pointTarget = target;
+      this.ann.setTool('click');
+    }
+
+    async requestPointBox(p) {
+      const ann = this.ann;
+      if (this.pointJob || !ann.img) return;
+      const target = this.pointTarget;
+      if (target && (p.x < target.x || p.x > target.x + target.w || p.y < target.y || p.y > target.y + target.h)) {
+        this.pointMessage = 'Click inside the selected box to refine it.';
+        this.renderPointControls();
+        return;
+      }
+      const w = ann.img.naturalWidth, h = ann.img.naturalHeight;
+      const point = {x: Math.max(0, p.x / w), y: Math.max(0, p.y / h)};
+      const selection = target ? {x: target.x / w, y: target.y / h, w: target.w / w, h: target.h / h} : null;
+      const job = {item: ann.item, target, classId: target?.classId ?? Number($('classSelect').value), w, h};
+      this.pointBox = null;
+      this.pointJob = job;
+      this.pointMessage = 'Preparing box preview…';
+      this.renderPointControls();
+      ann.draw();
+      try {
+        const photo = this.pointWorkerItem === job.item ? null : await job.item.imageEntry.getFile();
+        if (this.pointJob !== job) return;
+        if (!this.pointWorker) {
+          const worker = new Worker('click-box-worker.js', {type: 'module'});
+          this.pointWorker = worker;
+          worker.onmessage = ({data}) => {
+            if (this.pointWorker === worker) this.receivePointBox(data);
+          };
+          worker.onerror = () => {
+            if (this.pointWorker === worker) this.receivePointBox({type: 'error'});
+          };
+        }
+        this.pointWorker.postMessage({photo, point, selection});
+        this.pointWorkerItem = job.item;
+      } catch {
+        if (this.pointJob === job) this.receivePointBox({type: 'error'});
+      }
+    }
+
+    receivePointBox(result) {
+      const job = this.pointJob;
+      if (!job || job.item !== this.ann.item) return;
+      if (result.type === 'loading') {
+        this.pointMessage = 'Loading the local box model…';
+      } else if (result.type === 'analyzing') {
+        this.pointMessage = 'Finding the object around your click…';
+      } else if (result.type === 'error') {
+        this.clearPointBox(true);
+        this.pointMessage = 'Could not create a preview. Try again or draw the box by hand.';
+      } else if (result.type === 'done') {
+        this.pointJob = null;
+        const boxes = result.proposals
+          .filter(b => b.w * job.w >= 3 && b.h * job.h >= 3)
+          .map(b => ({classId: job.classId, x: b.x * job.w, y: b.y * job.h, w: b.w * job.w, h: b.h * job.h}));
+        if (boxes.length) this.pointBox = {job, boxes, box: boxes[0], index: 0};
+        this.pointMessage = this.pointBox ? 'Check the dashed preview, then apply it.' : 'No suitable box here. Click a solid part of the object or draw by hand.';
+      }
+      this.renderPointControls();
+      this.ann.draw();
+    }
+
+    applyPointBox() {
+      const ann = this.ann;
+      const preview = this.pointBox;
+      if (!preview || preview.job.item !== ann.item) return;
+      const {box, job} = preview;
+      const index = job.target ? ann.boxes.indexOf(job.target) : ann.boxes.length;
+      if (index < 0) return;
+      this.clearPointBox();
+      ann.pushUndo();
+      ann.boxes.splice(index, job.target ? 1 : 0, box);
+      ann.background = false;
+      ann.selected = index;
+      ann.changed();
+      ann.setTool(job.target ? 'edit' : 'click');
     }
 
     // --- Suggestions for the current photo --------------------------------
@@ -2909,6 +3294,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (review) return this.ann.boxes.length
         ? 'Check the boxes, choose their classes and draw any missing boxes before saving.'
         : 'Discard suggestions to leave this photo unreviewed, or draw any missing boxes.';
+      if (this.ann.tool === 'click') return '';
       if (!this.canSuggest) return 'Use the online labeler in a recent browser to get suggestions.';
       return eligible && !this.suggestionModelReady
         ? 'Suggest boxes runs on this device. First use downloads about 155 MB.'
@@ -2926,6 +3312,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     async suggestBoxes() {
       if (!this.canSuggestCurrentPhoto() || this.suggestionJob || this.ann.action) return;
+      if (this.ann.tool === 'click') this.ann.setTool('draw');
       const job = { item: this.ann.item };
       this.suggestionJob = job;
       this.suggestionMessage = 'Preparing the model…';
@@ -2969,7 +3356,7 @@ figcaption { margin-top:5px; line-height:1.25; }
           this.suggestionMessage = '';
           this.ann.startSuggestionReview(result.boxes);
         } else {
-          this.suggestionMessage = result.boxes.length ? '' : 'No suggestions found. Draw any objects you see, or confirm no object after checking.';
+          this.suggestionMessage = result.boxes.length ? '' : 'No suggestions found. Check the photo and draw boxes around any targets you see.';
         }
       }
       this.renderSuggestionControls();
@@ -2995,7 +3382,12 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     async guardUnsaved() {
+      if (this.pointBox) {
+        this.toast('Apply the box or discard its preview first.');
+        return false;
+      }
       if (!this.suggestionsResolved()) return false;
+      if (this.pointJob) this.clearPointBox();
       await this.ann.writes;
       return !this.ann.dirty || await this.ann.saveEdits();
     }
@@ -3017,6 +3409,12 @@ figcaption { margin-top:5px; line-height:1.25; }
       }
       occupiedStems.add(candidate.toLocaleLowerCase());
       return candidate;
+    }
+
+    async occupiedStems() {
+      const [images, labels] = await Promise.all([this.store.listDir('images'), this.store.listDir('labels')]);
+      return new Set([...images.filter(item => EXT.test(item.name)), ...labels.filter(item => /\.txt$/i.test(item.name))]
+        .map(item => stem(item.name).toLocaleLowerCase()));
     }
 
     // --- Import: images-only ZIP (starting a new dataset) ------------------
@@ -3144,7 +3542,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         if (!imageEntries.length) throw new Error('No supported images were found in the ZIP images/ folder.');
         checkLabelPairs(imageEntries, entries.filter(entry => /^labels\/[^/]+\.txt$/i.test(entry.name)));
 
-        const occupiedStems = new Set(this.model.images.map(item => item.stem.toLocaleLowerCase()));
+        const occupiedStems = await this.occupiedStems();
         let imported = 0;
         let renamed = 0;
         let emptyLabels = 0;
@@ -3263,7 +3661,8 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     // --- Keyboard shortcuts ------------------------------------------------
     keys(e) {
-      if ($('labeler').classList.contains('hidden') || document.querySelector('dialog[open]') || this.switching || this.exporting) return;
+      if ($('labeler').classList.contains('hidden') || document.querySelector('main').inert ||
+          document.querySelector('dialog[open]') || this.switching || this.exporting || !this.ann.item) return;
       if ((e.ctrlKey || e.metaKey || e.altKey) && !['s', 'z'].includes(e.key.toLowerCase())) return;
       const k = e.key.toLowerCase();
       const typing = e.target.matches('input:not([type="button"]),textarea,[contenteditable="true"]');
@@ -3290,6 +3689,10 @@ figcaption { margin-top:5px; line-height:1.25; }
         e.preventDefault();
         this.ann.deleteSelected();
       } else if (k === 'escape') {
+        if (this.ann.tool === 'click') {
+          this.ann.setTool('draw');
+          return;
+        }
         this.ann.cancelDrag();
         this.ann.selected = -1;
         this.ann.draw();
@@ -3306,8 +3709,9 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Reset & toast -----------------------------------------------------
     reset() {
       if (this.exporting || this.switching) return;
-      if ((this.ann.dirty || this.ann.suggestionReview || this.needsDownload || this.classEdits) &&
+      if ((this.ann.dirty || this.ann.suggestionReview || this.pointBox || this.needsDownload || this.classEdits) &&
           !confirm('Close and discard changes you have not downloaded or saved to your folder?')) return;
+      this.clearPointBox();
       this.ann.dirty = this.needsDownload = this.classEdits = false;
       location.reload();
     }
