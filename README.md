@@ -53,7 +53,7 @@ When you open an empty writable folder, click **Create Missing Items** where sho
 
 ![Empty dataset with all three required items marked Missing and Create Missing Items outlined in red](docs/guide/02-create-files.png)
 
-Open **File formats & folder access** on the opening screen for device-specific guidance. Supported photos are JPG/JPEG, PNG, WebP and BMP. Convert HEIC/HEIF photos to JPEG or PNG first. For ZIP imports, use UTF-8 or ASCII filenames and an unencrypted archive. Limits are 1 GiB per ZIP, 50,000 entries, 512 MiB per file and 2 GiB total extracted.
+Click **Help** in the top bar to find **File formats & folder access**. Supported photos are JPG/JPEG, PNG, WebP and BMP. Convert HEIC/HEIF photos to JPEG or PNG first. For ZIP imports, use UTF-8 or ASCII filenames and an unencrypted archive. Limits are 1 GiB per ZIP, 50,000 entries, 512 MiB per file and 2 GiB total extracted.
 
 Give each photo in a writable folder a unique name before its extension. For example, `bolt-01.jpg` and `bolt-01.png` would both need `bolt-01.txt`. When you import individual photos with the same name, the labeler gives the incoming copies unique names.
 
@@ -141,7 +141,7 @@ After the final download, **I have the ZIP** reveals the image, box and backgrou
 
 Click **Help** in the top bar for a reminder about drawing, editing, marking backgrounds, minimum box size, shortcuts and saving. While labeling, expand **Box guide & shortcuts** below the bounding-box list to see a loose box and a tight box around the same hex nut.
 
-![Quick help dialog with four annotation tips, a row of common keyboard shortcuts and a note on saving draft ZIPs](docs/guide/07-quick-help.png)
+![Quick help with file formats and folder access at the top, followed by labeling tips and keyboard shortcuts](docs/guide/07-quick-help.png)
 
 These shortcuts work in the annotation workbench. Finish typing in a text field before using the single-key commands. Use **Ctrl** on Windows or Linux and **⌘** on macOS.
 
