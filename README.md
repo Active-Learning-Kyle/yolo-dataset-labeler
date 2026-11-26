@@ -4,7 +4,7 @@
 
 **Make a YOLO dataset from your own photos.** Choose the object types you want to detect, draw a box around each one, then download a ZIP containing your photos, labels and class names. Labeling runs on your device and requires no account.
 
-![The annotation workbench with a boxed bolt and hex nut and a row of five distinct hardware photos](docs/guide/04-label-objects.png)
+![The annotation workbench with a boxed bolt and hex nut, the Suggest boxes toolbar button, and five distinct hardware photos](docs/guide/04-label-objects.png)
 
 The example uses photos of loose fasteners, an assembled bolt, a bolted plate, rusted parts and a bag of washers. [Screenshot photo credits](docs/guide/photo-credits.md)
 
@@ -70,7 +70,7 @@ A class is an object type. Use a distinct, non-empty name for each one. The numb
 
 ## Use the annotation workbench
 
-The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1** Draw or Edit, **2** the class for the next box, **3** the list of existing boxes, **4** Next, **5** Confirm no object and **6** the row of photos.
+The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1** Draw or Edit, **2** the class for the next box, **3** the list of existing boxes, **4** Next, **5** Confirm no object, **6** the row of photos and **7** Suggest boxes.
 
 | Task | How to do it |
 |---|---|
@@ -83,10 +83,8 @@ The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1*
 
 ### Get suggestions for a photo
 
-Open the optional preview if you want the labeler to propose boxes for you. [Try Suggest boxes](https://active-learning-kyle.github.io/yolo-dataset-labeler/?suggest=1)
-
-1. Save your classes and open an unlabeled photo. To start, use desktop Chrome or Edge and descriptive class names such as `bolt` and `hex_nut`.
-2. Click **Suggest boxes**. First use downloads about 155 MB of model weights. The browser processes your photos on your device. Use **Cancel** if you want to carry on by hand.
+1. In the regular labeler, save your classes and click **Start Labeling**. Open an unlabeled photo. Use descriptive class names such as `bolt` and `hex_nut`.
+2. If you want suggestions, click **Suggest boxes** in the toolbar above the photo, beside the drawing controls. First use downloads about 155 MB of model weights. The browser processes your photos on your device. Use **Cancel** if you want to carry on by hand.
 3. Check each dashed box. Choose its class in the menu beside that box under **Bounding boxes**. Use **Edit** to move or resize a box, **Delete** to remove one, and **Draw** to add any missed objects. The number marked **AI** is the model's score for its original suggestion.
 4. Click **Save reviewed boxes** when the whole photo is ready. To start over, click **Discard suggestions**. If the model suggests nothing, check the photo yourself, then draw boxes or use **Confirm no object** as appropriate.
 
