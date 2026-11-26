@@ -21,6 +21,7 @@ def confirm_no_object(page):
     if not options.evaluate('details => details.open'):
         options.locator('summary').click()
     options.get_by_role('button', name='Confirm no object').click()
+    page.locator('#savePhotoBtn').click()
 
 
 def check_unlabeled_review(browser, site):
@@ -43,23 +44,27 @@ def check_unlabeled_review(browser, site):
     page.mouse.down()
     page.mouse.move(rect['x'] + 130, rect['y'] + 140)
     page.mouse.up()
-    expect(page.locator('#saveState')).to_contain_text('download ZIP to keep')
+    expect(page.locator('#saveState')).to_contain_text('Unsaved draft')
     expect(page.locator('#imageList .current')).to_have_text('a.pngUnlabeled')
     expect(page.locator('#imageCount')).to_have_text('2')
     expect(page.locator('#progressText')).to_contain_text('Reviewed 1 · Remaining 2')
 
+    expect(page.locator('#nextBtn')).to_be_disabled()
+    page.locator('#savePhotoBtn').click()
+    expect(page.locator('#imageCount')).to_have_text('1')
     page.locator('#nextBtn').click()
     expect(page.locator('#frameName')).to_have_text('b.png')
     expect(page.locator('.toolbar').get_by_role('button', name='Confirm no object')).to_have_count(0)
     expect(page.locator('#noObjectBtn')).to_be_hidden()
     confirm_no_object(page)
-    expect(page.locator('#saveState')).to_contain_text('download ZIP to keep')
-    expect(page.locator('#imageList .current')).to_have_text('b.pngUnlabeled')
+    expect(page.locator('#saveState')).to_contain_text('Saved')
+    expect(page.locator('#imageCount')).to_have_text('0')
+    page.locator('#statusFilter').select_option('all')
     page.locator('#prevBtn').click()
     expect(page.locator('#frameName')).to_have_text('a.png')
     expect(page.locator('#boxList .box-row')).to_have_count(1)
 
-    page.get_by_role('button', name='Save & exit', exact=True).click()
+    page.get_by_role('button', name='Finish & exit', exact=True).click()
     expect(page.locator('#reviewExportTitle')).to_be_focused()
     expect(page.locator('#completionCard')).to_contain_text('No-object images: 2')
     expect(page.locator('#remainingBtn')).to_be_hidden()
@@ -69,7 +74,7 @@ def check_unlabeled_review(browser, site):
         assert len(archive.read('labels/a.txt').split()) == 5
         assert archive.read('labels/b.txt') == b''
     page.close()
-    print('PASS unlabeled thumbnails stay through autosave and navigation, with updates on Save & exit')
+    print('PASS explicit save, unlabeled filter, navigation and completed export')
 
 
 def validate_review(browser, site):
@@ -124,19 +129,21 @@ def validate_review(browser, site):
     expect(page.locator('#statusFilter')).to_have_value('unlabeled')
     expect(page.locator('#imageList .image-item')).to_have_count(1)
     page.locator('#backSetupBtn').click()
+    page.get_by_role('button', name='Exit to review').click()
     page.get_by_role('button',name='Review all photos',exact=True).click()
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
+    expect(page.locator('#nextBtn')).to_be_disabled()
+    confirm_no_object(page)
     page.locator('#nextBtn').click()
     expect(page.locator('#imageList .current')).to_contain_text('No Object')
     page.locator('#prevBtn').click()
-    expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
-    confirm_no_object(page)
     expect(page.locator('#imageList .current')).to_contain_text('No Object')
     page.locator('#undoBtn').click()
-    expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
+    expect(page.locator('#saveState')).to_contain_text('Unsaved draft')
     page.locator('#redoBtn').click()
-    expect(page.locator('#imageList .current')).to_contain_text('No Object')
+    expect(page.locator('#savePhotoBtn')).to_be_disabled()
     page.locator('#undoBtn').click()
+    page.locator('#savePhotoBtn').click()
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
     page.locator('#statusFilter').select_option('background')
     expect(page.locator('#imageList .image-item')).to_have_count(1)

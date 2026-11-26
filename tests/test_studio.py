@@ -65,6 +65,7 @@ def run(browser):
         for i in range(20):
             archive.writestr(f'images/kit-{i:02}.png', photo)
         archive.writestr('labels/kit-00.txt', '1 0.5 0.5 0.4 0.3\n')
+        archive.writestr('labels/kit-17.txt', '')
     dataset = ('kit.zip', frames.getvalue())
     drop(page, [dataset, ('loose.png', photo)])
     expect(page.get_by_role('alert')).to_contain_text('Drop one dataset ZIP')
@@ -104,8 +105,10 @@ def run(browser):
             && current.getBoundingClientRect().right <= list.getBoundingClientRect().right + 1;
     }""")
     page.set_viewport_size({'width': 390, 'height': 844})
-    expect(page.locator('#imageBrowser')).to_be_hidden()
+    expect(page.locator('#imageBrowser')).to_be_visible()
     expect(page.locator('#browseImages')).to_contain_text('19 / 20')
+    page.locator('#browseImages').click()
+    expect(page.locator('#imageBrowser')).to_be_hidden()
     page.locator('#browseImages').click()
     expect(page.locator('#imageList .current')).to_be_in_viewport()
     assert not errors, errors

@@ -81,8 +81,10 @@ def run(browser, output):
             page.mouse.up()
         if not boxes:
             confirm_no_object(page)
+        else:
+            page.locator('#savePhotoBtn').click()
         if i in (1,2):
-            expect(page.locator("#saveState")).to_contain_text("In this tab")
+            expect(page.locator("#saveState")).to_contain_text("Saved")
             if i == 1:
                 page.screenshot(path=output/"desktop.png")
                 page.set_viewport_size({"width":820, "height":1024})
