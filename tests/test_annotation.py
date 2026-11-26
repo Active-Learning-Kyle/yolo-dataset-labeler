@@ -12,7 +12,9 @@ def check_session(browser, site, width, height, touch):
     context = browser.new_context(viewport={'width': width, 'height': height}, has_touch=touch, is_mobile=touch)
     page = context.new_page()
     page.set_default_timeout(8000)
-    page.goto(site)
+    notebook = 'example_notebook_id'
+    fragment = {320: '#notebook=' + notebook, 390: '#notebook=https://example.org'}.get(width, '')
+    page.goto(site + fragment)
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     cdp = context.new_cdp_session(page) if touch and browser.browser_type.name == 'chromium' else None
@@ -138,7 +140,7 @@ def check_session(browser, site, width, height, touch):
     expect(page.locator('#trainingStep')).to_be_hidden()
     click('#confirmDownload')
     expect(page.get_by_role('link', name='Continue to Training in Colab')).to_have_attribute(
-        'href', 'https://colab.research.google.com/')
+        'href', 'https://colab.research.google.com/' + ('drive/' + notebook if width == 320 else ''))
     assert complete['classes.txt'].splitlines() == [b'disc', b'plate']
     assert complete['labels/OIP_imported_2.txt'] == b''
     assert complete['labels/OIP.txt'] == draft['labels/OIP.txt']
