@@ -71,6 +71,7 @@ def check(browser):
     expect(page.locator('.entry-actions .primary')).to_have_count(1)
     folder.click()
     expect(page.locator('#checklist .missing')).to_have_count(3)
+    expect(page.locator('#importLabelsBtn')).to_be_hidden()
     page.get_by_role('button', name='Create Missing Items').click()
     expect(page.locator('#checklist .ok')).to_have_count(3)
     page.evaluate("""async bytes => {
@@ -88,6 +89,8 @@ def check(browser):
     page.locator('#addClassBtn').click()
     page.locator('#classList input').fill('disc')
     page.locator('#saveClassesBtn').click()
+    expect(page.locator('#importLabelsBtn')).to_be_visible()
+    expect(page.locator('#summaryDraftBtn')).to_be_hidden()
     page.get_by_role('button', name='Start Labeling', exact=True).click()
     page.evaluate("""() => {
         const proto = FileSystemFileHandle.prototype;

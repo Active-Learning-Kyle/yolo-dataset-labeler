@@ -175,6 +175,8 @@ select {
 .stat b { display: block; font-size: 1.6rem; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.resume-later { border-top:1px solid var(--line); margin-top:18px; padding-top:12px; }
+.resume-later p { margin:0 0 8px; }
 
 .progress { height: 12px; background: #e4e9f1; border-radius: 999px; overflow: hidden; }
 .progress > div { height: 100%; background: var(--primary); width: 0; }
@@ -644,8 +646,12 @@ figcaption { margin-top:5px; line-height:1.25; }
       <h2>1. Dataset structure</h2>
       <div id="datasetName" class="small"></div>
       <div id="checklist" class="checklist"></div>
-      <button id="addPhotosBtn" class="ghost hidden">Add photos</button>
       <div id="structureActions" class="actions"></div>
+      <div class="actions">
+        <button id="addPhotosBtn" class="ghost hidden">Add photos</button>
+        <button id="importLabelsBtn" class="ghost hidden" aria-describedby="importLabelsHint">Import labeled ZIP</button>
+      </div>
+      <p id="importLabelsHint" class="small hidden">Add labeled photos to this dataset. Class names and order must match.</p>
       <div id="structureNotice"></div>
     </div>
 
@@ -665,7 +671,16 @@ figcaption { margin-top:5px; line-height:1.25; }
         <h2>3. Dataset summary</h2>
         <div id="summaryStats" class="stats"></div>
         <div id="summaryIssues"></div>
-        <div id="summaryActions" class="actions"></div>
+        <div id="summaryActions" class="actions">
+          <button id="trainingZipBtn" class="primary hidden">Download Labeled_data.zip</button>
+          <button id="remainingBtn" class="primary hidden">Label remaining photos</button>
+          <button id="invalidBtn" class="danger hidden">Review invalid files</button>
+          <button id="labelAllBtn" class="primary">Start Labeling</button>
+        </div>
+        <div id="resumeLater" class="resume-later hidden">
+          <p class="small"><b>Pausing here?</b> Download a draft and reopen it later with <b>Open a ZIP</b>.</p>
+          <button id="summaryDraftBtn" class="ghost">Download draft ZIP</button>
+        </div>
       </div>
     </div>
 
@@ -2177,6 +2192,7 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.needsDownload = false;
         if (this.draftDownload) {
           $('downloadDialog').close();
+          if (!$('setup').classList.contains('hidden')) this.renderSummary();
           return;
         }
         $('downloadTitle').textContent = 'Ready for training.';
@@ -2207,6 +2223,15 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('saveSuggestions').onclick = () => this.ann.finishSuggestionReview(true);
       $('discardSuggestions').onclick = () => this.ann.finishSuggestionReview(false);
       $('draftBtn').onclick = () => this.exportZip(true);
+      $('summaryDraftBtn').onclick = () => this.exportZip(true);
+      $('trainingZipBtn').onclick = () => this.exportZip();
+      $('labelAllBtn').onclick = () => this.start('all');
+      $('remainingBtn').onclick = () => this.start('unlabeled');
+      $('invalidBtn').onclick = () => this.start('invalid');
+      $('importLabelsBtn').onclick = () => {
+        if (this.classEdits) return this.toast('Save Classes before importing a labeled ZIP.', true);
+        $('zipInput').click();
+      };
       $('repairBtn').onclick = () => this.ann.saveEdits();
       $('browseImages').onclick = () => this.showImageBrowser(!$('imageBrowser').classList.contains('open'));
       $('photosBtn').onclick = () => $('photosInput').click();
@@ -2445,6 +2470,9 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Setup screen: structure ------------------------------------------
     renderStructure() {
       $('addPhotosBtn').classList.toggle('hidden', this.store.mode !== 'memory');
+      const canImport = Object.values(this.model.structure).every(Boolean) && this.model.classes.length > 0;
+      $('importLabelsBtn').classList.toggle('hidden', !canImport);
+      $('importLabelsHint').classList.toggle('hidden', !canImport);
       $('datasetName').textContent =
         `Dataset: ${this.store.name} · ${this.store.mode === 'direct' ? 'Direct folder mode' : 'Compatibility mode'}`;
 
@@ -2630,37 +2658,22 @@ figcaption { margin-top:5px; line-height:1.25; }
         issues.append(el('div', t.trim(), 'errorbox'));
       }
 
-      const a = $('summaryActions');
-      a.replaceChildren();
-
-      const actions = [
-        ['Start Labeling', 'all', 'primary'],
-        ['Show Only Unlabeled', 'unlabeled', '']
-      ];
-      if (s.invalid) actions.push(['Show Invalid Files', 'invalid', 'danger']);
-
-      for (const [text, filter, className] of actions) {
-        const button = el('button', text, className);
-        button.onclick = () => this.start(filter);
-        a.append(button);
-      }
-
-      const draft = el('button', 'Download draft ZIP');
-      draft.onclick = () => this.exportZip(true);
-      a.append(draft);
-      const importButton = el('button', 'Merge labeled ZIP');
-      importButton.onclick = () => {
-        if (this.classEdits) return this.toast('Save Classes before merging.', true);
-        $('zipInput').click();
-      };
-      a.append(importButton);
-
-      const ex = el('button', 'Download Labeled_data.zip', 'success');
-      ex.onclick = () => this.exportZip();
-      a.append(ex);
+      const classes = this.model.classes;
+      const canArchive = s.total > 0 && classes.length > 0 && new Set(classes).size === classes.length
+        && !s.orphans && !this.model.duplicates.length;
+      const ready = canArchive && !s.unlabeled && !s.invalid;
+      const started = s.total > s.unlabeled;
+      $('trainingZipBtn').classList.toggle('hidden', !ready);
+      $('remainingBtn').classList.toggle('hidden', !started || !s.unlabeled);
+      $('remainingBtn').textContent = `Label remaining photos (${s.unlabeled})`;
+      $('invalidBtn').classList.toggle('hidden', !s.invalid);
+      $('labelAllBtn').textContent = started ? 'Review all photos' : 'Start Labeling';
+      $('labelAllBtn').className = started ? 'ghost' : 'primary';
+      const offerDraft = this.store.mode === 'memory' && this.needsDownload && canArchive && !ready;
+      $('resumeLater').classList.toggle('hidden', !offerDraft);
 
       const card = $('completionCard');
-      if (s.total && !s.unlabeled && !s.invalid && !s.orphans && !this.model.duplicates.length) {
+      if (ready) {
         card.classList.remove('hidden');
         const counts = this.model.classes.map((n, id) =>
           `${id}: ${n} — ${this.model.images.reduce((q, i) => q + i.boxes.filter(b => b.classId === id).length, 0)}`

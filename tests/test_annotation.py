@@ -118,7 +118,7 @@ def check_session(browser, site, width, height, touch):
     restored.goto(site)
     restored.locator('#zipImagesInput').set_input_files({
         'name':'Labeler-draft.zip', 'mimeType':'application/zip', 'buffer':draft_bytes.getvalue()})
-    restored.get_by_role('button', name='Start Labeling', exact=True).click()
+    restored.get_by_role('button', name='Review all photos', exact=True).click()
     expect(restored.locator('#boxList .box-row')).to_have_count(2)
     restored.locator('#nextBtn').click()
     expect(restored.locator('#saveState')).to_have_text('Not reviewed')

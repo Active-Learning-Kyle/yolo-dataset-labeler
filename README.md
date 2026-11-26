@@ -31,7 +31,7 @@ Use these five photos to practice labeling `bolt` and `hex_nut`. Choose the work
 
 | Labeler button | Download | What to do |
 |---|---|---|
-| **Open a ZIP** | [Nearly finished dataset ZIP](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-labeled-dataset.zip) | Select the downloaded ZIP as-is. Four photos already have boxes. Click **Show Only Unlabeled** and review the washers photo, then try the final export. |
+| **Open a ZIP** | [Nearly finished dataset ZIP](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-labeled-dataset.zip) | Select the downloaded ZIP as-is. Four photos already have boxes. Click **Label remaining photos (1)** to open the washers photo, then try the final export. |
 | **Start with my photos** | [Unlabeled photos](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-photos.zip) | Unzip the download. Select the five JPGs inside **Fastener-Photos**, using your photo library or file picker. Add `bolt` first and `hex_nut` second, click **Save Classes**, then **Start Labeling**. |
 
 The washers photo contains neither target class. Use **Confirm no object** after checking it. When every photo has been reviewed, open **Dataset summary** and download **Labeled_data.zip**. Keep the photo credits from the pack with any copy you share. [Photo sources and licenses](docs/guide/photo-credits.md)
@@ -66,7 +66,7 @@ A class is an object type. Use a distinct, non-empty name for each one. The numb
 **1** Add a row for each object type. **2** Save your class names. **3** Open the workbench.
 
 - Before labeling, use **↑** to move a class up or **Delete** to remove it. Once images have labels, the order and delete controls lock so existing IDs keep their meaning. You can still append another class.
-- To combine a teammate’s work with yours, save your classes, then choose **Merge labeled ZIP** in **Dataset summary**. Both lists must have identical names in identical order. The labeler imports image–label pairs, keeps reviewed backgrounds and reports any images skipped for missing labels. If a pair’s filename is already in use, both incoming files get a matching new name.
+- To open a ZIP as its own dataset, choose **Open a ZIP** on the home screen. To add labeled photos to the dataset you already have open, save your classes and choose **Import labeled ZIP** under **Dataset structure**. The class names and order must match. The labeler keeps reviewed backgrounds, skips photos without a label file and renames incoming pairs when a filename is taken.
 
 ## Use the annotation workbench
 
@@ -83,7 +83,7 @@ The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1*
 
 ### Get suggestions for a photo
 
-1. In the regular labeler, save your classes and click **Start Labeling**. Open an unlabeled photo. Use descriptive class names such as `bolt` and `hex_nut`.
+1. Save your classes and click **Start Labeling**, or choose **Label remaining photos** in a partly reviewed dataset. Open an unlabeled photo. Use descriptive class names such as `bolt` and `hex_nut`.
 2. If you want suggestions, click **Suggest boxes** in the toolbar above the photo, beside the drawing controls. First use downloads about 155 MB of model weights. The browser processes your photos on your device. Use **Cancel** if you want to carry on by hand.
 3. Check each dashed box. Choose its class in the menu beside that box under **Bounding boxes**. Use **Edit** to move or resize a box, **Delete** to remove one, and **Draw** to add any missed objects. The number marked **AI** is the model's score for its original suggestion.
 4. Click **Save reviewed boxes** when the whole photo is ready. To start over, click **Discard suggestions**. If the model suggests nothing, check the photo yourself, then draw boxes or use **Confirm no object** as appropriate.
@@ -98,7 +98,9 @@ The model is [OWL-ViT](https://huggingface.co/google/owlvit-base-patch32), using
 
 ## Review, save and resume
 
-**Dataset summary** shows image counts, completion and issues. Use **Show Only Unlabeled** to finish a set, or **Show Invalid Files** to inspect errors. When review is complete, **Labeling finished** shows total boxes and counts per class.
+In **Dataset summary**, choose **Start Labeling** for a fresh set. When a set is partly reviewed, **Label remaining photos** opens the first unlabeled photo and filters the list to the number shown. Choose **Review all photos** to revisit earlier work. **Review invalid files** appears when a label needs repair. Once the dataset is ready, **Download Labeled_data.zip** appears and **Labeling finished** shows totals per class.
+
+![A dataset with one photo left. The numbered controls open the remaining photo, review all five photos or save a draft to resume later.](docs/guide/09-resume-labeling.png)
 
 | Status or message | What it means and what to do |
 |---|---|

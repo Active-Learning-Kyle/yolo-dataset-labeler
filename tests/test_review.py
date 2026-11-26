@@ -39,8 +39,9 @@ def validate_review(browser, site):
     expect(page.get_by_role('alert')).to_contain_text('matching image')
     upload({**img,'labels/a.txt':'7 0.5 0.5 0.2 0.2'})
     expect(page.locator('#summaryIssues')).to_contain_text('a.png')
-    page.get_by_role('button',name='Download Labeled_data.zip',exact=True).click()
-    expect(page.get_by_role('alert')).to_contain_text('Export blocked')
+    expect(page.locator('#trainingZipBtn')).to_be_hidden()
+    page.get_by_role('button', name='Review invalid files').click()
+    expect(page.locator('#statusFilter')).to_have_value('invalid')
     reset()
     upload({**img,'images/b.png':sample,'labels/b.txt':''})
     expect(page.locator('#datasetName')).to_contain_text('review')
@@ -49,11 +50,25 @@ def validate_review(browser, site):
         for name, value in {'classes.txt':'blue_disc\n', 'images/x.png':sample,
                             'images/X.jpg':sample, 'labels/x.txt':''}.items():
             z.writestr(name, value)
-    page.locator('#zipInput').set_input_files({
+    with page.expect_file_chooser() as picker:
+        page.get_by_role('button', name='Import labeled ZIP').click()
+    picker.value.set_files({
         'name':'ambiguous.zip', 'mimeType':'application/zip', 'buffer':ambiguous.getvalue()})
     expect(page.get_by_role('alert')).to_contain_text('one matching image')
     expect(page.locator('#summaryStats .stat').first).to_have_text('2Images')
-    page.get_by_text('Start Labeling',exact=True).click()
+    expect(page.locator('#summaryDraftBtn')).to_be_hidden()
+    page.locator('#classList input').fill('disc')
+    page.locator('#saveClassesBtn').click()
+    with page.expect_download() as draft:
+        page.locator('#summaryDraftBtn').click()
+    assert draft.value.suggested_filename == 'Labeler-draft.zip'
+    page.locator('#confirmDownload').click()
+    expect(page.locator('#summaryDraftBtn')).to_be_hidden()
+    page.get_by_role('button',name='Label remaining photos (1)',exact=True).click()
+    expect(page.locator('#statusFilter')).to_have_value('unlabeled')
+    expect(page.locator('#imageList button')).to_have_count(1)
+    page.locator('#backSetupBtn').click()
+    page.get_by_role('button',name='Review all photos',exact=True).click()
     expect(page.locator('#imageList .current')).to_contain_text('Unlabeled')
     page.locator('#nextBtn').click()
     expect(page.locator('#imageList .current')).to_contain_text('No Object')
