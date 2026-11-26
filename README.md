@@ -94,8 +94,6 @@ The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1*
 
 The model is [OWL-ViT](https://huggingface.co/google/owlvit-base-patch32), using [quantized ONNX weights](https://huggingface.co/Xenova/owlvit-base-patch32). Fine distinctions, small parts and partly hidden objects may need more hand correction.
 
-**Click to box.** Choose a class and click a solid part of a missed object. Check the dashed box, then choose **Apply box**. If another outline is available, use **Try another preview**. For a loose box, select it and choose **Tighten selected box**, then click inside the object. Tightening keeps the existing class. The model runs in the browser. First use downloads about 14 MB of weights. [SlimSAM model](https://huggingface.co/Xenova/slimsam-77-uniform)
-
 ### Use the workbench on a phone
 
 ![Phone-sized view with numbered callouts for the image drawer button, status filter and photo thumbnails](docs/guide/08-mobile-images.png)

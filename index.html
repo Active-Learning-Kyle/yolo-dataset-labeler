@@ -739,24 +739,16 @@ figcaption { margin-top:5px; line-height:1.25; }
           <button id="toggleBoxes" class="ghost" type="button">Hide boxes</button>
           <div class="suggest-actions">
             <button id="suggestBoxes" class="ghost" type="button" aria-describedby="suggestHint" disabled>Suggest boxes</button>
-            <button id="pointTool" class="ghost" type="button" aria-pressed="false" disabled>Click to box</button>
             <button id="cancelSuggestions" class="ghost hidden" type="button">Cancel</button>
             <div id="suggestReview" class="suggest-actions hidden">
               <button id="saveSuggestions" class="primary" type="button">Save reviewed boxes</button>
               <button id="discardSuggestions" class="ghost" type="button">Discard suggestions</button>
             </div>
-            <div id="pointReview" class="suggest-actions hidden">
-              <button id="applyPointBox" class="primary" type="button">Apply box</button>
-              <button id="nextPointBox" class="ghost hidden" type="button">Try another preview</button>
-              <button id="discardPointBox" class="ghost" type="button">Discard preview</button>
-            </div>
-            <button id="cancelPointBox" class="ghost hidden" type="button">Cancel box preview</button>
           </div>
         </div>
         <p id="toolHint" class="tool-hint"></p>
         <p id="suggestHint" class="tool-hint suggest-feedback"></p>
         <p id="suggestStatus" class="tool-hint suggest-feedback" role="status"></p>
-        <p id="pointStatus" class="tool-hint suggest-feedback" role="status"></p>
         <div id="canvasWrap" class="canvas-wrap">
           <canvas id="canvas"></canvas>
           <div id="canvasMessage" class="canvas-message">Choose an image.</div>
@@ -773,7 +765,6 @@ figcaption { margin-top:5px; line-height:1.25; }
           <h3>Bounding boxes</h3>
           <div id="boxList" class="box-list"></div>
           <label id="editClassField" class="edit-class hidden" for="editClass">Change selected box class<select id="editClass"></select></label>
-          <button id="tightenPointBox" class="ghost hidden" type="button">Tighten selected box</button>
           <button id="repairBtn" class="hidden">Save repaired label</button>
           <button id="draftBtn" class="ghost">Download draft ZIP</button>
           <div id="invalidDetails"></div>
@@ -830,7 +821,6 @@ figcaption { margin-top:5px; line-height:1.25; }
       <li>Background photos are optional. To include one in the training ZIP, open <b>Photo options</b> and choose <b>Confirm no object</b>. This saves an empty label file for the photo.</li>
       <li>Boxes smaller than 3 original-image pixels are rejected.</li>
       <li>On an unlabeled photo, <b>Suggest boxes</b> in the toolbar can propose boxes and classes. Change a class beside its box, check for missing objects, then choose <b>Save reviewed boxes</b>.</li>
-      <li>For a missed object, choose its class, select <b>Click to box</b> and click inside it. To refine a loose box, select it and choose <b>Tighten selected box</b>. Check the preview before selecting <b>Apply box</b>.</li>
     </ol>
     <p>
       <b>Shortcuts:</b>
@@ -1763,7 +1753,6 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       // Live preview while drawing a new box.
       if (this.action?.type === 'draw') this.drawBox(this.action.box, -2, t.scale);
-      if (this.app.pointBox) this.drawBox(this.app.pointBox.box, -2, t.scale, true);
     }
 
     /** Stable, well-separated colour per class id. */
@@ -1772,9 +1761,9 @@ figcaption { margin-top:5px; line-height:1.25; }
       return colors[id] || `hsl(${(id * 137.508) % 360} 74% 76%)`;
     }
 
-    drawBox(b, i, s, preview = false) {
+    drawBox(b, i, s) {
       const c = this.color(b.classId);
-      if (preview || b.score !== undefined) this.ctx.setLineDash([6 / s, 4 / s]);
+      if (b.score !== undefined) this.ctx.setLineDash([6 / s, 4 / s]);
       this.ctx.lineWidth = 4 / s;
       this.ctx.strokeStyle = '#172b42';
       this.ctx.strokeRect(b.x, b.y, b.w, b.h);
@@ -1786,7 +1775,7 @@ figcaption { margin-top:5px; line-height:1.25; }
 
       // Class label chip above the box.
       const name = this.app.model.classes[b.classId] ?? 'Unknown';
-      const txt = preview ? 'Proposed · ' + name : i >= 0 ? `#${i + 1} · ${name}` : name;
+      const txt = i >= 0 ? `#${i + 1} · ${name}` : name;
       const m = this.ctx.measureText(txt).width + 8 / s;
       const h = 20 / s;
       const y = Math.max(0, b.y - h);
@@ -1848,14 +1837,12 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     setTool(tool) {
       this.cancelDrag();
-      if (this.tool === 'click' && tool !== 'click') this.app.clearPointBox();
       this.setBoxesHidden(false);
       this.tool = tool;
       this.setPan(false);
       if (tool === 'draw') this.selected = -1;
       $('drawTool').setAttribute('aria-pressed', String(tool === 'draw'));
       $('editTool').setAttribute('aria-pressed', String(tool === 'edit'));
-      $('pointTool').setAttribute('aria-pressed', String(tool === 'click'));
       $('canvasWrap').classList.toggle('edit-mode', tool === 'edit');
       this.renderList();
       this.draw();
@@ -1866,8 +1853,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('panTool').setAttribute('aria-pressed', String(active));
       $('toolHint').textContent = active ? 'Drag to pan the zoomed image.' : this.boxesHidden
         ? 'Viewing the original image. Show boxes to draw or edit on the canvas.' : this.tool === 'draw'
-        ? 'Drag to draw a new box. Boxes can overlap.' : this.tool === 'click'
-        ? (this.app.pointTarget ? 'Click inside the object in the selected box.' : 'Choose a class, then click inside a missed object.')
+        ? 'Drag to draw a new box. Boxes can overlap.'
         : 'Select a box here or in the list. Drag a corner to resize.';
       $('canvasWrap').classList.toggle('pan-mode', active);
     }
@@ -1889,10 +1875,6 @@ figcaption { margin-top:5px; line-height:1.25; }
         return;
       }
       if (this.boxesHidden) return;
-      if (this.tool === 'click') {
-        this.app.requestPointBox(p);
-        return;
-      }
       const hit = this.tool === 'edit' ? this.hit(p, e.pointerType === 'touch') : null;
       if (this.tool === 'edit' && !hit) {
         this.selected = -1;
@@ -2011,7 +1993,6 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Box list / edits --------------------------------------------------
     /** Mark the image as modified and schedule a save in the active storage mode. */
     changed() {
-      if (this.app.pointBox || this.app.pointJob) this.app.clearPointBox();
       if (this.suggestionReview) return;
       if (this.app.suggestionJob) this.app.cancelSuggestionJob();
       if (this.item?.status === 'unlabeled' && this.app.filter === 'unlabeled') {
@@ -2052,7 +2033,6 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     renderList() {
       this.app.renderSuggestionControls();
-      this.app.renderPointControls();
       $('undoBtn').disabled = !this.undo.length;
       $('redoBtn').disabled = !this.redo.length;
       const editing = this.tool === 'edit' && this.selected >= 0 && !this.suggestionReview;
@@ -2235,12 +2215,6 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.suggestionJob = null;
       this.suggestionMessage = '';
       this.suggestionModelReady = false;
-      this.pointWorker = null;
-      this.pointWorkerItem = null;
-      this.pointJob = null;
-      this.pointTarget = null;
-      this.pointBox = null;
-      this.pointMessage = '';
       this.canSuggest = location.protocol !== 'file:' && typeof Worker === 'function'
         && typeof OffscreenCanvas === 'function' && typeof createImageBitmap === 'function';
       this.current = -1;
@@ -2306,7 +2280,6 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('editTool').onclick = () => this.ann.setTool('edit');
       $('toggleBoxes').onclick = () => {
         this.ann.cancelDrag();
-        this.clearPointBox();
         this.ann.selected = -1;
         this.ann.setBoxesHidden(!this.ann.boxesHidden);
         this.ann.setPan(this.ann.panning);
@@ -2314,23 +2287,6 @@ figcaption { margin-top:5px; line-height:1.25; }
         this.ann.renderList();
       };
       $('suggestBoxes').onclick = () => this.suggestBoxes();
-      $('pointTool').onclick = () => this.beginPointBox();
-      $('tightenPointBox').onclick = () => this.beginPointBox(this.ann.boxes[this.ann.selected]);
-      $('applyPointBox').onclick = () => this.applyPointBox();
-      $('nextPointBox').onclick = () => {
-        const preview = this.pointBox;
-        if (!preview) return;
-        preview.index = (preview.index + 1) % preview.boxes.length;
-        preview.box = preview.boxes[preview.index];
-        this.pointMessage = `Preview ${preview.index + 1} of ${preview.boxes.length}. Check the dashed box before applying.`;
-        this.renderPointControls();
-        this.ann.draw();
-      };
-      $('discardPointBox').onclick = $('cancelPointBox').onclick = () => {
-        this.clearPointBox(true);
-        this.ann.renderList();
-        this.ann.draw();
-      };
       $('cancelSuggestions').onclick = () => this.cancelSuggestionJob('Suggestions canceled. You can keep labeling by hand.');
       $('saveSuggestions').onclick = () => this.ann.finishSuggestionReview(true);
       $('discardSuggestions').onclick = () => this.ann.finishSuggestionReview(false);
@@ -2358,9 +2314,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('redoBtn').onclick = () => this.ann.redoDo();
       $('backSetupBtn').onclick = () => this.exitLabeling();
       $('emptyBackBtn').onclick = () => this.exitLabeling();
-      $('classSelect').onchange = () => {
-        if (this.ann.tool !== 'click') this.ann.setTool('draw');
-      };
+      $('classSelect').onchange = () => this.ann.setTool('draw');
       $('editClass').onchange = e => this.ann.changeClass(Number(e.target.value));
       $('noObjectBtn').onclick = () => this.ann.noObject();
       $('statusFilter').onchange = e => {
@@ -2414,7 +2368,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       this.bindDropZone();
 
       window.addEventListener('beforeunload', e => {
-        if (this.ann.dirty || this.ann.suggestionReview || this.pointBox || this.needsDownload || this.classEdits) {
+        if (this.ann.dirty || this.ann.suggestionReview || this.needsDownload || this.classEdits) {
           e.preventDefault();
           e.returnValue = '';
         }
@@ -3163,112 +3117,6 @@ figcaption { margin-top:5px; line-height:1.25; }
       }
     }
 
-    // --- Point-guided boxes ------------------------------------------------
-    renderPointControls() {
-      const ann = this.ann;
-      $('pointTool').disabled = !this.canSuggest || !ann.img || Boolean(this.pointJob);
-      $('pointTool').title = this.canSuggest ? 'Preview a box around the object you click' : 'Open the labeler from a web address to use Click to box';
-      $('tightenPointBox').classList.toggle('hidden', !this.canSuggest || ann.tool !== 'edit' || !ann.boxes[ann.selected]);
-      $('pointReview').classList.toggle('hidden', !this.pointBox);
-      $('nextPointBox').classList.toggle('hidden', !(this.pointBox?.boxes.length > 1));
-      $('cancelPointBox').classList.toggle('hidden', !this.pointJob);
-      $('pointStatus').textContent = this.pointMessage;
-    }
-
-    clearPointBox(keepTarget = false) {
-      if (this.pointJob) {
-        this.pointWorker?.terminate();
-        this.pointWorker = this.pointWorkerItem = this.pointJob = null;
-      }
-      this.pointBox = null;
-      this.pointMessage = '';
-      if (!keepTarget) this.pointTarget = null;
-    }
-
-    beginPointBox(target = null) {
-      if (!this.canSuggest || !this.ann.img) return;
-      this.cancelSuggestionJob();
-      this.clearPointBox();
-      this.pointTarget = target;
-      this.ann.setTool('click');
-    }
-
-    async requestPointBox(p) {
-      const ann = this.ann;
-      if (this.pointJob || !ann.img) return;
-      const target = this.pointTarget;
-      if (target && (p.x < target.x || p.x > target.x + target.w || p.y < target.y || p.y > target.y + target.h)) {
-        this.pointMessage = 'Click inside the selected box to refine it.';
-        this.renderPointControls();
-        return;
-      }
-      const w = ann.img.naturalWidth, h = ann.img.naturalHeight;
-      const point = {x: Math.max(0, p.x / w), y: Math.max(0, p.y / h)};
-      const selection = target ? {x: target.x / w, y: target.y / h, w: target.w / w, h: target.h / h} : null;
-      const job = {item: ann.item, target, classId: target?.classId ?? Number($('classSelect').value), w, h};
-      this.pointBox = null;
-      this.pointJob = job;
-      this.pointMessage = 'Preparing box preview…';
-      this.renderPointControls();
-      ann.draw();
-      try {
-        const photo = this.pointWorkerItem === job.item ? null : await job.item.imageEntry.getFile();
-        if (this.pointJob !== job) return;
-        if (!this.pointWorker) {
-          const worker = new Worker('click-box-worker.js', {type: 'module'});
-          this.pointWorker = worker;
-          worker.onmessage = ({data}) => {
-            if (this.pointWorker === worker) this.receivePointBox(data);
-          };
-          worker.onerror = () => {
-            if (this.pointWorker === worker) this.receivePointBox({type: 'error'});
-          };
-        }
-        this.pointWorker.postMessage({photo, point, selection});
-        this.pointWorkerItem = job.item;
-      } catch {
-        if (this.pointJob === job) this.receivePointBox({type: 'error'});
-      }
-    }
-
-    receivePointBox(result) {
-      const job = this.pointJob;
-      if (!job || job.item !== this.ann.item) return;
-      if (result.type === 'loading') {
-        this.pointMessage = 'Loading the local box model…';
-      } else if (result.type === 'analyzing') {
-        this.pointMessage = 'Finding the object around your click…';
-      } else if (result.type === 'error') {
-        this.clearPointBox(true);
-        this.pointMessage = 'Could not create a preview. Try again or draw the box by hand.';
-      } else if (result.type === 'done') {
-        this.pointJob = null;
-        const boxes = result.proposals
-          .filter(b => b.w * job.w >= 3 && b.h * job.h >= 3)
-          .map(b => ({classId: job.classId, x: b.x * job.w, y: b.y * job.h, w: b.w * job.w, h: b.h * job.h}));
-        if (boxes.length) this.pointBox = {job, boxes, box: boxes[0], index: 0};
-        this.pointMessage = this.pointBox ? 'Check the dashed preview, then apply it.' : 'No suitable box here. Click a solid part of the object or draw by hand.';
-      }
-      this.renderPointControls();
-      this.ann.draw();
-    }
-
-    applyPointBox() {
-      const ann = this.ann;
-      const preview = this.pointBox;
-      if (!preview || preview.job.item !== ann.item) return;
-      const {box, job} = preview;
-      const index = job.target ? ann.boxes.indexOf(job.target) : ann.boxes.length;
-      if (index < 0) return;
-      this.clearPointBox();
-      ann.pushUndo();
-      ann.boxes.splice(index, job.target ? 1 : 0, box);
-      ann.background = false;
-      ann.selected = index;
-      ann.changed();
-      ann.setTool(job.target ? 'edit' : 'click');
-    }
-
     // --- Suggestions for the current photo --------------------------------
     canSuggestCurrentPhoto() {
       const ann = this.ann;
@@ -3312,7 +3160,6 @@ figcaption { margin-top:5px; line-height:1.25; }
 
     async suggestBoxes() {
       if (!this.canSuggestCurrentPhoto() || this.suggestionJob || this.ann.action) return;
-      if (this.ann.tool === 'click') this.ann.setTool('draw');
       const job = { item: this.ann.item };
       this.suggestionJob = job;
       this.suggestionMessage = 'Preparing the model…';
@@ -3382,12 +3229,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     async guardUnsaved() {
-      if (this.pointBox) {
-        this.toast('Apply the box or discard its preview first.');
-        return false;
-      }
       if (!this.suggestionsResolved()) return false;
-      if (this.pointJob) this.clearPointBox();
       await this.ann.writes;
       return !this.ann.dirty || await this.ann.saveEdits();
     }
@@ -3709,9 +3551,8 @@ figcaption { margin-top:5px; line-height:1.25; }
     // --- Reset & toast -----------------------------------------------------
     reset() {
       if (this.exporting || this.switching) return;
-      if ((this.ann.dirty || this.ann.suggestionReview || this.pointBox || this.needsDownload || this.classEdits) &&
+      if ((this.ann.dirty || this.ann.suggestionReview || this.needsDownload || this.classEdits) &&
           !confirm('Close and discard changes you have not downloaded or saved to your folder?')) return;
-      this.clearPointBox();
       this.ann.dirty = this.needsDownload = this.classEdits = false;
       location.reload();
     }
