@@ -6,7 +6,7 @@
 
 **Make a YOLO dataset from your own photos.** Choose the object types you want to detect, draw a box around each one, then download a ZIP containing your photos, labels and class names. Labeling runs on your device and requires no account.
 
-[Try the sample photos](#try-the-sample-photos) · [Label your own photos](#your-first-dataset) · [Continue training in Colab](#continue-training-in-colab)
+[Try the sample photos](#try-the-sample-photos) · [Label your own photos](#your-first-dataset) · [Label on a phone](#use-the-workbench-on-a-phone) · [Continue training in Colab](#continue-training-in-colab)
 
 For a quick first try, download the [nearly finished dataset ZIP](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-labeled-dataset.zip) and select it with **Open a ZIP**. One photo is left to review.
 
@@ -16,7 +16,7 @@ The example uses photos of loose fasteners, an assembled bolt, a bolted plate, r
 
 ## Your first dataset
 
-**On a phone?** Choose **Start with my photos**, select your images, then begin at step 3.
+**On a phone?** Choose **Start with my photos**, select your images, then begin at step 3. See the [phone opening screen](#open-or-add-images).
 
 1. **Start with a folder.** On your computer, create an empty folder called `My Dataset`. Open the labeler in desktop Chrome or Edge, click **Open dataset folder**, select it and allow write access if prompted.
 2. **Add your photos.** Click **Create Missing Items**. The labeler creates `images/`, `labels/` and `classes.txt`. Copy your training photos into `images/`, then click **Refresh Dataset**. Keep a few fresh photos aside for testing.
@@ -47,6 +47,10 @@ The washers photo contains neither target class. You can remove it from the trai
 ![Opening screen with numbered red frames around Open dataset folder, Open a ZIP and Start with my photos](docs/guide/01-open-dataset.png)
 
 **1** Open a folder on your computer. **2** Open a ZIP or resume a draft. **3** Pick individual photos, including on a phone.
+
+**On a phone.** Tap **1** **Start with my photos** to choose images from your device, or **2** **Open a ZIP** to open a sample or resume a draft. Both options work on phones where the browser cannot save to a folder.
+
+<img src="docs/guide/12-mobile-home.png" alt="Phone opening screen with Start with my photos and Open a ZIP highlighted above the screw identification example" width="330">
 
 | What you have | What to do |
 |---|---|
@@ -106,9 +110,16 @@ The model is [OWL-ViT](https://huggingface.co/google/owlvit-base-patch32), using
 
 ### Use the workbench on a phone
 
-![Phone-sized view with numbered callouts for the image drawer button, status filter and photo thumbnails](docs/guide/08-mobile-images.png)
+**Label a photo.** **1** Tap **Draw** and drag a finger across the photo to frame an object, or tap **Edit** to adjust a box. **2** Use **New box class** to choose the class for the next box. **3** Tap **Save & exit** to return to **Review & export**.
 
-**1** Tap **Images** to open the list. **2** Filter by status or search by filename. **3** Swipe along the thumbnails and tap one to return to the canvas. After zooming in, use **Pan** to move the photo with one finger, then switch back to **Draw** or **Edit**.
+**Find another photo.** **1** Tap **Images** to open the photo list. **2** Filter by status or search by filename. **3** Swipe through the thumbnails and tap one to return to the canvas. Use **Add photos** at the end of the list to bring in more images.
+
+<p>
+  <img src="docs/guide/13-mobile-label.png" alt="Phone workbench with Draw and Edit, New box class, and Save and exit highlighted around the annotated fasteners photo" width="330">
+  <img src="docs/guide/08-mobile-images.png" alt="Phone workbench with the Images drawer open and callouts for the drawer, status filter, and a photo thumbnail" width="330">
+</p>
+
+After zooming in, use **Pan** to move the photo with one finger, then switch back to **Draw** or **Edit**.
 
 ## Review, save and resume
 
@@ -141,6 +152,10 @@ You can export once every image has boxes or a confirmed background and you have
 ![Review and export area with 100% completion, zero unlabeled or invalid images, and the Download Labeled_data.zip button outlined](docs/guide/05-export-dataset.png)
 
 **1** Check that review is complete. **2** Download the ZIP.
+
+**On a phone.** Scroll to **Review & export** and tap **1** **Download Labeled_data.zip**. Check your browser’s downloads or your Files app before tapping **I have the ZIP**.
+
+<img src="docs/guide/14-mobile-export.png" alt="Phone view of Review and export showing 100 percent completion and the Download Labeled_data.zip button" width="330">
 
 For a one-photo dataset, the ZIP contains these files.
 
