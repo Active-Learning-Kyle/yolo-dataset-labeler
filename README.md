@@ -17,8 +17,8 @@ The example uses photos of loose fasteners, an assembled bolt, a bolted plate, r
 1. **Start with a folder.** On your computer, create an empty folder called `My Dataset`. Open the labeler in desktop Chrome or Edge, click **Open dataset folder**, select it and allow write access if prompted.
 2. **Add your photos.** Click **Create Missing Items**. The labeler creates `images/`, `labels/` and `classes.txt`. Copy your training photos into `images/`, then click **Refresh Dataset**. Keep a few fresh photos aside for testing.
 3. **Choose your classes.** Click **Add Class** for each object type, enter names such as `bolt` and `hex_nut`, then click **Save Classes** and **Start Labeling**.
-4. **Label each photo.** In **Draw**, choose a **New box class** and drag a tight box around each matching object. Use **Edit** to adjust a box. Click **Next** to move on. For a photo you checked that contains none of your targets, click **Confirm no object**.
-5. **Download your work.** Open **Dataset summary**, finish any remaining images and click **Download Labeled_data.zip**. The ZIP contains your photos, matching labels and class list.
+4. **Label each photo.** In **Draw**, choose a **New box class** and drag a tight box around each matching object. Use **Edit** to adjust a box. Click **Next** to move on. Select **×** on a thumbnail to leave that photo out of the dataset.
+5. **Download your work.** Click **Save & exit** to open **Review & export**. Finish any remaining images and click **Download Labeled_data.zip**. The ZIP contains your photos, matching labels and class list.
 6. **Continue to training.** Find the ZIP in Downloads, click **I have the ZIP**, then **Continue to Training in Colab**. In Colab, sign in and open the notebook supplied in Part 5D. Upload your `Labeled_data.zip` through the **Files** panel, leave it zipped and run the dataset check. Check your class names before training.
 
 **On a phone?** Start at **Start with my photos**, pick your pictures and continue from step 3. Download a draft ZIP before closing if you want to finish later.
@@ -36,7 +36,7 @@ Use these five photos to practice labeling `bolt` and `hex_nut`. Choose the work
 | **Open a ZIP** | [Nearly finished dataset ZIP](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-labeled-dataset.zip) | Select the downloaded ZIP as-is. Four photos already have boxes. Click **Label remaining photos (1)** to open the washers photo, then try the final export. |
 | **Start with my photos** | [Unlabeled photos](https://active-learning-kyle.github.io/yolo-dataset-labeler/examples/fasteners/fastener-photos.zip) | Unzip the download. Select the five JPGs inside **Fastener-Photos**, using your photo library or file picker. Add `bolt` first and `hex_nut` second, click **Save Classes**, then **Start Labeling**. |
 
-The washers photo contains neither target class. Use **Confirm no object** after checking it. When every photo has been reviewed, open **Dataset summary** and download **Labeled_data.zip**. Keep the photo credits from the pack with any copy you share. [Photo sources and licenses](docs/guide/photo-credits.md)
+The washers photo contains neither target class. You can remove it from the training dataset and keep it aside to test for false detections. When every included photo has been reviewed, click **Save & exit** and download **Labeled_data.zip**. Keep the photo credits from the pack with any copy you share. [Photo sources and licenses](docs/guide/photo-credits.md)
 
 ## Open or add images
 
@@ -50,6 +50,8 @@ The washers photo contains neither target class. Use **Confirm no object** after
 | Individual photos | Use **Start with my photos**, or drop the photos together onto the opening screen. In setup, use **Add photos** to add another batch. |
 | A ZIP of photos, a dataset or a saved draft | Use **Open a ZIP**, or drop one ZIP onto the opening screen. Existing classes and matching labels are restored when present. Drop photos and ZIPs separately. |
 | A browser that only imports folders | You can import an existing dataset with files. For an empty folder, choose **Start with my photos**. In **Compatibility mode**, download a ZIP to keep your edits. |
+
+While labeling, choose **+ Add photos** at the end of the image strip to append more photos. On a phone, open the strip with **Images** first. Use the **×** on a thumbnail to remove that photo and its label from the current dataset and future ZIP exports. Hover over the thumbnail or focus it with the keyboard to reveal the button on a computer. **Undo remove** restores the photo with its label. The original files stay on your device. If you reopen the original folder, its photos are included again. Reopen your exported ZIP to continue with the curated set.
 
 When you open an empty writable folder, click **Create Missing Items** where shown below. Copy photos into `images/` and click **Refresh Dataset** beside it.
 
@@ -72,7 +74,7 @@ A class is an object type. Use a distinct, non-empty name for each one. The numb
 
 ## Use the annotation workbench
 
-The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1** Draw or Edit, **2** the class for the next box, **3** the list of existing boxes, **4** Next, **5** Confirm no object, **6** the row of photos and **7** Suggest boxes.
+The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1** Draw or Edit, **2** the class for the next box, **3** the list of existing boxes, **4** Next, **5** Save & exit, **6** the row of photos and **7** Suggest boxes.
 
 | Task | How to do it |
 |---|---|
@@ -88,9 +90,11 @@ The numbers in the [workbench screenshot above](#yolo-dataset-labeler) show **1*
 1. Save your classes and click **Start Labeling**, or choose **Label remaining photos** in a partly reviewed dataset. Open an unlabeled photo. Use descriptive class names such as `bolt` and `hex_nut`.
 2. If you want suggestions, click **Suggest boxes** in the toolbar above the photo, beside the drawing controls. First use downloads about 155 MB of model weights. The browser processes your photos on your device. Use **Cancel** if you want to carry on by hand.
 3. Check each dashed box. Choose its class in the menu beside that box under **Bounding boxes**. Use **Edit** to move or resize a box, **Delete** to remove one, and **Draw** to add any missed objects. The number marked **AI** is the model's score for its original suggestion.
-4. Click **Save reviewed boxes** when the whole photo is ready. To start over, click **Discard suggestions**. If the model suggests nothing, check the photo yourself, then draw boxes or use **Confirm no object** as appropriate.
+4. Click **Save reviewed boxes** when the whole photo is ready. To start over, click **Discard suggestions**. If the model suggests nothing, check the photo yourself and draw boxes around any missed targets.
 
 The model is [OWL-ViT](https://huggingface.co/google/owlvit-base-patch32), using [quantized ONNX weights](https://huggingface.co/Xenova/owlvit-base-patch32). Fine distinctions, small parts and partly hidden objects may need more hand correction.
+
+**Click to box.** Choose a class and click a solid part of a missed object. Check the dashed box, then choose **Apply box**. If another outline is available, use **Try another preview**. For a loose box, select it and choose **Tighten selected box**, then click inside the object. Tightening keeps the existing class. The model runs in the browser. First use downloads about 14 MB of weights. [SlimSAM model](https://huggingface.co/Xenova/slimsam-77-uniform)
 
 ### Use the workbench on a phone
 
@@ -100,27 +104,31 @@ The model is [OWL-ViT](https://huggingface.co/google/owlvit-base-patch32), using
 
 ## Review, save and resume
 
-In **Dataset summary**, choose **Start Labeling** for a fresh set. When a set is partly reviewed, **Label remaining photos** opens the first unlabeled photo and filters the list to the number shown. Choose **Review all photos** to revisit earlier work. **Review invalid files** appears when a label needs repair. Once the dataset is ready, **Download Labeled_data.zip** appears and **Labeling finished** shows totals per class.
+In **Review & export**, choose **Start Labeling** for a fresh set. When a set is partly reviewed, **Label remaining photos** opens the first unlabeled photo and filters the list to the number shown. Choose **Review all photos** to revisit earlier work. **Review invalid files** appears when a label needs repair. **Save & exit** saves the current edits before returning here. Once the dataset is ready, **Download Labeled_data.zip** appears and **Labeling finished** shows totals per class.
+
+When you work through the **Unlabeled** filter, photos stay in that list while you edit them. The labeler saves your edits as you go and updates their review status when you choose **Save & exit**.
 
 ![A dataset with one photo left. The numbered controls open the remaining photo, review all five photos or save a draft to resume later.](docs/guide/09-resume-labeling.png)
 
 | Status or message | What it means and what to do |
 |---|---|
 | **Labeled** | The photo has boxes. Check that every visible target has the right class. |
-| **No Object** | You reviewed the photo and selected **Confirm no object**. Its label file is empty. If it already has boxes, the app asks before replacing them. |
+| **No Object** | Background photos are optional. To keep a photo with no targets, open **Photo options** and select **Confirm no object**. The training ZIP includes it with an empty label file. |
 | **Unlabeled** | The photo still needs review. Clicking **Next** on an untouched photo leaves it in this state. |
 | **Invalid** | Inspect the filename and line error. Review the boxes shown, correct or redraw them, then use **Save repaired label** when offered. Confirming replaces the invalid label with the boxes on screen. |
 | **Orphan labels** or ambiguous filenames | Match each label to one image by filename stem, for example `bolt-01.jpg` and `bolt-01.txt`. Correct the source files, then refresh a writable folder or re-import the corrected dataset. |
 
-**Folder sessions.** Look for **Saved to folder**. Reopen the same folder to resume. If **Save failed** appears, stay on the image, restore write access and try **Next** again.
+For a blurry, duplicate or wrong photo you want to leave out, select **×** on its thumbnail.
+
+**Folder sessions.** Look for **Saved to folder**. Reopen the same folder to resume. If **Save failed** appears, the current image stays open. Restore write access and try **Save & exit** again.
 
 **Photo, ZIP and read-only folder sessions.** **In this tab · download ZIP to keep** means your edits are held in this tab. Choose **Download draft ZIP**, check that `Labeler-draft.zip` is in Downloads and use **Open a ZIP** next time. Unreviewed photos stay unreviewed. Use **Close dataset** to return to the opening screen after saving.
 
 ## Export your training ZIP
 
-You can export once every image has boxes or a confirmed background and you have resolved the dataset issues. If export is blocked, check the filenames in **Dataset summary**.
+You can export once every image has boxes or a confirmed background and you have resolved the dataset issues. If export is blocked, check the filenames in **Review & export**.
 
-![Dataset summary with 100% completion, zero unlabeled or invalid images, and the Download Labeled_data.zip button outlined](docs/guide/05-export-dataset.png)
+![Review and export area with 100% completion, zero unlabeled or invalid images, and the Download Labeled_data.zip button outlined](docs/guide/05-export-dataset.png)
 
 **1** Check that review is complete. **2** Download the ZIP.
 

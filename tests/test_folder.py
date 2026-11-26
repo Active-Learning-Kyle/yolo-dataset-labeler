@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from test_review import solid_png
+from test_review import confirm_no_object, solid_png
 
 
 def check_read_only_folder(browser):
@@ -32,7 +32,7 @@ def check_read_only_folder(browser):
         page.locator('#classList input').fill('bolt')
         page.locator('#saveClassesBtn').click()
         page.get_by_role('button', name='Start Labeling', exact=True).click()
-        page.locator('#noObjectBtn').click()
+        confirm_no_object(page)
         page.locator('#backSetupBtn').click()
         with page.expect_download() as archive:
             page.get_by_role('button', name='Download Labeled_data.zip', exact=True).click()
@@ -111,10 +111,19 @@ def check(browser):
     page.locator('#nextBtn').click()
     expect(page.locator('#saveState')).to_have_text('Save failed')
     expect(page.locator('#frameName')).to_have_text('a.png')
+    save_exit = page.get_by_role('button', name='Save & exit', exact=True)
+    save_exit.click()
+    expect(page.locator('#saveState')).to_have_text('Save failed')
+    expect(page.locator('#labeler')).to_be_visible()
+    expect(save_exit).to_be_focused()
+    expect(page.locator('#boxList .box-row')).to_have_count(1)
     page.evaluate('window.rejectWrites = false')
-    page.locator('#nextBtn').click()
+    save_exit.click()
+    expect(page.locator('#labeler')).to_be_hidden()
+    expect(page.get_by_role('heading', name='3. Review & export')).to_be_focused()
+    page.get_by_role('button', name='Label remaining photos (1)').click()
     expect(page.locator('#frameName')).to_have_text('b.png')
-    page.locator('#noObjectBtn').click()
+    confirm_no_object(page)
     expect(page.locator('#saveState')).to_have_text('Saved to folder')
     labels = page.evaluate("""async () => {
         const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle('labels');
@@ -125,7 +134,7 @@ def check(browser):
     assert labels['b.txt'] == '' and labels['a.txt'].split()[0] == '0'
     assert len(labels['a.txt'].split()) == 5
     page.close()
-    print('PASS primary folder entry, empty-folder setup, photo refresh, class save, write denial, retry and background label')
+    print('PASS empty-folder setup, class save, write denial, Save & exit, resume and background label')
 
 
 if __name__ == '__main__':
