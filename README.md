@@ -137,6 +137,8 @@ Each box is one line in its image’s label file. The fields are `class_id x_cen
 
 After the final download, **I have the ZIP** reveals the image, box and background counts and the Colab link. **Return to dataset** takes you back to your work.
 
+**For instructors.** To open your own course notebook from the training button, share the Labeler URL with `#notebook=YOUR_DRIVE_FILE_ID` at the end. Use the ID after `/drive/` in your Colab notebook link. Give your students viewer access in Google Drive. The regular Labeler URL opens the Colab home page.
+
 ![Ready for training dialog showing the example dataset totals and the Continue to Training in Colab link outlined in red](docs/guide/06-open-colab.png)
 
 ## Help and keyboard shortcuts

@@ -769,7 +769,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     <button id="confirmDownload" class="primary">I have the ZIP</button>
     <div id="trainingStep" class="hidden">
       <dl id="exportStats" class="export-stats"></dl>
-      <p>Open Colab, sign in, and upload the classroom notebook from your instructor. Check that it uses your class names in the same order. Then upload <b>Labeled_data.zip</b> to its session storage.</p>
+      <p><span id="notebookHint"></span> In the Colab Files panel, upload <b>Labeled_data.zip</b> and keep it zipped.</p>
       <a href="https://colab.research.google.com/" target="_blank" rel="noopener noreferrer">Continue to Training in Colab ↗</a>
     </div>
   </div>
@@ -2198,8 +2198,13 @@ figcaption { margin-top:5px; line-height:1.25; }
         $('downloadTitle').textContent = 'Ready for training.';
         $('downloadInstructions').textContent = 'Your dataset is saved in Labeled_data.zip.';
         $('confirmDownload').classList.add('hidden');
+        const notebook = new URLSearchParams(location.hash.slice(1)).get('notebook') || '';
+        const hasNotebook = /^[A-Za-z0-9_-]{10,128}$/.test(notebook);
+        const trainingLink = $('trainingStep').querySelector('a');
+        trainingLink.href = hasNotebook ? 'https://colab.research.google.com/drive/' + notebook : 'https://colab.research.google.com/';
+        $('notebookHint').textContent = hasNotebook ? 'Open your course notebook and sign in if prompted.' : 'Open Colab, sign in and open the notebook from your instructor.';
         $('trainingStep').classList.remove('hidden');
-        $('trainingStep').querySelector('a').focus();
+        trainingLink.focus();
       };
       $('addClassBtn').onclick = () => this.addClass();
       $('saveClassesBtn').onclick = () => this.saveClasses();
