@@ -12,7 +12,7 @@ def run(browser):
     page = browser.new_page()
     site = 'http://localhost/index.html'
     html = Path(__file__).resolve().parents[1] / 'index.html'
-    page.route(site + '*', lambda route: route.fulfill(content_type='text/html; charset=utf-8', body=html.read_bytes()))
+    page.route(site, lambda route: route.fulfill(content_type='text/html; charset=utf-8', body=html.read_bytes()))
     page.route('http://localhost/suggest-boxes-worker.js', lambda route: route.fulfill(
         content_type='text/javascript',
         body="""onmessage = ({data}) => {
@@ -26,10 +26,7 @@ def run(browser):
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.on('request', lambda request: worker_loads.append(request.url) if request.url.endswith('suggest-boxes-worker.js') else None)
     page.goto(site)
-    expect(page.locator('#suggestTools')).to_be_hidden()
-    expect(page.locator('#suggestHelp')).to_be_hidden()
-    page.get_by_role('link', name='Try Suggest boxes (preview)').click()
-    expect(page).to_have_url(site + '?suggest=1')
+    expect(page.locator('#landing')).not_to_contain_text('Vietnam AI Workshop')
     page.locator('#photosInput').set_input_files([
         {'name': name, 'mimeType': 'image/png', 'buffer': solid_png(100, 80)}
         for name in ('a.png', 'b.png')
@@ -40,7 +37,7 @@ def run(browser):
     page.locator('#saveClassesBtn').click()
     page.get_by_role('button', name='Start Labeling', exact=True).click()
 
-    suggest = page.locator('#suggestBoxes')
+    suggest = page.locator('.draw-tools').get_by_role('button', name='Suggest boxes', exact=True)
     review = page.locator('#suggestReview')
     row = page.locator('#boxList .box-row')
     expect(suggest).to_be_visible()
@@ -99,7 +96,7 @@ def run(browser):
         assert dataset.read('classes.txt') == b'bolt\nhex_nut\n'
     assert not errors, errors
     page.close()
-    print('PASS opt-in, inline class edit, provisional suggestions, discard, save, undo, empty result and YOLO export')
+    print('PASS suggestions on the regular workbench, lazy load, class edit, discard, save, undo and export')
 
 
 if __name__ == '__main__':
