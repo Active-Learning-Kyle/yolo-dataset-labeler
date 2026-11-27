@@ -551,9 +551,9 @@ figcaption { margin-top:5px; line-height:1.25; }
 .export-stats dd { margin:0; font-size:1.5rem; font-weight:700; }
 #trainingStep a { color:white; background:var(--primary); text-decoration:none; display:inline-block; padding:10px 14px; border-radius:6px; }
 #trainingStep a:focus-visible { outline:3px solid #84b6ff; outline-offset:2px; }
-#finishDialog { max-width:430px; color:var(--ink); }
-#finishDialog h2 { margin-top:0; }
-#finishDialog .dialog-foot { flex-wrap:wrap; }
+#finishDialog, #noObjectDialog { max-width:430px; color:var(--ink); }
+#finishDialog h2, #noObjectDialog h2 { margin-top:0; }
+#finishDialog .dialog-foot, #noObjectDialog .dialog-foot { flex-wrap:wrap; }
 #boxGuideDialog { max-width:470px; max-height:calc(100dvh - 24px); color:var(--ink); }
 #boxGuideDialog[open] { display:flex; flex-direction:column; }
 #boxGuideDialog .dialog-body { min-height:0; overflow-y:auto; overscroll-behavior:contain; }
@@ -831,6 +831,17 @@ figcaption { margin-top:5px; line-height:1.25; }
   <form method="dialog" class="dialog-foot">
     <button value="continue" type="submit" class="primary" autofocus>Keep labeling</button>
     <button value="exit" type="submit" class="ghost">Exit to review</button>
+  </form>
+</dialog>
+
+<dialog id="noObjectDialog" aria-labelledby="noObjectTitle" aria-describedby="noObjectMessage">
+  <div class="dialog-body">
+    <h2 id="noObjectTitle">No objects in this photo?</h2>
+    <p id="noObjectMessage">Have you checked the whole image? Confirm that there are no target objects to save this photo as No Object.</p>
+  </div>
+  <form method="dialog" class="dialog-foot">
+    <button value="cancel" type="submit" class="ghost" autofocus>Cancel</button>
+    <button value="confirm" type="submit" class="primary">Confirm no object</button>
   </form>
 </dialog>
 
@@ -2246,7 +2257,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     async finishSuggestionReview(keep) {
       if (!this.suggestionReview) return;
       const empty = keep && !this.boxes.length;
-      if (empty && !confirm('Have you checked the whole image? Saving without boxes marks it as No Object.')) return;
+      if (empty && !(await this.app.confirmNoObject())) return;
       this.cancelDrag();
       const previous = this.suggestionReview;
       this.suggestionReview = null;
@@ -2292,7 +2303,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (item.status === 'invalid' &&
           !confirm('Replace this invalid label file with the boxes currently shown?')) return false;
       if (!empty && !unreviewed && !this.boxes.length && !this.background) {
-        if (!confirm('Have you checked the whole image? Saving without boxes marks it as No Object.')) return false;
+        if (!(await this.app.confirmNoObject())) return false;
         this.pushUndo();
         this.background = true;
       }
@@ -2864,6 +2875,15 @@ figcaption { margin-top:5px; line-height:1.25; }
       $('topProgress').classList.add('hidden');
       $('setup').classList.remove('hidden');
       this.renderAll();
+    }
+
+    confirmNoObject() {
+      const dialog = $('noObjectDialog');
+      dialog.returnValue = '';
+      return new Promise(resolve => {
+        dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirm'), {once:true});
+        dialog.showModal();
+      });
     }
 
     exitLabeling() {
