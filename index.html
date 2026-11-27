@@ -864,7 +864,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       <li>Choose <b>Draw</b> and a <b>New box class</b>. Drag anywhere on the image, including inside an existing box.</li>
       <li>Choose <b>Edit</b>, then tap a box or its row. Drag inside to move it, drag a corner to resize it, or use <b>Change selected box class</b>.</li>
       <li>To leave out a blurry, duplicate or wrong photo, select <b>×</b> on its thumbnail. The original file stays on your device.</li>
-      <li>Background photos are optional. To include one in the training ZIP, open <b>Photo options</b>, choose <b>Confirm no object</b>, then choose <b>Save</b>.</li>
+      <li>Background photos are optional. If there are no target objects, choose <b>Save</b> and confirm <b>No Object</b> when prompted. Cancel to continue labeling.</li>
       <li>Boxes smaller than 3 original-image pixels are rejected.</li>
       <li>On an unlabeled photo, <b>Suggest boxes</b> in the toolbar can propose boxes and classes. Change a class beside its box, check for missing objects, then choose <b>Save reviewed boxes</b>.</li>
       <li>Choose <b>Save</b> before moving to the next photo. <b>Finish &amp; exit</b> returns to review. Unsaved boxes stay in your workspace as a draft.</li>
@@ -2244,7 +2244,9 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     async finishSuggestionReview(keep) {
-      if (!this.suggestionReview || (keep && !this.boxes.length)) return;
+      if (!this.suggestionReview) return;
+      const empty = keep && !this.boxes.length;
+      if (empty && !confirm('Have you checked the whole image? Saving without boxes marks it as No Object.')) return;
       this.cancelDrag();
       const previous = this.suggestionReview;
       this.suggestionReview = null;
@@ -2254,6 +2256,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       if (keep) {
         this.pushUndo(previous.snapshot);
         this.boxes = this.boxes.map(({ classId, x, y, w, h }) => ({ classId, x, y, w, h }));
+        if (empty) this.background = true;
       } else {
         this.boxes = JSON.parse(previous.snapshot).boxes;
       }
@@ -2279,21 +2282,20 @@ figcaption { margin-top:5px; line-height:1.25; }
     }
 
     saveEdits() {
-      const unreviewed = !this.boxes.length && !this.background && this.item?.status !== 'invalid';
-      return this.save(this.background && !this.boxes.length, unreviewed);
+      return this.save(this.background && !this.boxes.length);
     }
 
     async save(empty = false, unreviewed = false) {
       if (!this.item || !this.img) return false;
 
       const item = this.item;
+      if (item.status === 'invalid' &&
+          !confirm('Replace this invalid label file with the boxes currently shown?')) return false;
       if (!empty && !unreviewed && !this.boxes.length && !this.background) {
         if (!confirm('Have you checked the whole image? Saving without boxes marks it as No Object.')) return false;
         this.pushUndo();
         this.background = true;
       }
-      if (item.status === 'invalid' &&
-          !confirm('Replace this invalid label file with the boxes currently shown?')) return false;
 
       const revision = this.revision;
       const boxes = this.boxes.map(box => ({ ...box }));
@@ -3346,7 +3348,7 @@ figcaption { margin-top:5px; line-height:1.25; }
       const pending = this.drafts.has(item?.name);
       const save = $('savePhotoBtn');
       save.textContent = ann.suggestionReview ? 'Save reviewed boxes' : 'Save';
-      save.disabled = this.savingPhoto || !ann.img || (ann.suggestionReview ? !ann.boxes.length : !ann.dirty && item?.status !== 'invalid');
+      save.disabled = this.savingPhoto || !ann.img || (!ann.suggestionReview && !ann.dirty && !['unlabeled', 'invalid'].includes(item?.status));
       $('discardPhotoBtn').classList.toggle('hidden', !ann.dirty || Boolean(ann.suggestionReview));
       $('prevBtn').disabled = this.savingPhoto || pending || !visible.some(row => row.i < this.current);
       $('nextBtn').disabled = this.savingPhoto || !this.photoReviewed(item) || !visible.some(row => row.i > this.current);
@@ -3512,7 +3514,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     suggestionHint(review, eligible) {
       if (review) return this.ann.boxes.length
         ? 'Check the boxes, choose their classes and draw any missing boxes before saving.'
-        : 'Discard suggestions to leave this photo unreviewed, or draw any missing boxes.';
+        : 'Save and confirm No Object if there are no target objects, or draw missing boxes. Discard suggestions to leave the photo unreviewed.';
       if (this.ann.tool === 'click') return '';
       if (!this.canSuggest) return 'Use the online labeler in a recent browser to get suggestions.';
       return eligible && !this.suggestionModelReady
