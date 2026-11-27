@@ -554,6 +554,11 @@ figcaption { margin-top:5px; line-height:1.25; }
 #finishDialog, #noObjectDialog { max-width:430px; color:var(--ink); }
 #finishDialog h2, #noObjectDialog h2 { margin-top:0; }
 #finishDialog .dialog-foot, #noObjectDialog .dialog-foot { flex-wrap:wrap; }
+#finishDialog .dialog-foot button, #noObjectDialog .dialog-foot button {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:44px; text-align:center; border:1px solid transparent;
+}
+#finishDialog .dialog-foot button.ghost, #noObjectDialog .dialog-foot button.ghost { border-color:var(--line); }
 #boxGuideDialog { max-width:470px; max-height:calc(100dvh - 24px); color:var(--ink); }
 #boxGuideDialog[open] { display:flex; flex-direction:column; }
 #boxGuideDialog .dialog-body { min-height:0; overflow-y:auto; overscroll-behavior:contain; }
@@ -840,8 +845,8 @@ figcaption { margin-top:5px; line-height:1.25; }
     <p id="noObjectMessage">Have you checked the whole image? Confirm that there are no target objects to save this photo as No Object.</p>
   </div>
   <form method="dialog" class="dialog-foot">
-    <button value="cancel" type="submit" class="ghost" autofocus>Cancel</button>
     <button value="confirm" type="submit" class="primary">Confirm no object</button>
+    <button value="cancel" type="submit" class="ghost" autofocus>Cancel</button>
   </form>
 </dialog>
 
