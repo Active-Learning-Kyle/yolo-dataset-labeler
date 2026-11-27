@@ -23,7 +23,7 @@ The example uses photos of loose fasteners, an assembled bolt, a bolted plate, r
 3. **Choose your classes.** Click **Add Class** for each object type, enter names such as `bolt` and `hex_nut`, then click **Save Classes** and **Start Labeling**. On your first visit, dismiss the box guide with **Got it** or **×**.
 4. **Label and save each photo.** In **Draw**, choose a **New box class** and drag a tight box around each target. Use **Edit** to adjust it. Click **Save** on each photo before **Next**. If you used [**Suggest boxes**](#get-suggestions-for-a-photo), check the suggestions and click **Save reviewed boxes** instead.
 5. **Finish and download.** To keep a photo with no targets, choose **Photo options → Confirm no object**, then **Save**. When every included photo is reviewed, choose **Finish & exit** and then **Download Labeled_data.zip** in **Review & export**.
-6. **If you’re training in Colab.** Find the file in Downloads, click **I have the ZIP**, then **Continue to Training in Colab**. Upload the ZIP as-is through **Files** in your training notebook. See [Continue training in Colab](#continue-training-in-colab).
+6. **If you’re training in Colab.** Find the file in Downloads, click **I have the ZIP**, then return to your workshop Notion page and open the classroom notebook in Part 5D, Step 1. Upload the ZIP as-is through **Files** in your training notebook. See [Continue training in Colab](#continue-training-in-colab).
 
 Returning after a break or a refresh? Choose [**Resume last dataset**](#resume-your-work) on the opening screen.
 
@@ -179,15 +179,15 @@ Labeled_data.zip
 
 Each box is one line in its image’s label file. The fields are `class_id x_center y_center width height`, with coordinates and dimensions expressed as fractions of the image size. The Part 5D notebook reads your class names from `classes.txt` in the saved order.
 
-After you find `Labeled_data.zip` in Downloads, click **I have the ZIP**. This shows the image, box and background counts and the Colab link. **Return to dataset** takes you back to your work.
+After you find `Labeled_data.zip` in Downloads, click **I have the ZIP**. This shows the image, box and background counts and the next step in the workshop Notion page. **Return to dataset** takes you back to your work.
 
 ![Check your download dialog showing the I have the ZIP button](docs/guide/11-confirm-download.png)
 
-![Ready for training dialog showing the example dataset totals and the Continue to Training in Colab link outlined in red](docs/guide/06-open-colab.png)
+
 
 ## Continue training in Colab
 
-The regular Labeler link takes you to the Colab home page. A Labeler link with a notebook ID opens that notebook directly after you click **Continue to Training in Colab**. Sign in if prompted.
+Return to the workshop Notion page and follow **Part 5D, Step 1: Open the classroom notebook** to start training in Google Colab. If you are using the Labeler outside this workshop, open your own training notebook. Sign in if prompted.
 
 If you are using the HKU training notebook, run its cells in order.
 
@@ -196,7 +196,7 @@ If you are using the HKU training notebook, run its cells in order.
 3. Run **Train your detector**. Upload fresh test photos separately with filenames starting with `unseen-`, then run **Test unseen images**.
 4. Run **Download your evidence** and open `team-results.zip` from Downloads. It contains your model weights, class list, training log and one prediction image per test photo. While the runtime is connected, you can also find the ZIP in Colab’s **Files** panel.
 
-**For instructors.** Append `#notebook=YOUR_DRIVE_FILE_ID` to the Labeler URL to open your own course notebook from the training button. Use the ID after `/drive/` in its Colab link and grant your students viewer access in Google Drive.
+**For instructors.** Share the classroom notebook in your course instructions and grant your students viewer access in Google Drive.
 
 ## Help and keyboard shortcuts
 
