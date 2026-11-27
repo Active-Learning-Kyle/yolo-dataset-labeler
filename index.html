@@ -549,8 +549,6 @@ figcaption { margin-top:5px; line-height:1.25; }
 .export-stats div { display:flex; flex-direction:column-reverse; }
 .export-stats dt { font-size:.78rem; color:var(--muted); }
 .export-stats dd { margin:0; font-size:1.5rem; font-weight:700; }
-#trainingStep a { color:white; background:var(--primary); text-decoration:none; display:inline-block; padding:10px 14px; border-radius:6px; }
-#trainingStep a:focus-visible { outline:3px solid #84b6ff; outline-offset:2px; }
 #finishDialog, #noObjectDialog { max-width:430px; color:var(--ink); }
 #finishDialog h2, #noObjectDialog h2 { margin-top:0; }
 #finishDialog .dialog-foot, #noObjectDialog .dialog-foot { flex-wrap:wrap; }
@@ -858,8 +856,7 @@ figcaption { margin-top:5px; line-height:1.25; }
     <button id="confirmDownload" class="primary">I have the ZIP</button>
     <div id="trainingStep" class="hidden">
       <dl id="exportStats" class="export-stats"></dl>
-      <p><span id="notebookHint"></span> In the Colab Files panel, upload <b>Labeled_data.zip</b> and keep it zipped.</p>
-      <a href="https://colab.research.google.com/" target="_blank" rel="noopener noreferrer">Continue to Training in Colab ↗</a>
+      <p id="trainingHandoff" tabindex="-1">Return to the workshop Notion page and follow <b>Part 5D, Step 1: Open the classroom notebook</b>, to start training in Google Colab.</p>
     </div>
   </div>
   <div class="export-art" aria-hidden="true"></div>
@@ -2554,13 +2551,8 @@ figcaption { margin-top:5px; line-height:1.25; }
         $('downloadTitle').textContent = 'Ready for training.';
         $('downloadInstructions').textContent = 'Your dataset is saved in Labeled_data.zip.';
         $('confirmDownload').classList.add('hidden');
-        const notebook = new URLSearchParams(location.hash.slice(1)).get('notebook') || '';
-        const hasNotebook = /^[A-Za-z0-9_-]{10,128}$/.test(notebook);
-        const trainingLink = $('trainingStep').querySelector('a');
-        trainingLink.href = hasNotebook ? 'https://colab.research.google.com/drive/' + notebook : 'https://colab.research.google.com/';
-        $('notebookHint').textContent = hasNotebook ? 'Open your course notebook and sign in if prompted.' : 'Open Colab, sign in and open the notebook from your instructor.';
         $('trainingStep').classList.remove('hidden');
-        trainingLink.focus();
+        $('trainingHandoff').focus();
       };
       $('addClassBtn').onclick = () => this.addClass();
       $('saveClassesBtn').onclick = () => this.saveClasses();
